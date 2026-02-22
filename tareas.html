@@ -1,0 +1,1998 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Requerimientos por Salida</title>
+    <link rel="icon" type="image/x-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%232c3e50'><path d='M20 6h-8l-2-2H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm0 12H4V8h16v10z'/></svg>">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js"></script>
+    
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --secondary: #3498db;
+            --success: #27ae60;
+            --warning: #f39c12;
+            --danger: #e74c3c;
+            --info: #9b59b6;
+            --light: #f8f9fa;
+            --dark: #343a40;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+            height: 100vh;
+            overflow: hidden;
+        }
+        
+        .app-container {
+            max-width: 100%;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .app-header {
+            background: linear-gradient(135deg, var(--primary), #1a252f);
+            color: white;
+            padding: 15px 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .header-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .header-subtitle {
+            font-size: 0.9rem;
+            opacity: 0.8;
+            margin-top: 2px;
+        }
+        
+        .header-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .header-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        .header-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        .content-area {
+            flex: 1;
+            overflow-y: auto;
+            padding: 15px;
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        .cards-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 15px;
+            padding-bottom: 20px;
+        }
+        
+        .requirement-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border-left: 5px solid var(--secondary);
+        }
+        
+        .requirement-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .card-header {
+            padding: 20px;
+        }
+        
+        .requirement-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--primary);
+            margin-bottom: 5px;
+        }
+        
+        .requirement-id {
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 10px;
+        }
+        
+        .card-details {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+        }
+        
+        .detail-item {
+            text-align: center;
+        }
+        
+        .detail-value {
+            font-size: 1.4rem;
+            font-weight: 700;
+            display: block;
+        }
+        
+        .detail-label {
+            font-size: 0.8rem;
+            color: #666;
+            display: block;
+        }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .status-pending {
+            background: #ffeaa7;
+            color: #d35400;
+        }
+        
+        .status-in-progress {
+            background: #a29bfe;
+            color: white;
+        }
+        
+        .status-completed {
+            background: #55efc4;
+            color: #00b894;
+        }
+        
+        .status-finalized {
+            background: #dfe6e9;
+            color: #636e72;
+        }
+        
+        .scan-interface {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: white;
+            z-index: 1000;
+            flex-direction: column;
+        }
+        
+        .scan-header {
+            background: linear-gradient(135deg, var(--primary), #1a252f);
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .scan-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+        
+        .scan-back-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        .scan-back-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        .scanner-section {
+            padding: 15px;
+            background: white;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .search-container {
+            position: relative;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .scanner-input {
+            flex: 1;
+            padding: 14px 15px 14px 45px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px 0 0 10px;
+            font-size: 1rem;
+            background: var(--light);
+            transition: border-color 0.3s;
+            border-right: none;
+        }
+        
+        .scanner-input:focus {
+            outline: none;
+            border-color: var(--secondary);
+        }
+        
+        .scanner-icon {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--secondary);
+            font-size: 1.1rem;
+            z-index: 1;
+        }
+        
+        .search-button {
+            background: var(--secondary);
+            border: 2px solid var(--secondary);
+            border-radius: 0 10px 10px 0;
+            width: 50px;
+            height: 52px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 1.2rem;
+        }
+        
+        .search-button:hover {
+            background: #2980b9;
+            border-color: #2980b9;
+        }
+        
+        .search-button:active {
+            transform: scale(0.95);
+        }
+        
+        .progress-section {
+            margin-top: 10px;
+        }
+        
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+        
+        .progress-title {
+            font-weight: 600;
+            color: var(--primary);
+            font-size: 0.9rem;
+        }
+        
+        .progress-percent {
+            font-weight: 700;
+            font-size: 0.9rem;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 12px;
+            background: #f0f0f0;
+            border-radius: 6px;
+            overflow: hidden;
+            margin-bottom: 3px;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            border-radius: 6px;
+            width: 0%;
+            transition: width 0.5s ease;
+        }
+        
+        .progress-complete {
+            background: linear-gradient(90deg, var(--success), #2ecc71);
+        }
+        
+        .progress-incomplete {
+            background: linear-gradient(90deg, var(--warning), #e67e22);
+        }
+        
+        .progress-text {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.75rem;
+            color: #666;
+        }
+        
+        .products-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 15px;
+            background: #f8f9fa;
+        }
+        
+        .product-item {
+            background: white;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            border-left: 4px solid var(--secondary);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .product-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        
+        .product-item.completed {
+            border-left-color: var(--success);
+            background: #e8f5e9;
+            border-left-width: 8px;
+        }
+        
+        .product-item.in-progress {
+            border-left-color: var(--warning);
+            background: #fff3e0;
+            border-left-width: 8px;
+        }
+        
+        .product-item.problem {
+            border-left-color: var(--danger);
+            background: #ffebee;
+            border-left-width: 8px;
+        }
+        
+        .product-item.pending {
+            border-left-color: var(--secondary);
+            background: #ffffff;
+            border-left-width: 8px;
+        }
+        
+        .product-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .product-name {
+            font-weight: 600;
+            color: var(--primary);
+            font-size: 1rem;
+            flex: 1;
+        }
+        
+        .product-sku {
+            font-size: 0.8rem;
+            color: #666;
+            background: rgba(0,0,0,0.05);
+            padding: 3px 10px;
+            border-radius: 20px;
+        }
+        
+        .product-quantity {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin: 10px 0;
+        }
+        
+        .quantity-label {
+            font-size: 0.9rem;
+            color: #666;
+            font-weight: 500;
+        }
+        
+        .quantity-value {
+            font-weight: 700;
+            font-size: 1.2rem;
+            color: var(--primary);
+        }
+        
+        .product-progress {
+            margin-top: 15px;
+        }
+        
+        .product-progress-bar {
+            width: 100%;
+            height: 8px;
+            background: rgba(0,0,0,0.1);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 8px;
+        }
+        
+        .product-progress-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.5s ease;
+        }
+        
+        .product-item.completed .product-progress-fill {
+            background: linear-gradient(90deg, var(--success), #2ecc71);
+        }
+        
+        .product-item.in-progress .product-progress-fill {
+            background: linear-gradient(90deg, var(--warning), #e67e22);
+        }
+        
+        .product-item.pending .product-progress-fill {
+            background: linear-gradient(90deg, var(--secondary), #5dade2);
+        }
+        
+        .product-item.problem .product-progress-fill {
+            background: linear-gradient(90deg, var(--danger), #e74c3c);
+        }
+        
+        .scanned-count {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            color: #666;
+            font-weight: 500;
+        }
+        
+        .problem-badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-top: 10px;
+        }
+        
+        .problem-insufficient {
+            background: #ffeaa7;
+            color: #d35400;
+        }
+        
+        .problem-broken {
+            background: #ff7675;
+            color: white;
+        }
+        
+        .finalize-header-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .finalize-header-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: scale(1.1);
+        }
+        
+        .finalize-header-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .finalize-header-btn.enabled {
+            background: rgba(39, 174, 96, 0.2);
+            color: #55efc4;
+        }
+        
+        .finalize-header-btn.enabled:hover {
+            background: rgba(39, 174, 96, 0.3);
+        }
+        
+        .tap-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+            padding: 15px;
+        }
+        
+        .tap-modal-content {
+            background: white;
+            border-radius: 12px;
+            width: 100%;
+            max-width: 400px;
+            animation: modalFadeIn 0.3s;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+        
+        @keyframes modalFadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .tap-modal-header {
+            padding: 20px;
+            background: linear-gradient(135deg, var(--primary), #1a252f);
+            color: white;
+            text-align: center;
+        }
+        
+        .tap-modal-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        
+        .tap-modal-sku {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+        
+        .tap-modal-body {
+            padding: 20px;
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+        
+        .scan-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 2001;
+            align-items: center;
+            justify-content: center;
+            padding: 15px;
+        }
+        
+        .scan-modal-content {
+            background: white;
+            border-radius: 12px;
+            width: 100%;
+            max-width: 350px;
+            animation: modalFadeIn 0.3s;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+        
+        .scan-modal-header {
+            padding: 20px;
+            background: linear-gradient(135deg, var(--primary), #1a252f);
+            color: white;
+            text-align: center;
+        }
+        
+        .scan-modal-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        
+        .scan-modal-sku {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+        
+        .scan-modal-body {
+            padding: 25px;
+        }
+        
+        .modal-section {
+            margin-bottom: 20px;
+        }
+        
+        .modal-section-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--primary);
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .quantity-input-section {
+            margin-bottom: 15px;
+        }
+        
+        .quantity-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--primary);
+        }
+        
+        .quantity-input-group {
+            position: relative;
+        }
+        
+        .quantity-input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1.2rem;
+            font-weight: 700;
+            text-align: center;
+            color: var(--primary);
+            background: #f8f9fa;
+        }
+        
+        .quantity-input:focus {
+            outline: none;
+            border-color: var(--secondary);
+        }
+        
+        .quantity-info {
+            text-align: center;
+            margin-top: 8px;
+            font-size: 0.9rem;
+            color: #666;
+        }
+        
+        .inventory-info {
+            margin-top: 15px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+        }
+        
+        .inventory-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #dee2e6;
+        }
+        
+        .inventory-item:last-child {
+            margin-bottom: 0;
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+        
+        .inventory-label {
+            font-weight: 600;
+            color: #495057;
+        }
+        
+        .inventory-value {
+            font-weight: 700;
+            color: var(--primary);
+        }
+        
+        .inventory-value.low {
+            color: var(--warning);
+        }
+        
+        .inventory-value.critical {
+            color: var(--danger);
+        }
+        
+        .problem-options {
+            margin-top: 20px;
+        }
+        
+        .problem-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .problem-btn {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            background: white;
+            color: #666;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .problem-btn:hover {
+            background: #f8f9fa;
+        }
+        
+        .problem-btn.active {
+            border-color: var(--warning);
+            background: #fff8e1;
+            color: #d35400;
+        }
+        
+        .problem-btn.broken.active {
+            border-color: var(--danger);
+            background: #ffebee;
+            color: #c0392b;
+        }
+        
+        .problem-btn i {
+            font-size: 1.1rem;
+        }
+        
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .modal-btn {
+            flex: 1;
+            padding: 15px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .modal-btn-cancel {
+            background: #f8f9fa;
+            color: #666;
+            border: 2px solid #e0e0e0;
+        }
+        
+        .modal-btn-cancel:hover {
+            background: #e9ecef;
+        }
+        
+        .modal-btn-confirm {
+            background: var(--success);
+            color: white;
+        }
+        
+        .modal-btn-confirm:hover {
+            background: #219653;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #999;
+        }
+        
+        .empty-icon {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            color: #ddd;
+        }
+        
+        .empty-text {
+            font-size: 1.1rem;
+            margin-bottom: 10px;
+        }
+
+        .detail-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 0.8rem;
+        }
+        
+        .detail-table th {
+            background: linear-gradient(135deg, var(--primary), #1a252f);
+            color: white;
+            padding: 8px;
+            text-align: left;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        
+        .detail-table td {
+            padding: 6px 8px;
+            border-bottom: 1px solid #e0e0e0;
+            font-size: 0.75rem;
+        }
+        
+        .detail-table tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .detail-table tr:hover {
+            background: #f8f9fa;
+        }
+        
+        .badge-success {
+            background: #d4edda;
+            color: #155724;
+            padding: 3px 6px;
+            border-radius: 10px;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+        
+        .badge-warning {
+            background: #fff3cd;
+            color: #856404;
+            padding: 3px 6px;
+            border-radius: 10px;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+        
+        .badge-danger {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 3px 6px;
+            border-radius: 10px;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+        
+        .btn-pdf {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            margin-left: 10px;
+            transition: all 0.3s;
+        }
+        
+        .btn-pdf:hover {
+            background: #c0392b;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(231, 76, 60, 0.3);
+        }
+        
+        @media (max-width: 768px) {
+            .cards-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .problem-buttons {
+                flex-direction: column;
+            }
+            
+            .tap-modal-content,
+            .scan-modal-content {
+                max-width: 95%;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .card-details {
+                flex-wrap: wrap;
+                gap: 10px;
+            }
+            
+            .detail-item {
+                flex: 1 0 calc(50% - 10px);
+            }
+            
+            .modal-actions {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container" id="mainInterface">
+        <header class="app-header">
+            <div class="header-content">
+                <div>
+                    <div class="header-title">
+                        <i class="fas fa-clipboard-list"></i> Req. por Salida
+                    </div>
+                    <div class="header-subtitle">Selecciona para empezar</div>
+                </div>
+                <div class="header-actions">
+                    <button class="header-btn" id="btnRefresh" title="Actualizar">
+                        <i class="fas fa-sync-alt"></i>
+                    </button>
+                    <button class="header-btn" id="btnBackToSend" title="Volver a send.html">
+                        <i class="fas fa-arrow-left"></i>
+                    </button>
+                </div>
+            </div>
+        </header>
+        
+        <div class="content-area">
+            <div class="cards-container" id="cardsContainer"></div>
+        </div>
+    </div>
+    
+    <div class="scan-interface" id="scanInterface">
+        <div class="scan-header">
+            <button class="scan-back-btn" id="btnBack">
+                <i class="fas fa-arrow-left"></i>
+            </button>
+            <div class="scan-title" id="scanReqTitle">Requerimiento</div>
+            <button class="finalize-header-btn" id="btnFinalizeHeader" title="Finalizar requerimiento">
+                <i class="fas fa-check"></i>
+            </button>
+        </div>
+        
+        <section class="scanner-section">
+            <div class="search-container">
+                <i class="fas fa-barcode scanner-icon"></i>
+                <input type="text" class="scanner-input" id="scannerInput" placeholder="Escanear código de barras o SKU..." autocomplete="off" autofocus>
+                <button class="search-button" id="searchButton" title="Buscar">
+                    <i class="fas fa-search"></i>
+                </button>
+            </div>
+            
+            <div class="progress-section">
+                <div class="progress-header">
+                    <div class="progress-title">Progreso</div>
+                    <div class="progress-percent" id="requirementProgress">0%</div>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="requirementProgressFill"></div>
+                </div>
+                <div class="progress-text">
+                    <span>Escaneados: <strong id="scannedCount">0</strong></span>
+                    <span>Total: <strong id="totalCount">0</strong></span>
+                </div>
+            </div>
+        </section>
+        
+        <div class="products-list" id="productsList"></div>
+    </div>
+    
+    <div class="tap-modal" id="tapModal">
+        <div class="tap-modal-content">
+            <div class="tap-modal-header">
+                <div class="tap-modal-title" id="tapProductName">Nombre del Producto</div>
+                <div class="tap-modal-sku" id="tapProductSku">SKU: 000000</div>
+            </div>
+            
+            <div class="tap-modal-body">
+                <div class="modal-section">
+                    <div class="modal-section-title">
+                        <i class="fas fa-boxes"></i> Existencia de Inventario
+                    </div>
+                    <div class="inventory-info">
+                        <div class="inventory-item">
+                            <span class="inventory-label">Requerido:</span>
+                            <span class="inventory-value" id="tapRequired">0</span>
+                        </div>
+                        <div class="inventory-item">
+                            <span class="inventory-label">Escaneado:</span>
+                            <span class="inventory-value" id="tapScanned">0</span>
+                        </div>
+                        <div class="inventory-item">
+                            <span class="inventory-label">Restante:</span>
+                            <span class="inventory-value" id="tapRemaining">0</span>
+                        </div>
+                        <div class="inventory-item">
+                            <span class="inventory-label">Stock Bodega:</span>
+                            <span class="inventory-value" id="tapStock">0</span>
+                        </div>
+                        <div class="inventory-item">
+                            <span class="inventory-label">Disponible:</span>
+                            <span class="inventory-value" id="tapAvailable">0</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="modal-section">
+                    <div class="modal-section-title">
+                        <i class="fas fa-exclamation-triangle"></i> Marcar Problema
+                    </div>
+                    <div class="problem-options">
+                        <div class="problem-buttons">
+                            <button class="problem-btn" id="tapBtnInsufficient" data-problem="insufficient">
+                                <i class="fas fa-exclamation-triangle"></i> Existencia Insuficiente
+                            </button>
+                            <button class="problem-btn" id="tapBtnBroken" data-problem="broken">
+                                <i class="fas fa-times-circle"></i> Quebrado
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="modal-actions">
+                    <button class="modal-btn modal-btn-cancel" id="tapBtnCancel">
+                        <i class="fas fa-times"></i> Cerrar
+                    </button>
+                    <button class="modal-btn modal-btn-confirm" id="tapBtnConfirm">
+                        <i class="fas fa-check"></i> Guardar Problema
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="scan-modal" id="scanModal">
+        <div class="scan-modal-content">
+            <div class="scan-modal-header">
+                <div class="scan-modal-title" id="scanModalProductName">Nombre del Producto</div>
+                <div class="scan-modal-sku" id="scanModalProductSku">SKU: 000000</div>
+            </div>
+            
+            <div class="scan-modal-body">
+                <div class="modal-section">
+                    <div class="modal-section-title">
+                        <i class="fas fa-hashtag"></i> Cantidad Escaneada
+                    </div>
+                    <div class="quantity-input-section">
+                        <div class="quantity-input-group">
+                            <input type="number" class="quantity-input" id="scanModalQuantityInput" min="0" max="1000" value="0" autofocus>
+                        </div>
+                        <div class="quantity-info">
+                            Máximo: <strong id="scanModalMax">0</strong> | Restante: <strong id="scanModalRemaining">0</strong>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="modal-actions">
+                    <button class="modal-btn modal-btn-cancel" id="scanBtnCancel">
+                        <i class="fas fa-times"></i> Cancelar
+                    </button>
+                    <button class="modal-btn modal-btn-confirm" id="scanBtnConfirm">
+                        <i class="fas fa-check"></i> Guardar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyDQe0HfkrnRJAH8Dtzh-gesTsq_UdHnOHE",
+            authDomain: "pos-tda.firebaseapp.com",
+            projectId: "pos-tda",
+            storageBucket: "pos-tda.firebasestorage.app",
+            messagingSenderId: "732089248607",
+            appId: "1:732089248607:web:895d8588d384b05a26a4ea",
+            measurementId: "G-QTRZV9X9ML"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        db.settings({
+            cacheSizeBytes: firebase.firestore.CACHE_SIZE_UNLIMITED
+        });
+        
+        db.enablePersistence()
+            .catch((err) => {
+                if (err.code == 'failed-precondition') {
+                    console.log('Persistencia falló - múltiples pestañas abiertas');
+                } else if (err.code == 'unimplemented') {
+                    console.log('Persistencia no disponible en este navegador');
+                }
+            });
+
+        let requirements = [];
+        let productsFromFirebase = [];
+        let currentRequirement = null;
+        let currentProduct = null;
+        let selectedProblem = null;
+        let autoSubmitTimeout = null;
+
+        const mainInterface = document.getElementById('mainInterface');
+        const scanInterface = document.getElementById('scanInterface');
+        const tapModal = document.getElementById('tapModal');
+        const scanModal = document.getElementById('scanModal');
+        const cardsContainer = document.getElementById('cardsContainer');
+        const scannerInput = document.getElementById('scannerInput');
+        const searchButton = document.getElementById('searchButton');
+        const requirementProgress = document.getElementById('requirementProgress');
+        const requirementProgressFill = document.getElementById('requirementProgressFill');
+        const scannedCount = document.getElementById('scannedCount');
+        const totalCount = document.getElementById('totalCount');
+        const productsList = document.getElementById('productsList');
+        const scanReqTitle = document.getElementById('scanReqTitle');
+        const btnRefresh = document.getElementById('btnRefresh');
+        const btnBackToSend = document.getElementById('btnBackToSend');
+        const btnBack = document.getElementById('btnBack');
+        const btnFinalizeHeader = document.getElementById('btnFinalizeHeader');
+        
+        const tapProductName = document.getElementById('tapProductName');
+        const tapProductSku = document.getElementById('tapProductSku');
+        const tapRequired = document.getElementById('tapRequired');
+        const tapScanned = document.getElementById('tapScanned');
+        const tapRemaining = document.getElementById('tapRemaining');
+        const tapStock = document.getElementById('tapStock');
+        const tapAvailable = document.getElementById('tapAvailable');
+        const tapBtnInsufficient = document.getElementById('tapBtnInsufficient');
+        const tapBtnBroken = document.getElementById('tapBtnBroken');
+        const tapBtnCancel = document.getElementById('tapBtnCancel');
+        const tapBtnConfirm = document.getElementById('tapBtnConfirm');
+        
+        const scanModalProductName = document.getElementById('scanModalProductName');
+        const scanModalProductSku = document.getElementById('scanModalProductSku');
+        const scanModalQuantityInput = document.getElementById('scanModalQuantityInput');
+        const scanModalMax = document.getElementById('scanModalMax');
+        const scanModalRemaining = document.getElementById('scanModalRemaining');
+        const scanBtnCancel = document.getElementById('scanBtnCancel');
+        const scanBtnConfirm = document.getElementById('scanBtnConfirm');
+
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Inicializando app de picking...');
+            loadProductsFromFirebase();
+            loadRequirementsFromFirebase();
+            setupEventListeners();
+        });
+
+        async function loadProductsFromFirebase() {
+            try {
+                console.log('Cargando productos desde Firebase...');
+                const snapshot = await db.collection('products').get();
+                
+                productsFromFirebase = snapshot.docs.map(doc => {
+                    const data = doc.data();
+                    return {
+                        id: doc.id,
+                        sku: data.sku || '',
+                        name: data.name || 'Producto sin nombre',
+                        barcode: data.barcode || '',
+                        barcodes: data.barcodes || [],
+                        stock: data.bodega || 0
+                    };
+                });
+                
+                console.log('Productos cargados:', productsFromFirebase.length);
+                
+            } catch (error) {
+                console.error('Error cargando productos:', error);
+            }
+        }
+
+        async function loadRequirementsFromFirebase() {
+            try {
+                console.log('Cargando requerimientos desde Firebase...');
+                const snapshot = await db.collection('requerimientos').get();
+                
+                requirements = snapshot.docs.map(doc => {
+                    const data = doc.data();
+                    return {
+                        id: doc.id,
+                        title: data.title || data.nombre || 'Requerimiento',
+                        date: data.date || data.fecha || new Date().toLocaleDateString(),
+                        status: data.status || data.estado || 'Pendiente',
+                        client: data.client || data.tienda || 'Cliente',
+                        finalized: data.finalized || false,
+                        // Asegurar que productos existe y es un array
+                        products: Array.isArray(data.productos) ? data.productos.map(p => ({
+                            id: p.id || 'P' + Math.random(),
+                            sku: p.sku || '',
+                            name: p.name || 'Producto',
+                            required: p.required || 0,
+                            scanned: p.scanned || 0,
+                            issues: p.issues || [],
+                            stock: p.stock || 0,
+                            barcode: p.barcode || '',
+                            barcodes: p.barcodes || []
+                        })) : []
+                    };
+                });
+                
+                console.log('Requerimientos cargados:', requirements.length);
+                renderRequirements();
+                
+            } catch (error) {
+                console.error('Error cargando requerimientos:', error);
+            }
+        }
+
+        async function updateRequirementInFirebase(requirement) {
+            try {
+                const requirementToSave = {
+                    id: requirement.id,
+                    title: requirement.title,
+                    nombre: requirement.title,
+                    date: requirement.date,
+                    fecha: requirement.date,
+                    status: requirement.status,
+                    estado: requirement.status,
+                    client: requirement.client,
+                    tienda: requirement.client,
+                    finalized: requirement.finalized,
+                    productos: requirement.products.map(p => ({
+                        id: p.id,
+                        sku: p.sku,
+                        name: p.name,
+                        required: p.required,
+                        scanned: p.scanned || 0,
+                        issues: p.issues || [],
+                        stock: p.stock || 0,
+                        barcode: p.barcode || '',
+                        barcodes: p.barcodes || []
+                    }))
+                };
+                
+                await db.collection('requerimientos').doc(requirement.id).set(requirementToSave);
+                console.log('Requerimiento actualizado en Firebase:', requirement.id);
+                return true;
+            } catch (error) {
+                console.error('Error actualizando en Firebase:', error);
+                return false;
+            }
+        }
+
+        async function updateProductStock(productSku, quantityScanned) {
+            try {
+                const product = productsFromFirebase.find(p => p.sku === productSku);
+                if (!product) return false;
+                
+                const productRef = db.collection('products').doc(product.id);
+                const doc = await productRef.get();
+                
+                if (!doc.exists) return false;
+                
+                const currentData = doc.data();
+                const currentStock = currentData.bodega || 0;
+                const newStock = currentStock - quantityScanned;
+                
+                await productRef.update({ bodega: newStock });
+                console.log(`Stock actualizado: ${productSku} ${currentStock} -> ${newStock}`);
+                product.stock = newStock;
+                
+                return true;
+            } catch (error) {
+                console.error('Error actualizando stock:', error);
+                return false;
+            }
+        }
+
+        function findProductByCode(code) {
+            if (!productsFromFirebase || productsFromFirebase.length === 0) return null;
+            
+            const searchCode = code.toLowerCase().trim();
+            
+            return productsFromFirebase.find(p => {
+                if (p.sku && p.sku.toLowerCase() === searchCode) return true;
+                if (p.barcode && p.barcode.toLowerCase() === searchCode) return true;
+                if (p.barcodes && Array.isArray(p.barcodes)) {
+                    return p.barcodes.some(b => b && b.toString().toLowerCase() === searchCode);
+                }
+                return false;
+            });
+        }
+
+        function setupEventListeners() {
+            btnRefresh.addEventListener('click', function() {
+                loadProductsFromFirebase();
+                loadRequirementsFromFirebase();
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Actualizado',
+                    text: 'Datos actualizados correctamente',
+                    timer: 1500,
+                    showConfirmButton: false
+                });
+            });
+            
+            btnBackToSend.addEventListener('click', function() {
+                window.location.href = 'send.html';
+            });
+            
+            btnBack.addEventListener('click', function() {
+                showMainInterface();
+            });
+            
+            btnFinalizeHeader.addEventListener('click', function() {
+                finalizeRequirement();
+            });
+            
+            scannerInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    processScan();
+                }
+            });
+            
+            scannerInput.addEventListener('input', function() {
+                handleAutoSubmit();
+            });
+            
+            searchButton.addEventListener('click', function() {
+                processScan();
+            });
+            
+            tapBtnInsufficient.addEventListener('click', function() {
+                toggleProblem('insufficient');
+            });
+            
+            tapBtnBroken.addEventListener('click', function() {
+                toggleProblem('broken');
+            });
+            
+            tapBtnCancel.addEventListener('click', function() {
+                closeTapModal();
+            });
+            
+            tapBtnConfirm.addEventListener('click', function() {
+                saveProblem();
+            });
+            
+            scanBtnCancel.addEventListener('click', function() {
+                closeScanModal();
+            });
+            
+            scanBtnConfirm.addEventListener('click', function() {
+                saveScanQuantity();
+            });
+            
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    if (tapModal.style.display === 'flex') closeTapModal();
+                    else if (scanModal.style.display === 'flex') closeScanModal();
+                }
+            });
+        }
+
+        function handleAutoSubmit() {
+            const value = scannerInput.value.trim();
+            
+            // Limpiar timeout anterior
+            if (autoSubmitTimeout) {
+                clearTimeout(autoSubmitTimeout);
+            }
+            
+            // Si tiene al menos 5 caracteres, programar auto-submit
+            if (value.length >= 5) {
+                autoSubmitTimeout = setTimeout(() => {
+                    if (scannerInput.value.trim().length >= 5) {
+                        processScan();
+                    }
+                }, 500); // 500ms de espera después de dejar de escribir
+            }
+        }
+
+        function renderRequirements() {
+            cardsContainer.innerHTML = '';
+            
+            const activeRequirements = requirements.filter(req => !req.finalized);
+            
+            if (activeRequirements.length === 0) {
+                cardsContainer.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-check-circle" style="font-size: 3rem; color: #27ae60; margin-bottom: 15px;"></i>
+                        <h3>No hay requerimientos pendientes</h3>
+                    </div>
+                `;
+                return;
+            }
+            
+            activeRequirements.forEach(req => {
+                const totalProducts = req.products?.length || 0;
+                const totalRequired = req.products?.reduce((sum, p) => sum + (p.required || 0), 0) || 0;
+                const totalScanned = req.products?.reduce((sum, p) => sum + (p.scanned || 0), 0) || 0;
+                const progressPercent = totalRequired > 0 ? Math.round((totalScanned / totalRequired) * 100) : 0;
+                const hasProblems = req.products?.some(p => p.issues && p.issues.length > 0) || false;
+                
+                const card = document.createElement('div');
+                card.className = 'requirement-card';
+                card.dataset.id = req.id;
+                
+                card.innerHTML = `
+                    <div class="card-header" onclick="openScanInterface('${req.id}')">
+                        <div class="requirement-title">${req.title}</div>
+                        <div class="requirement-id">${req.id} • ${req.date}</div>
+                        <div class="card-details">
+                            <div class="detail-item">
+                                <span class="detail-value">${totalProducts}</span>
+                                <span class="detail-label">Productos</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-value">${totalRequired}</span>
+                                <span class="detail-label">Unidades</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-value">${progressPercent}%</span>
+                                <span class="detail-label">Completado</span>
+                            </div>
+                        </div>
+                        <div style="margin-top: 10px;">
+                            <span class="status-badge status-pending">${req.status}</span>
+                            ${hasProblems ? '<span style="margin-left: 10px; color: #e74c3c;"><i class="fas fa-exclamation-triangle"></i> Problemas</span>' : ''}
+                        </div>
+                        <div style="margin-top: 15px; color: #666;">
+                            <i class="fas fa-building"></i> ${req.client}
+                        </div>
+                    </div>
+                `;
+                
+                cardsContainer.appendChild(card);
+            });
+        }
+
+        function openScanInterface(reqId) {
+            currentRequirement = requirements.find(r => r.id === reqId);
+            if (!currentRequirement) return;
+            
+            if (currentRequirement.finalized) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Finalizado',
+                    text: 'Este requerimiento ya ha sido finalizado'
+                });
+                return;
+            }
+            
+            console.log('Abriendo requerimiento:', currentRequirement);
+            console.log('Productos:', currentRequirement.products);
+            
+            mainInterface.style.display = 'none';
+            scanInterface.style.display = 'flex';
+            scanReqTitle.textContent = currentRequirement.title;
+            renderProducts();
+            updateRequirementProgress();
+            updateFinalizeButton();
+            
+            setTimeout(() => scannerInput.focus(), 100);
+        }
+
+        function showMainInterface() {
+            mainInterface.style.display = 'flex';
+            scanInterface.style.display = 'none';
+            currentRequirement = null;
+            scannerInput.value = '';
+            loadRequirementsFromFirebase();
+        }
+
+        function renderProducts() {
+            if (!currentRequirement) return;
+            
+            productsList.innerHTML = '';
+            
+            // Verificar si hay productos
+            if (!currentRequirement.products || currentRequirement.products.length === 0) {
+                productsList.innerHTML = '<div class="empty-state">No hay productos en este requerimiento</div>';
+                return;
+            }
+            
+            console.log('Renderizando productos:', currentRequirement.products);
+            
+            const sortedProducts = [...currentRequirement.products].sort((a, b) => {
+                const aCompleted = a.scanned >= a.required;
+                const bCompleted = b.scanned >= b.required;
+                const aHasIssues = a.issues && a.issues.length > 0;
+                const bHasIssues = b.issues && b.issues.length > 0;
+                
+                if (aHasIssues && !bHasIssues) return -1;
+                if (!aHasIssues && bHasIssues) return 1;
+                if (!aCompleted && bCompleted) return -1;
+                if (aCompleted && !bCompleted) return 1;
+                return (b.required - b.scanned) - (a.required - a.scanned);
+            });
+            
+            sortedProducts.forEach(product => {
+                const isCompleted = product.scanned >= product.required;
+                const hasIssues = product.issues && product.issues.length > 0;
+                const remaining = Math.max(0, product.required - product.scanned);
+                
+                let itemClass = 'product-item';
+                if (isCompleted) itemClass += ' completed';
+                else if (product.scanned > 0) itemClass += ' in-progress';
+                else if (hasIssues) itemClass += ' problem';
+                else itemClass += ' pending';
+                
+                const scanPercent = product.required > 0 ? (product.scanned / product.required) * 100 : 0;
+                
+                const productElement = document.createElement('div');
+                productElement.className = itemClass;
+                productElement.dataset.productId = product.id;
+                
+                productElement.innerHTML = `
+                    <div class="product-header">
+                        <div class="product-name">${product.name}</div>
+                        <div class="product-sku">${product.sku}</div>
+                    </div>
+                    <div class="product-quantity">
+                        <span class="quantity-label">Requerido:</span>
+                        <span class="quantity-value">${product.required}</span>
+                    </div>
+                    <div class="product-quantity">
+                        <span class="quantity-label">Escaneado:</span>
+                        <span class="quantity-value">${product.scanned}</span>
+                    </div>
+                    <div class="product-progress">
+                        <div class="product-progress-bar">
+                            <div class="product-progress-fill" style="width: ${scanPercent}%"></div>
+                        </div>
+                        <div class="scanned-count">
+                            <span>${product.scanned} / ${product.required}</span>
+                            <span>${remaining} faltantes</span>
+                        </div>
+                    </div>
+                    ${hasIssues ? `
+                        <div class="problem-badge ${product.issues[0] === 'Quebrado' ? 'problem-broken' : 'problem-insufficient'}">
+                            <i class="fas fa-exclamation-circle"></i> ${product.issues[0]}
+                        </div>
+                    ` : ''}
+                `;
+                
+                productElement.addEventListener('click', () => openTapModal(product.id));
+                productsList.appendChild(productElement);
+            });
+        }
+
+        function updateFinalizeButton() {
+            if (!currentRequirement) return;
+            
+            const allValid = currentRequirement.products.every(p => 
+                p.scanned > 0 || (p.issues && p.issues.length > 0)
+            );
+            
+            btnFinalizeHeader.disabled = !allValid;
+            if (allValid) {
+                btnFinalizeHeader.classList.add('enabled');
+                btnFinalizeHeader.title = 'Finalizar requerimiento';
+            } else {
+                btnFinalizeHeader.classList.remove('enabled');
+                btnFinalizeHeader.title = 'Complete todos los productos';
+            }
+        }
+
+        function generatePDF(requirement) {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            
+            doc.setFontSize(18);
+            doc.setTextColor(44, 62, 80);
+            doc.text('Requerimiento de Salida', 14, 20);
+            
+            doc.setFontSize(11);
+            doc.setTextColor(100, 100, 100);
+            doc.text(`ID: ${requirement.id}`, 14, 30);
+            doc.text(`Fecha: ${requirement.date}`, 14, 36);
+            doc.text(`Tienda: ${requirement.client}`, 14, 42);
+            doc.text(`Título: ${requirement.title}`, 14, 48);
+            
+            const tableColumn = ['SKU', 'Producto', 'Req.', 'Esc.', 'Estado'];
+            const tableRows = [];
+            
+            requirement.products.forEach(p => {
+                const status = p.scanned >= p.required ? 'Completado' : 
+                              (p.issues && p.issues.length > 0 ? p.issues[0] : 'Pendiente');
+                tableRows.push([p.sku, p.name, p.required, p.scanned, status]);
+            });
+            
+            doc.autoTable({
+                head: [tableColumn],
+                body: tableRows,
+                startY: 55,
+                styles: { fontSize: 9 },
+                headStyles: { fillColor: [44, 62, 80] }
+            });
+            
+            doc.save(`requerimiento_${requirement.id}.pdf`);
+        }
+
+        function showDetailTable(requirement) {
+            let productsHtml = '';
+            requirement.products.forEach(p => {
+                const status = p.scanned >= p.required ? 'Completado' : 
+                              (p.issues && p.issues.length > 0 ? p.issues[0] : 'Pendiente');
+                let statusClass = 'badge-success';
+                if (status === 'Existencia Insuficiente' || status === 'Quebrado') statusClass = 'badge-danger';
+                else if (status === 'Pendiente') statusClass = 'badge-warning';
+                
+                productsHtml += `
+                    <tr>
+                        <td>${p.sku}</td>
+                        <td>${p.name}</td>
+                        <td style="text-align: center;">${p.required}</td>
+                        <td style="text-align: center;">${p.scanned}</td>
+                        <td><span class="${statusClass}">${status}</span></td>
+                    </tr>
+                `;
+            });
+            
+            Swal.fire({
+                title: 'Detalle del Requerimiento',
+                html: `
+                    <div style="margin-bottom: 15px;">
+                        <p><strong>${requirement.title}</strong> - ${requirement.id}</p>
+                        <p>Tienda: ${requirement.client} - Fecha: ${requirement.date}</p>
+                    </div>
+                    <table class="detail-table">
+                        <thead><tr><th>SKU</th><th>Producto</th><th>Req.</th><th>Esc.</th><th>Estado</th></tr></thead>
+                        <tbody>${productsHtml}</tbody>
+                    </table>
+                    <div style="margin-top: 15px; text-align: center;">
+                        <button class="btn-pdf" onclick="generatePDFFromSwal('${requirement.id}')">
+                            <i class="fas fa-file-pdf"></i> Descargar PDF
+                        </button>
+                    </div>
+                `,
+                icon: 'success',
+                confirmButtonText: 'Aceptar',
+                width: '700px',
+                confirmButtonColor: '#2c3e50'
+            });
+        }
+
+        window.generatePDFFromSwal = function(requirementId) {
+            const requirement = requirements.find(r => r.id === requirementId);
+            if (requirement) generatePDF(requirement);
+        };
+
+        async function finalizeRequirement() {
+            if (!currentRequirement) return;
+            
+            const allValid = currentRequirement.products.every(p => 
+                p.scanned > 0 || (p.issues && p.issues.length > 0)
+            );
+            
+            if (!allValid) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Productos sin escanear',
+                    text: 'Debe escanear al menos 1 unidad o marcar como problema'
+                });
+                return;
+            }
+            
+            // Calcular totales para mostrar en la confirmación
+            const totalProductosEscaneados = currentRequirement.products.filter(p => p.scanned > 0).length;
+            const totalUnidadesEscaneadas = currentRequirement.products.reduce((sum, p) => sum + p.scanned, 0);
+            const productosConProblemas = currentRequirement.products.filter(p => p.issues && p.issues.length > 0).length;
+            
+            Swal.fire({
+                title: '¿FINALIZAR?',
+                html: `
+                    <div style="text-align: left; font-size: 1rem;">
+                        <p style="color: #e74c3c; font-weight: bold; margin-bottom: 15px; text-align: center;">
+                            Esta accion es irreversible
+                        </p>
+                        
+                        <p style="background: #f8f9fa; padding: 10px; border-radius: 8px; margin-bottom: 15px;">
+                            <strong style="color: #2c3e50;">${currentRequirement.title}</strong>
+                        </p>
+                        
+                        <div style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 12px; margin-bottom: 15px;">
+                            <p style="margin-bottom: 8px; font-weight: bold;">Detalle:</p>
+                            <ul style="margin-left: 20px;">
+                                <li><strong>${totalProductosEscaneados}</strong> productos con escaneo exitoso</li>
+                                <li><strong>${totalUnidadesEscaneadas}</strong> unidades totales a descontar</li>
+                                ${productosConProblemas > 0 ? 
+                                    `<li style="color: #856404;"><strong>${productosConProblemas}</strong> productos marcados con problema (NO se descuentan)</li>` 
+                                    : ''}
+                            </ul>
+                        </div>
+                        
+                        <p style="color: #856404; font-size: 0.9rem; margin-top: 10px; text-align: center;">
+                            <i class="fas fa-info-circle"></i> 
+                            Los productos con problemas (Existencia Insuficiente/Quebrado) NO afectarán el inventario
+                        </p>
+                    </div>
+                `,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#e74c3c',
+                cancelButtonColor: '#2c3e50',
+                confirmButtonText: 'SÍ, FINALIZAR Y DESCONTAR',
+                cancelButtonText: 'Cancelar',
+                width: '600px'
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    Swal.fire({
+                        title: 'Procesando...',
+                        text: 'Actualizando inventario en Firebase',
+                        allowOutsideClick: false,
+                        didOpen: () => {
+                            Swal.showLoading();
+                        }
+                    });
+                    
+                    // Solo descontar productos escaneados (los que tienen cantidad > 0)
+                    const productosADescontar = currentRequirement.products.filter(p => p.scanned > 0);
+                    
+                    for (const product of productosADescontar) {
+                        await updateProductStock(product.sku, product.scanned);
+                    }
+                    
+                    const finalizedRequirement = {...currentRequirement};
+                    currentRequirement.finalized = true;
+                    await updateRequirementInFirebase(currentRequirement);
+                    
+                    Swal.close();
+                    showDetailTable(finalizedRequirement);
+                    setTimeout(() => showMainInterface(), 500);
+                }
+            });
+        }
+
+        function processScan() {
+            const code = scannerInput.value.trim();
+            if (!code) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Código vacío',
+                    text: 'Ingrese o escanee un código',
+                    timer: 1500,
+                    showConfirmButton: false
+                });
+                return;
+            }
+            
+            if (!currentRequirement || currentRequirement.finalized) return;
+            
+            const firebaseProduct = findProductByCode(code);
+            
+            if (firebaseProduct) {
+                const requirementProduct = currentRequirement.products.find(p => p.sku === firebaseProduct.sku);
+                if (requirementProduct) {
+                    // Limpiar input y timeout
+                    scannerInput.value = '';
+                    if (autoSubmitTimeout) {
+                        clearTimeout(autoSubmitTimeout);
+                    }
+                    
+                    // ABRIR MODAL
+                    openScanModal(requirementProduct.id);
+                } else {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Producto no solicitado',
+                        text: `"${firebaseProduct.name}" no está en este requerimiento`,
+                        timer: 2000,
+                        showConfirmButton: false
+                    });
+                    scannerInput.value = '';
+                    scannerInput.focus();
+                }
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Producto no encontrado',
+                    text: `No existe producto con código: ${code}`,
+                    timer: 1500,
+                    showConfirmButton: false
+                });
+                scannerInput.value = '';
+                scannerInput.focus();
+            }
+        }
+
+        function openTapModal(productId) {
+            if (!currentRequirement) return;
+            currentProduct = currentRequirement.products.find(p => p.id === productId);
+            if (!currentProduct) return;
+            
+            selectedProblem = null;
+            tapBtnInsufficient.classList.remove('active');
+            tapBtnBroken.classList.remove('active');
+            
+            tapProductName.textContent = currentProduct.name;
+            tapProductSku.textContent = `SKU: ${currentProduct.sku}`;
+            tapRequired.textContent = currentProduct.required;
+            tapScanned.textContent = currentProduct.scanned;
+            tapRemaining.textContent = Math.max(0, currentProduct.required - currentProduct.scanned);
+            tapStock.textContent = currentProduct.stock || 0;
+            tapAvailable.textContent = Math.max(0, (currentProduct.stock || 0) - currentProduct.scanned);
+            
+            if (currentProduct.issues && currentProduct.issues.length > 0) {
+                if (currentProduct.issues.includes('Existencia Insuficiente')) {
+                    selectedProblem = 'insufficient';
+                    tapBtnInsufficient.classList.add('active');
+                } else if (currentProduct.issues.includes('Quebrado')) {
+                    selectedProblem = 'broken';
+                    tapBtnBroken.classList.add('active');
+                }
+            }
+            
+            tapModal.style.display = 'flex';
+        }
+
+        function closeTapModal() {
+            tapModal.style.display = 'none';
+            currentProduct = null;
+            selectedProblem = null;
+            setTimeout(() => scannerInput.focus(), 100);
+        }
+
+        function openScanModal(productId) {
+            if (!currentRequirement) return;
+            currentProduct = currentRequirement.products.find(p => p.id === productId);
+            if (!currentProduct) return;
+            
+            scanModalProductName.textContent = currentProduct.name;
+            scanModalProductSku.textContent = `SKU: ${currentProduct.sku}`;
+            
+            const remaining = Math.max(0, currentProduct.required - currentProduct.scanned);
+            const available = Math.max(0, (currentProduct.stock || 0) - currentProduct.scanned);
+            const maxPossible = Math.min(remaining, available);
+            
+            scanModalRemaining.textContent = remaining;
+            scanModalQuantityInput.max = maxPossible;
+            scanModalMax.textContent = maxPossible;
+            scanModalQuantityInput.value = 0;
+            
+            scanModal.style.display = 'flex';
+            setTimeout(() => {
+                scanModalQuantityInput.focus();
+                scanModalQuantityInput.select();
+            }, 100);
+        }
+
+        function closeScanModal() {
+            scanModal.style.display = 'none';
+            currentProduct = null;
+            setTimeout(() => scannerInput.focus(), 100);
+        }
+
+        function toggleProblem(problemType) {
+            if (selectedProblem === problemType) {
+                selectedProblem = null;
+                document.querySelectorAll('.problem-btn').forEach(b => b.classList.remove('active'));
+            } else {
+                selectedProblem = problemType;
+                document.querySelectorAll('.problem-btn').forEach(b => b.classList.remove('active'));
+                if (problemType === 'insufficient') tapBtnInsufficient.classList.add('active');
+                else tapBtnBroken.classList.add('active');
+            }
+        }
+
+        function saveProblem() {
+            if (!currentProduct) return;
+            
+            if (selectedProblem) {
+                currentProduct.issues = [selectedProblem === 'insufficient' ? 'Existencia Insuficiente' : 'Quebrado'];
+                currentProduct.scanned = 0;
+                
+                // NOTIFICACIÓN DESPUÉS DE GUARDAR PROBLEMA
+                Swal.fire({
+                    title: "Problema Marcado",
+                    text: `${currentProduct.name} - ${currentProduct.issues[0]}`,
+                    icon: "success",
+                    timer: 1500,
+                    showConfirmButton: false
+                });
+            } else {
+                currentProduct.issues = [];
+            }
+            
+            renderProducts();
+            updateRequirementProgress();
+            updateFinalizeButton();
+            updateRequirementInFirebase(currentRequirement);
+            closeTapModal();
+        }
+
+        function saveScanQuantity() {
+            if (!currentProduct) return;
+            
+            const quantity = parseInt(scanModalQuantityInput.value) || 0;
+            const maxAllowed = parseInt(scanModalQuantityInput.max) || 0;
+            
+            if (quantity < 0 || quantity > maxAllowed) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Cantidad inválida',
+                    text: `Máximo permitido: ${maxAllowed}`
+                });
+                return;
+            }
+            
+            currentProduct.scanned = quantity;
+            if (quantity > 0) currentProduct.issues = [];
+            
+            // NOTIFICACIÓN DESPUÉS DE GUARDAR CANTIDAD
+            Swal.fire({
+                title: "Cantidad Agregada",
+                text: `${currentProduct.name} - ${quantity} unidades`,
+                icon: "success",
+                timer: 1500,
+                showConfirmButton: false
+            });
+            
+            renderProducts();
+            updateRequirementProgress();
+            updateFinalizeButton();
+            updateRequirementInFirebase(currentRequirement);
+            closeScanModal();
+            
+            if (quantity >= currentProduct.required) autoFocusNextProduct();
+        }
+
+        function autoFocusNextProduct() {
+            if (!currentRequirement) return;
+            
+            const pendingProducts = currentRequirement.products.filter(p => 
+                p.scanned < p.required && (!p.issues || p.issues.length === 0)
+            );
+            
+            if (pendingProducts.length > 0) {
+                const nextProduct = pendingProducts[0];
+                scannerInput.value = nextProduct.sku;
+                scannerInput.focus();
+                scannerInput.select();
+            }
+        }
+
+        function updateRequirementProgress() {
+            if (!currentRequirement) return;
+            
+            const totalRequired = currentRequirement.products.reduce((sum, p) => sum + p.required, 0);
+            const totalScanned = currentRequirement.products.reduce((sum, p) => sum + p.scanned, 0);
+            const progressPercent = totalRequired > 0 ? Math.round((totalScanned / totalRequired) * 100) : 0;
+            
+            requirementProgress.textContent = `${progressPercent}%`;
+            requirementProgressFill.style.width = `${progressPercent}%`;
+            scannedCount.textContent = totalScanned;
+            totalCount.textContent = totalRequired;
+        }
+    </script>
+</body>
+</html>
