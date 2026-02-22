@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Redireccionando...</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <script>
+        function isMobile() {
+            return /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(navigator.userAgent)
+                   || window.innerWidth <= 768;
+        }
+
+        window.onload = function() {
+            if (isMobile()) {
+                window.location.replace("m_dashboard.html");
+            } else {
+                window.location.replace("login.html");
+            }
+        };
+    </script>
+
+</head>
+<body>
+</body>
+</html>
