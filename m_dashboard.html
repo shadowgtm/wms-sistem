@@ -660,6 +660,8 @@
         }
 
         function handleTouchStart(e) {
+            if (!e.touches || e.touches.length === 0) return;
+            
             const touch = e.touches[0];
             touchStartX = touch.clientX;
             touchStartY = touch.clientY;
@@ -670,7 +672,7 @@
         }
 
         function handleTouchMove(e) {
-            if (!isDragging) return;
+            if (!isDragging || !e.touches || e.touches.length === 0) return;
             
             const touch = e.touches[0];
             const currentX = touch.clientX;
@@ -686,7 +688,18 @@
         function handleTouchEnd(e) {
             if (!isDragging) return;
             
-            const touch = e.changedTouches[0];
+            // Verificar si existe changedTouches y tiene elementos
+            let touch;
+            if (e.changedTouches && e.changedTouches.length > 0) {
+                touch = e.changedTouches[0];
+            } else {
+                // Fallback si no hay changedTouches
+                isDragging = false;
+                document.getElementById('gestureHint').classList.remove('active');
+                document.getElementById('gestureHint').style.transform = 'translateX(0)';
+                return;
+            }
+            
             const diffX = touch.clientX - touchStartX;
             const diffY = Math.abs(touch.clientY - touchStartY);
             const swipeTime = Date.now() - dragStartTime;
@@ -715,7 +728,7 @@
 
         // Gestos en contenido principal
         function handleContentTouchStart(e) {
-            if (!mobileMenuOpen) return;
+            if (!mobileMenuOpen || !e.touches || e.touches.length === 0) return;
             
             const touch = e.touches[0];
             touchStartX = touch.clientX;
@@ -732,7 +745,15 @@
         function handleContentTouchEnd(e) {
             if (!isDragging || !mobileMenuOpen) return;
             
-            const touch = e.changedTouches[0];
+            // Verificar si existe changedTouches
+            let touch;
+            if (e.changedTouches && e.changedTouches.length > 0) {
+                touch = e.changedTouches[0];
+            } else {
+                isDragging = false;
+                return;
+            }
+            
             const diffX = touch.clientX - touchStartX;
             const swipeTime = Date.now() - dragStartTime;
             
