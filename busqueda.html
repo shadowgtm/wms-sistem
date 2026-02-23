@@ -1,0 +1,1899 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Buscador de Productos</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🔍</text></svg>" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🔍</text></svg>">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --secondary: #3498db;
+            --success: #27ae60;
+            --warning: #f39c12;
+            --danger: #e74c3c;
+            --light: #f8f9fa;
+            --dark: #343a40;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+            -webkit-tap-highlight-color: transparent;
+            -webkit-touch-callout: none;
+            height: 100vh;
+            overflow: hidden;
+        }
+        
+        .app-container {
+            max-width: 100%;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .app-header {
+            background: linear-gradient(135deg, var(--primary), #1a252f);
+            color: white;
+            padding: 12px 15px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .header-title {
+            font-size: 1.4rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .header-actions {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .header-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            border-radius: 50%;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        .header-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        .search-section {
+            padding: 15px;
+            background: white;
+            margin: 10px;
+            border-radius: 12px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+            flex-shrink: 0;
+        }
+        
+        .search-title {
+            text-align: center;
+            margin-bottom: 15px;
+            color: var(--primary);
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .search-input-container {
+            position: relative;
+            margin-bottom: 15px;
+        }
+        
+        .search-input {
+            width: 100%;
+            padding: 14px 15px 14px 45px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1rem;
+            background: var(--light);
+            transition: border-color 0.3s;
+        }
+        
+        .search-input:focus {
+            outline: none;
+            border-color: var(--secondary);
+        }
+        
+        .search-icon {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--secondary);
+            font-size: 1.1rem;
+        }
+        
+        .search-button {
+            width: 100%;
+            padding: 14px;
+            background: var(--secondary);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: background 0.3s;
+        }
+        
+        .search-button:hover {
+            background: #2980b9;
+        }
+        
+        .content-area {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0 10px 10px 10px;
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        .results-container {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .product-card {
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            border-left: 4px solid var(--secondary);
+        }
+        
+        .product-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+        
+        .product-name {
+            font-weight: 600;
+            color: var(--primary);
+            font-size: 1rem;
+            margin-bottom: 8px;
+            word-break: break-word;
+        }
+        
+        .product-details {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .product-sku {
+            color: #666;
+            font-size: 0.85rem;
+            background: #f0f0f0;
+            padding: 3px 8px;
+            border-radius: 4px;
+        }
+        
+        .product-stock {
+            color: var(--success);
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #999;
+        }
+        
+        .empty-icon {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            color: #ddd;
+        }
+        
+        .empty-text {
+            font-size: 1rem;
+            margin-bottom: 10px;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 30px;
+            color: #666;
+        }
+        
+        .spinner {
+            display: inline-block;
+            width: 24px;
+            height: 24px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid var(--secondary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Modal de producto */
+        .product-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+            padding: 15px;
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            width: 100%;
+            max-width: 400px;
+            animation: modalFadeIn 0.3s;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        
+        @keyframes modalFadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .modal-header {
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--light);
+            border-radius: 12px 12px 0 0;
+        }
+        
+        .modal-title {
+            font-size: 1.2rem;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: #999;
+            cursor: pointer;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+        }
+        
+        .modal-close:hover {
+            background: #f0f0f0;
+        }
+        
+        .modal-body {
+            padding: 20px;
+        }
+        
+        .modal-product-info {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .modal-product-name {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: var(--dark);
+            margin-bottom: 10px;
+            word-break: break-word;
+        }
+        
+        .modal-product-sku {
+            color: #666;
+            font-size: 1rem;
+            margin-bottom: 15px;
+            background: #f8f9fa;
+            padding: 8px 12px;
+            border-radius: 6px;
+            display: inline-block;
+        }
+        
+        .stock-info {
+            background: var(--light);
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+        }
+        
+        .stock-title {
+            font-size: 1rem;
+            color: var(--primary);
+            margin-bottom: 10px;
+            text-align: center;
+        }
+        
+        .stock-amount {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--success);
+            text-align: center;
+        }
+        
+        .stock-label {
+            font-size: 0.9rem;
+            color: #666;
+            text-align: center;
+            margin-top: 5px;
+        }
+        
+        /* Modal de autenticación */
+        .auth-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+            padding: 15px;
+        }
+        
+        .auth-content {
+            background: white;
+            border-radius: 12px;
+            width: 100%;
+            max-width: 350px;
+            animation: modalFadeIn 0.3s;
+        }
+        
+        .auth-header {
+            padding: 20px;
+            border-bottom: 1px solid #eee;
+            background: var(--light);
+            border-radius: 12px 12px 0 0;
+            text-align: center;
+        }
+        
+        .auth-title {
+            font-size: 1.3rem;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .auth-body {
+            padding: 20px;
+        }
+        
+        .auth-input-container {
+            margin-bottom: 20px;
+            position: relative;
+        }
+        
+        .auth-input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1.2rem;
+            font-weight: 600;
+            text-align: center;
+            letter-spacing: 3px;
+            transition: border-color 0.3s;
+        }
+        
+        .auth-input:focus {
+            outline: none;
+            border-color: var(--secondary);
+        }
+        
+        .auth-error {
+            color: var(--danger);
+            font-size: 0.9rem;
+            margin-top: 5px;
+            display: none;
+        }
+        
+        .auth-buttons {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .auth-btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .auth-btn-primary {
+            background: var(--secondary);
+            color: white;
+        }
+        
+        .auth-btn-primary:hover {
+            background: #2980b9;
+        }
+        
+        .auth-btn-secondary {
+            background: #f0f0f0;
+            color: #333;
+        }
+        
+        .auth-btn-secondary:hover {
+            background: #e0e0e0;
+        }
+        
+        /* Modal agregar código de barras */
+        .barcode-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+            padding: 15px;
+        }
+        
+        .barcode-content {
+            background: white;
+            border-radius: 12px;
+            width: 100%;
+            max-width: 500px;
+            animation: modalFadeIn 0.3s;
+            max-height: 90vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .barcode-header {
+            padding: 20px;
+            border-bottom: 1px solid #eee;
+            background: var(--light);
+            border-radius: 12px 12px 0 0;
+            flex-shrink: 0;
+        }
+        
+        .barcode-title {
+            font-size: 1.3rem;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .barcode-body {
+            padding: 20px;
+            flex: 1;
+            overflow-y: auto;
+        }
+        
+        /* Búsqueda en modal de barras */
+        .barcode-search-container {
+            margin-bottom: 20px;
+            position: relative;
+        }
+        
+        .barcode-search-input {
+            width: 100%;
+            padding: 12px 15px 12px 45px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+        
+        .barcode-search-input:focus {
+            outline: none;
+            border-color: var(--secondary);
+        }
+        
+        .barcode-search-icon {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--secondary);
+            font-size: 1.1rem;
+        }
+        
+        /* Resultados de búsqueda en modal */
+        .barcode-results {
+            max-height: 200px;
+            overflow-y: auto;
+            margin-bottom: 20px;
+            border: 1px solid #eee;
+            border-radius: 8px;
+            display: none;
+        }
+        
+        .barcode-result-item {
+            padding: 12px 15px;
+            border-bottom: 1px solid #f0f0f0;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        .barcode-result-item:hover {
+            background: #f8f9fa;
+        }
+        
+        .barcode-result-item:last-child {
+            border-bottom: none;
+        }
+        
+        .barcode-result-name {
+            font-weight: 600;
+            color: var(--primary);
+            margin-bottom: 3px;
+            font-size: 0.95rem;
+        }
+        
+        .barcode-result-sku {
+            color: #666;
+            font-size: 0.85rem;
+        }
+        
+        /* Información del producto seleccionado */
+        .barcode-product-info {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+        }
+        
+        .barcode-product-selected {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 15px;
+        }
+        
+        .barcode-product-name {
+            font-weight: 600;
+            color: var(--primary);
+            margin-bottom: 5px;
+            font-size: 1.1rem;
+        }
+        
+        .barcode-product-sku {
+            color: #666;
+            font-size: 0.9rem;
+            background: #e9ecef;
+            padding: 3px 8px;
+            border-radius: 4px;
+            display: inline-block;
+        }
+        
+        .barcode-clear {
+            background: none;
+            border: none;
+            color: var(--danger);
+            cursor: pointer;
+            font-size: 0.9rem;
+            padding: 5px 10px;
+            border-radius: 4px;
+            transition: background 0.2s;
+        }
+        
+        .barcode-clear:hover {
+            background: rgba(231, 76, 60, 0.1);
+        }
+        
+        /* Lista de códigos de barras */
+        .barcodes-list {
+            margin-bottom: 20px;
+        }
+        
+        .barcodes-title {
+            font-size: 1rem;
+            color: var(--primary);
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .barcodes-container {
+            max-height: 150px;
+            overflow-y: auto;
+            border: 1px solid #eee;
+            border-radius: 8px;
+            padding: 10px;
+            background: #f8f9fa;
+        }
+        
+        .barcode-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 10px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .barcode-item:last-child {
+            border-bottom: none;
+        }
+        
+        .barcode-value {
+            font-family: monospace;
+            font-size: 1.1rem;
+            letter-spacing: 1px;
+            color: var(--dark);
+        }
+        
+        .barcode-remove {
+            background: none;
+            border: none;
+            color: var(--danger);
+            cursor: pointer;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 6px;
+            transition: background 0.2s;
+            position: relative;
+        }
+        
+        .barcode-remove:hover {
+            background: rgba(231, 76, 60, 0.15);
+        }
+        
+        .barcode-remove i {
+            font-size: 1rem;
+        }
+        
+        .barcode-remove .spinner-small {
+            display: none;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid var(--danger);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        .barcode-remove.processing i {
+            display: none;
+        }
+        
+        .barcode-remove.processing .spinner-small {
+            display: block;
+        }
+        
+        .no-barcodes {
+            text-align: center;
+            color: #999;
+            padding: 20px;
+            font-style: italic;
+        }
+        
+        /* Formulario para agregar nuevo código */
+        .barcode-add-form {
+            margin-top: 20px;
+        }
+        
+        .barcode-input-container {
+            margin-bottom: 15px;
+        }
+        
+        .barcode-input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-family: monospace;
+            text-align: center;
+            letter-spacing: 1px;
+            transition: border-color 0.3s;
+        }
+        
+        .barcode-input:focus {
+            outline: none;
+            border-color: var(--secondary);
+        }
+        
+        .barcode-buttons {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .barcode-btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+        }
+        
+        .barcode-btn-primary {
+            background: var(--success);
+            color: white;
+        }
+        
+        .barcode-btn-primary:hover {
+            background: #219653;
+        }
+        
+        .barcode-btn-secondary {
+            background: #f0f0f0;
+            color: #333;
+        }
+        
+        .barcode-btn-secondary:hover {
+            background: #e0e0e0;
+        }
+        
+        .barcode-btn.processing {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+        
+        .barcode-btn .spinner-small {
+            display: none;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+        }
+        
+        .barcode-btn-primary .spinner-small {
+            border-top-color: white;
+        }
+        
+        .barcode-btn-secondary .spinner-small {
+            border-top-color: #333;
+        }
+        
+        .barcode-btn.processing span {
+            visibility: hidden;
+        }
+        
+        .barcode-btn.processing .spinner-small {
+            display: block;
+        }
+        
+        .message {
+            padding: 10px 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            display: none;
+        }
+        
+        .message-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .message-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .message-info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        
+        /* Spinner de carga en modal */
+        .barcode-loading {
+            text-align: center;
+            padding: 40px 20px;
+            color: #666;
+            display: none;
+        }
+        
+        .barcode-loading .spinner {
+            margin-bottom: 15px;
+        }
+        
+        /* Scrollbar */
+        .content-area::-webkit-scrollbar,
+        .barcode-results::-webkit-scrollbar,
+        .barcodes-container::-webkit-scrollbar {
+            width: 4px;
+        }
+        
+        .content-area::-webkit-scrollbar-track,
+        .barcode-results::-webkit-scrollbar-track,
+        .barcodes-container::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 2px;
+        }
+        
+        .content-area::-webkit-scrollbar-thumb,
+        .barcode-results::-webkit-scrollbar-thumb,
+        .barcodes-container::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 2px;
+        }
+        
+        .content-area::-webkit-scrollbar-thumb:hover,
+        .barcode-results::-webkit-scrollbar-thumb:hover,
+        .barcodes-container::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+        
+        /* Responsive */
+        @media (max-width: 400px) {
+            .search-section {
+                padding: 12px;
+                margin: 8px;
+            }
+            
+            .header-title {
+                font-size: 1.2rem;
+            }
+            
+            .modal-content,
+            .auth-content,
+            .barcode-content {
+                max-width: 95%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <header class="app-header">
+            <div class="header-content">
+                <div class="header-title">
+                    <i class="fas fa-search"></i> Buscador de Productos
+                </div>
+                <div class="header-actions">
+                    <button class="header-btn" id="btnAddBarcode" title="Agregar código de barras">
+                        <i class="fas fa-barcode"></i>
+                    </button>
+                    <button class="header-btn" id="btnBack" title="Volver">
+                        <i class="fas fa-arrow-left"></i>
+                    </button>
+                </div>
+            </div>
+        </header>
+        
+        <section class="search-section">
+            <h2 class="search-title">
+                <i class="fas fa-search"></i> Buscar producto
+            </h2>
+            
+            <div class="search-input-container">
+                <i class="fas fa-search search-icon"></i>
+                <input type="text" 
+                       class="search-input" 
+                       id="searchInput"
+                       placeholder="Nombre o SKU del producto..."
+                       autocomplete="off"
+                       autocorrect="off"
+                       spellcheck="false"
+                       autofocus>
+            </div>
+            
+            <button class="search-button" id="btnSearch">
+                <i class="fas fa-search"></i> Buscar
+            </button>
+        </section>
+        
+        <div class="content-area" id="contentArea">
+            <!-- Los resultados se mostrarán aquí -->
+            <div class="empty-state" id="emptyState">
+                <div class="empty-icon">
+                    <i class="fas fa-search"></i>
+                </div>
+                <div class="empty-text">
+                    Ingresa un término de búsqueda
+                </div>
+                <div style="font-size: 0.9rem; color: #888;">
+                    Busca por nombre o SKU del producto
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal de producto -->
+    <div class="product-modal" id="productModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">
+                    <i class="fas fa-box"></i> Producto
+                </h3>
+                <button class="modal-close" id="closeModal">&times;</button>
+            </div>
+            
+            <div class="modal-body">
+                <div class="modal-product-info">
+                    <div class="modal-product-name" id="modalProductName">Nombre del producto</div>
+                    <div class="modal-product-sku" id="modalProductSku">SKU: 000000</div>
+                </div>
+                
+                <div class="stock-info">
+                    <div class="stock-title">Existencia en Bodega</div>
+                    <div class="stock-amount" id="modalStockAmount">0</div>
+                    <div class="stock-label">unidades disponibles</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de autenticación -->
+    <div class="auth-modal" id="authModal">
+        <div class="auth-content">
+            <div class="auth-header">
+                <h3 class="auth-title">
+                    <i class="fas fa-lock"></i> Ingresar PIN
+                </h3>
+            </div>
+            
+            <div class="auth-body">
+                <div class="auth-error" id="authError">PIN incorrecto. Intenta nuevamente.</div>
+                
+                <div class="auth-input-container">
+                    <input type="password" 
+                           class="auth-input" 
+                           id="authPin"
+                           placeholder="Ingresa el PIN de 4 dígitos"
+                           autocomplete="off"
+                           maxlength="4"
+                           inputmode="numeric">
+                </div>
+                
+                <div class="auth-buttons">
+                    <button class="auth-btn auth-btn-secondary" id="cancelAuth">Cancelar</button>
+                    <button class="auth-btn auth-btn-primary" id="submitAuth">Ingresar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal agregar código de barras -->
+    <div class="barcode-modal" id="barcodeModal">
+        <div class="barcode-content">
+            <div class="barcode-header">
+                <h3 class="barcode-title">
+                    <i class="fas fa-barcode"></i> Cod. Barras
+                </h3>
+            </div>
+            
+            <div class="barcode-body">
+                <!-- Spinner de carga general -->
+                <div class="barcode-loading" id="barcodeLoading">
+                    <div class="spinner"></div>
+                    <div>Cargando códigos de barras...</div>
+                </div>
+                
+                <div class="message" id="barcodeMessage"></div>
+                
+                <!-- Búsqueda de productos -->
+                <div class="barcode-search-container">
+                    <i class="fas fa-search barcode-search-icon"></i>
+                    <input type="text" 
+                           class="barcode-search-input" 
+                           id="barcodeSearchInput"
+                           placeholder="Buscar producto por nombre o SKU..."
+                           autocomplete="off"
+                           autocorrect="off"
+                           spellcheck="false">
+                </div>
+                
+                <!-- Resultados de búsqueda -->
+                <div class="barcode-results" id="barcodeResults"></div>
+                
+                <!-- Información del producto seleccionado -->
+                <div class="barcode-product-info" id="barcodeProductInfo" style="display: none;">
+                    <div class="barcode-product-selected">
+                        <div>
+                            <div class="barcode-product-name" id="barcodeProductName">Producto no seleccionado</div>
+                            <div class="barcode-product-sku" id="barcodeProductSku">SKU: ---</div>
+                        </div>
+                        <button class="barcode-clear" id="clearProductSelection">Cambiar producto</button>
+                    </div>
+                    
+                    <!-- Lista de códigos de barras existentes -->
+                    <div class="barcodes-list">
+                        <h4 class="barcodes-title">
+                            <i class="fas fa-list"></i> Códigos de Barras Asignados
+                        </h4>
+                        <div class="barcodes-container" id="barcodesContainer">
+                            <div class="no-barcodes" id="noBarcodesMessage">No hay códigos de barras asignados</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Formulario para agregar nuevo código -->
+                    <div class="barcode-add-form">
+                        <div class="barcode-input-container">
+                            <input type="text" 
+                                   class="barcode-input" 
+                                   id="barcodeInput"
+                                   placeholder="Escanear o ingresar nuevo código de barras"
+                                   autocomplete="off"
+                                   autocorrect="off"
+                                   spellcheck="false">
+                        </div>
+                        
+                        <div class="barcode-buttons">
+                            <button class="barcode-btn barcode-btn-secondary" id="cancelBarcode">
+                                <span>Cancelar</span>
+                                <div class="spinner-small"></div>
+                            </button>
+                            <button class="barcode-btn barcode-btn-primary" id="saveBarcode">
+                                <span>Agregar Código</span>
+                                <div class="spinner-small"></div>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Configuración de Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyC5PwQQrY02yhICT4hl6nzZTEvA-CLgC2g",
+            authDomain: "thogar-de74d.firebaseapp.com",
+            projectId: "thogar-de74d",
+            storageBucket: "thogar-de74d.firebasestorage.app",
+            messagingSenderId: "605168322064",
+            appId: "1:605168322064:web:e0d9a16c5e5bc230d9ac95"
+        };
+
+        // PIN de administrador
+        const ADMIN_PIN = "1234";
+
+        // Inicializar Firebase
+        let app, db;
+        try {
+            app = firebase.initializeApp(firebaseConfig);
+            db = firebase.firestore();
+            console.log("Firebase inicializado para buscador");
+        } catch (error) {
+            console.error("Error inicializando Firebase:", error);
+        }
+
+        // Variables globales
+        let productos = [];
+        let currentProduct = null;
+        let authenticated = false;
+        let selectedProductForBarcode = null;
+        let currentBarcodes = [];
+
+        // Elementos del DOM
+        const searchInput = document.getElementById('searchInput');
+        const btnSearch = document.getElementById('btnSearch');
+        const btnBack = document.getElementById('btnBack');
+        const btnAddBarcode = document.getElementById('btnAddBarcode');
+        const contentArea = document.getElementById('contentArea');
+        const emptyState = document.getElementById('emptyState');
+        
+        // Modales
+        const productModal = document.getElementById('productModal');
+        const authModal = document.getElementById('authModal');
+        const barcodeModal = document.getElementById('barcodeModal');
+        
+        // Botones de cierre
+        const closeModal = document.getElementById('closeModal');
+        const cancelAuth = document.getElementById('cancelAuth');
+        const cancelBarcode = document.getElementById('cancelBarcode');
+        
+        // Autenticación
+        const authPin = document.getElementById('authPin');
+        const submitAuth = document.getElementById('submitAuth');
+        const authError = document.getElementById('authError');
+        
+        // Modal de barras - Búsqueda
+        const barcodeSearchInput = document.getElementById('barcodeSearchInput');
+        const barcodeResults = document.getElementById('barcodeResults');
+        const barcodeProductInfo = document.getElementById('barcodeProductInfo');
+        const barcodeProductName = document.getElementById('barcodeProductName');
+        const barcodeProductSku = document.getElementById('barcodeProductSku');
+        const clearProductSelection = document.getElementById('clearProductSelection');
+        const barcodeLoading = document.getElementById('barcodeLoading');
+        
+        // Modal de barras - Gestión
+        const barcodeInput = document.getElementById('barcodeInput');
+        const saveBarcode = document.getElementById('saveBarcode');
+        const barcodeMessage = document.getElementById('barcodeMessage');
+        const barcodesContainer = document.getElementById('barcodesContainer');
+        const noBarcodesMessage = document.getElementById('noBarcodesMessage');
+        
+        // Modal producto
+        const modalProductName = document.getElementById('modalProductName');
+        const modalProductSku = document.getElementById('modalProductSku');
+        const modalStockAmount = document.getElementById('modalStockAmount');
+
+        // Inicializar la aplicación
+        document.addEventListener('DOMContentLoaded', async function() {
+            configurarEventos();
+            await cargarProductos();
+            searchInput.focus();
+        });
+
+        // Configurar eventos
+        function configurarEventos() {
+            // Botón volver
+            btnBack.addEventListener('click', function() {
+                window.location.href = 'send.html';
+            });
+
+            // Botón agregar código de barras
+            btnAddBarcode.addEventListener('click', function() {
+                showBarcodeModal();
+            });
+
+            // Buscar producto en la página principal
+            btnSearch.addEventListener('click', buscarProductos);
+            searchInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    buscarProductos();
+                }
+            });
+
+            // Cerrar modales
+            closeModal.addEventListener('click', function() {
+                productModal.style.display = 'none';
+            });
+            
+            cancelAuth.addEventListener('click', function() {
+                authModal.style.display = 'none';
+                authPin.value = '';
+                authError.style.display = 'none';
+            });
+            
+            cancelBarcode.addEventListener('click', function() {
+                resetBarcodeModal();
+                barcodeModal.style.display = 'none';
+            });
+
+            // Autenticación
+            submitAuth.addEventListener('click', function() {
+                verificarPin();
+            });
+            
+            authPin.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    verificarPin();
+                }
+            });
+            
+            // Solo permitir números en el campo PIN
+            authPin.addEventListener('input', function() {
+                this.value = this.value.replace(/\D/g, '');
+            });
+
+            // Búsqueda en modal de barras
+            barcodeSearchInput.addEventListener('input', function() {
+                buscarProductosEnModal(this.value.trim());
+            });
+            
+            barcodeSearchInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    buscarProductosEnModal(this.value.trim());
+                }
+            });
+
+            // Limpiar selección de producto
+            clearProductSelection.addEventListener('click', function() {
+                selectedProductForBarcode = null;
+                currentBarcodes = [];
+                barcodeProductInfo.style.display = 'none';
+                barcodeSearchInput.value = '';
+                barcodeResults.style.display = 'none';
+                barcodeSearchInput.focus();
+            });
+
+            // Guardar código de barras
+            saveBarcode.addEventListener('click', async function() {
+                await agregarCodigoBarras();
+            });
+            
+            barcodeInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    agregarCodigoBarras();
+                }
+            });
+
+            // Cerrar modales al hacer clic fuera
+            window.addEventListener('click', function(e) {
+                if (e.target === productModal) {
+                    productModal.style.display = 'none';
+                }
+                if (e.target === authModal) {
+                    authModal.style.display = 'none';
+                    authPin.value = '';
+                    authError.style.display = 'none';
+                }
+                if (e.target === barcodeModal) {
+                    resetBarcodeModal();
+                    barcodeModal.style.display = 'none';
+                }
+            });
+
+            // Cerrar modales con Escape
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    if (productModal.style.display === 'flex') {
+                        productModal.style.display = 'none';
+                    }
+                    if (authModal.style.display === 'flex') {
+                        authModal.style.display = 'none';
+                        authPin.value = '';
+                        authError.style.display = 'none';
+                    }
+                    if (barcodeModal.style.display === 'flex') {
+                        resetBarcodeModal();
+                        barcodeModal.style.display = 'none';
+                    }
+                }
+            });
+        }
+
+        // Verificar PIN
+        function verificarPin() {
+            const pin = authPin.value.trim();
+            if (pin === ADMIN_PIN) {
+                authenticated = true;
+                authModal.style.display = 'none';
+                authPin.value = '';
+                authError.style.display = 'none';
+                // Mostrar modal para gestionar barras
+                showBarcodeModal();
+            } else {
+                authError.style.display = 'block';
+                authPin.value = '';
+                setTimeout(() => {
+                    authError.style.display = 'none';
+                }, 3000);
+            }
+        }
+
+        // Mostrar modal de autenticación
+        function showAuthModal() {
+            authModal.style.display = 'flex';
+            authPin.focus();
+        }
+
+        // Mostrar modal para gestionar códigos de barras
+        function showBarcodeModal() {
+            if (!authenticated) {
+                showAuthModal();
+                return;
+            }
+            
+            resetBarcodeModal();
+            barcodeModal.style.display = 'flex';
+            barcodeSearchInput.focus();
+        }
+
+        // Resetear modal de barras
+        function resetBarcodeModal() {
+            selectedProductForBarcode = null;
+            currentBarcodes = [];
+            barcodeProductInfo.style.display = 'none';
+            barcodeSearchInput.value = '';
+            barcodeInput.value = '';
+            barcodeResults.style.display = 'none';
+            barcodeResults.innerHTML = '';
+            barcodeMessage.style.display = 'none';
+            barcodeLoading.style.display = 'none';
+            mostrarBarcodes([]);
+            
+            // Restablecer botones
+            saveBarcode.classList.remove('processing');
+            cancelBarcode.classList.remove('processing');
+        }
+
+        // Buscar productos en el modal de barras
+        function buscarProductosEnModal(termino) {
+            if (!termino) {
+                barcodeResults.style.display = 'none';
+                barcodeResults.innerHTML = '';
+                return;
+            }
+
+            const terminoLower = termino.toLowerCase();
+            const resultados = productos.filter(producto => {
+                const nombre = producto.name.toLowerCase();
+                const sku = producto.sku.toLowerCase();
+                
+                return nombre.includes(terminoLower) || sku.includes(terminoLower);
+            });
+
+            mostrarResultadosBusqueda(resultados);
+        }
+
+        // Mostrar resultados de búsqueda en el modal
+        function mostrarResultadosBusqueda(resultados) {
+            barcodeResults.innerHTML = '';
+            
+            if (resultados.length === 0) {
+                barcodeResults.innerHTML = `
+                    <div class="barcode-result-item" style="text-align: center; color: #999; padding: 20px;">
+                        No se encontraron productos
+                    </div>
+                `;
+                barcodeResults.style.display = 'block';
+                return;
+            }
+
+            resultados.forEach(producto => {
+                const item = document.createElement('div');
+                item.className = 'barcode-result-item';
+                item.dataset.id = producto.id;
+
+                item.innerHTML = `
+                    <div class="barcode-result-name">${producto.name}</div>
+                    <div class="barcode-result-sku">SKU: ${producto.sku}</div>
+                `;
+
+                item.addEventListener('click', () => {
+                    seleccionarProductoParaBarcode(producto);
+                });
+
+                barcodeResults.appendChild(item);
+            });
+
+            barcodeResults.style.display = 'block';
+        }
+
+        // Seleccionar producto para gestionar códigos de barras
+        async function seleccionarProductoParaBarcode(producto) {
+            try {
+                selectedProductForBarcode = producto;
+                barcodeProductName.textContent = producto.name;
+                barcodeProductSku.textContent = `SKU: ${producto.sku}`;
+                
+                // Ocultar resultados de búsqueda
+                barcodeResults.style.display = 'none';
+                barcodeSearchInput.value = '';
+                
+                // Mostrar información del producto y spinner de carga
+                barcodeProductInfo.style.display = 'block';
+                barcodeLoading.style.display = 'flex';
+                
+                // Cargar códigos de barras existentes
+                await cargarBarcodesProducto(producto);
+                
+                // Ocultar spinner y enfocar el input
+                barcodeLoading.style.display = 'none';
+                barcodeInput.focus();
+            } catch (error) {
+                console.error('Error seleccionando producto:', error);
+                barcodeLoading.style.display = 'none';
+                mostrarMensajeBarcode('Error al seleccionar producto', 'error');
+            }
+        }
+
+        // Cargar códigos de barras del producto
+        async function cargarBarcodesProducto(producto) {
+            try {
+                // Buscamos por SKU ya que es más confiable
+                const querySnapshot = await db.collection('products')
+                    .where('sku', '==', producto.sku)
+                    .get();
+                
+                if (!querySnapshot.empty) {
+                    // Tomamos el primer documento que coincida con el SKU
+                    const doc = querySnapshot.docs[0];
+                    const data = doc.data();
+                    
+                    // Los códigos de barras pueden ser un string simple o un array
+                    if (data.barcodes && Array.isArray(data.barcodes)) {
+                        currentBarcodes = data.barcodes;
+                    } else if (data.barcode) {
+                        // Si hay un solo código de barras, lo convertimos a array
+                        currentBarcodes = [data.barcode];
+                    } else {
+                        currentBarcodes = [];
+                    }
+                    
+                    // Guardar el ID real del documento
+                    selectedProductForBarcode.firebaseId = doc.id;
+                    
+                    mostrarBarcodes(currentBarcodes);
+                } else {
+                    // Si no encontramos por SKU, mostramos los códigos locales
+                    currentBarcodes = producto.barcodes || [];
+                    mostrarBarcodes(currentBarcodes);
+                    mostrarMensajeBarcode('Producto encontrado localmente pero no en la base de datos', 'info');
+                }
+            } catch (error) {
+                console.error('Error cargando códigos de barras:', error);
+                currentBarcodes = [];
+                mostrarBarcodes([]);
+                mostrarMensajeBarcode('Error al cargar códigos de barras', 'error');
+            }
+        }
+
+        // Mostrar códigos de barras en la lista
+        function mostrarBarcodes(barcodes) {
+            barcodesContainer.innerHTML = '';
+            
+            if (barcodes.length === 0) {
+                noBarcodesMessage.style.display = 'block';
+                return;
+            }
+            
+            noBarcodesMessage.style.display = 'none';
+            
+            barcodes.forEach((barcode, index) => {
+                const barcodeItem = document.createElement('div');
+                barcodeItem.className = 'barcode-item';
+                
+                barcodeItem.innerHTML = `
+                    <span class="barcode-value">${barcode}</span>
+                    <button class="barcode-remove" data-index="${index}" title="Eliminar código">
+                        <i class="fas fa-trash-alt"></i>
+                        <div class="spinner-small"></div>
+                    </button>
+                `;
+                
+                // Agregar evento para eliminar código (SIN CONFIRMACIÓN)
+                const removeBtn = barcodeItem.querySelector('.barcode-remove');
+                removeBtn.addEventListener('click', function() {
+                    eliminarCodigoBarras(index, this);
+                });
+                
+                barcodesContainer.appendChild(barcodeItem);
+            });
+        }
+
+        // Verificar si un código de barras ya existe en otro producto
+        async function verificarCodigoBarrasDuplicado(codigo) {
+            try {
+                // Buscar en todos los productos si el código ya está asignado
+                const querySnapshot = await db.collection('products')
+                    .where('barcodes', 'array-contains', codigo)
+                    .get();
+                
+                if (!querySnapshot.empty) {
+                    // Encontró productos con este código
+                    const productosConCodigo = [];
+                    querySnapshot.forEach(doc => {
+                        const data = doc.data();
+                        if (data.sku !== selectedProductForBarcode.sku) {
+                            productosConCodigo.push({
+                                sku: data.sku,
+                                name: data.name
+                            });
+                        }
+                    });
+                    
+                    return productosConCodigo;
+                }
+                
+                // También verificar el campo barcode (para compatibilidad)
+                const querySnapshot2 = await db.collection('products')
+                    .where('barcode', '==', codigo)
+                    .get();
+                
+                if (!querySnapshot2.empty) {
+                    const productosConCodigo = [];
+                    querySnapshot2.forEach(doc => {
+                        const data = doc.data();
+                        if (data.sku !== selectedProductForBarcode.sku) {
+                            productosConCodigo.push({
+                                sku: data.sku,
+                                name: data.name
+                            });
+                        }
+                    });
+                    
+                    return productosConCodigo;
+                }
+                
+                return []; // No hay duplicados
+            } catch (error) {
+                console.error('Error verificando código duplicado:', error);
+                return [];
+            }
+        }
+
+        // Eliminar código de barras (SIN CONFIRMACIÓN, CON SPINNER)
+        async function eliminarCodigoBarras(index, botonEliminar) {
+            if (!selectedProductForBarcode) return;
+            
+            try {
+                // Mostrar spinner en el botón de eliminar
+                botonEliminar.classList.add('processing');
+                botonEliminar.disabled = true;
+                
+                // Eliminar de la lista local
+                const codigoEliminado = currentBarcodes.splice(index, 1)[0];
+                
+                // Si no quedan códigos, mantener array vacío
+                const nuevoBarcode = currentBarcodes.length > 0 ? currentBarcodes[0] : '';
+                
+                // Buscar el documento por SKU
+                const querySnapshot = await db.collection('products')
+                    .where('sku', '==', selectedProductForBarcode.sku)
+                    .get();
+                
+                if (!querySnapshot.empty) {
+                    const doc = querySnapshot.docs[0];
+                    
+                    // Actualizar en Firebase
+                    await db.collection('products').doc(doc.id).update({
+                        barcodes: currentBarcodes,
+                        barcode: nuevoBarcode
+                    });
+                    
+                    // Actualizar producto en array local
+                    const prodIndex = productos.findIndex(p => p.sku === selectedProductForBarcode.sku);
+                    if (prodIndex !== -1) {
+                        productos[prodIndex].barcodes = currentBarcodes;
+                        productos[prodIndex].barcode = nuevoBarcode;
+                    }
+                    
+                    // Actualizar visualización
+                    mostrarBarcodes(currentBarcodes);
+                    
+                    mostrarMensajeBarcode('Código de barras eliminado', 'success');
+                } else {
+                    throw new Error('Producto no encontrado en la base de datos');
+                }
+                
+            } catch (error) {
+                console.error('Error eliminando código de barras:', error);
+                mostrarMensajeBarcode('Error al eliminar código de barras: ' + error.message, 'error');
+                // Re-cargar códigos actuales
+                mostrarBarcodes(currentBarcodes);
+            } finally {
+                // Quitar spinner del botón
+                if (botonEliminar) {
+                    botonEliminar.classList.remove('processing');
+                    botonEliminar.disabled = false;
+                }
+            }
+        }
+
+        // Agregar nuevo código de barras (CON SPINNER)
+        async function agregarCodigoBarras() {
+            const nuevoCodigo = barcodeInput.value.trim();
+            
+            if (!nuevoCodigo) {
+                mostrarMensajeBarcode('Ingresa un código de barras', 'error');
+                return;
+            }
+            
+            if (!selectedProductForBarcode) {
+                mostrarMensajeBarcode('Primero selecciona un producto', 'error');
+                return;
+            }
+            
+            // Verificar si el código ya existe en el mismo producto
+            if (currentBarcodes.includes(nuevoCodigo)) {
+                mostrarMensajeBarcode('Este código de barras ya está asignado a este producto', 'error');
+                return;
+            }
+            
+            try {
+                // Mostrar spinner en el botón de guardar
+                saveBarcode.classList.add('processing');
+                saveBarcode.disabled = true;
+                
+                // Verificar si el código ya existe en OTRO producto
+                const productosDuplicados = await verificarCodigoBarrasDuplicado(nuevoCodigo);
+                
+                if (productosDuplicados.length > 0) {
+                    // Mostrar mensaje con los productos que ya tienen este código
+                    const productosLista = productosDuplicados.map(p => 
+                        `${p.name} (SKU: ${p.sku})`
+                    ).join(', ');
+                    
+                    mostrarMensajeBarcode(
+                        `Este código de barras ya está asignado a otros productos: ${productosLista}`,
+                        'error'
+                    );
+                    return;
+                }
+                
+                // Si pasa todas las validaciones, agregar el código
+                // Agregar a la lista local
+                currentBarcodes.push(nuevoCodigo);
+                
+                // Buscar el documento por SKU
+                const querySnapshot = await db.collection('products')
+                    .where('sku', '==', selectedProductForBarcode.sku)
+                    .get();
+                
+                if (!querySnapshot.empty) {
+                    const doc = querySnapshot.docs[0];
+                    
+                    // Actualizar en Firebase
+                    await db.collection('products').doc(doc.id).update({
+                        barcodes: currentBarcodes,
+                        barcode: nuevoCodigo // Mantener compatibilidad con campo simple
+                    });
+                    
+                    // Actualizar producto en array local
+                    const index = productos.findIndex(p => p.sku === selectedProductForBarcode.sku);
+                    if (index !== -1) {
+                        productos[index].barcodes = currentBarcodes;
+                        productos[index].barcode = nuevoCodigo;
+                    }
+                    
+                    // Actualizar visualización
+                    mostrarBarcodes(currentBarcodes);
+                    barcodeInput.value = '';
+                    
+                    mostrarMensajeBarcode('Código de barras agregado exitosamente', 'success');
+                } else {
+                    throw new Error('Producto no encontrado en la base de datos');
+                }
+                
+            } catch (error) {
+                console.error('Error agregando código de barras:', error);
+                // Revertir cambio local
+                currentBarcodes.pop();
+                mostrarMensajeBarcode('Error al agregar código de barras: ' + error.message, 'error');
+            } finally {
+                // Quitar spinner del botón de guardar
+                saveBarcode.classList.remove('processing');
+                saveBarcode.disabled = false;
+            }
+        }
+
+        // Mostrar mensaje en modal de código de barras
+        function mostrarMensajeBarcode(texto, tipo) {
+            barcodeMessage.textContent = texto;
+            barcodeMessage.className = 'message';
+            barcodeMessage.classList.add(`message-${tipo}`);
+            barcodeMessage.style.display = 'block';
+            
+            // Ocultar mensaje después de 3 segundos (excepto para mensajes de error persistentes)
+            if (tipo !== 'error' || texto.includes('Primero selecciona')) {
+                setTimeout(() => {
+                    barcodeMessage.style.display = 'none';
+                }, 3000);
+            }
+        }
+
+        // Cargar productos desde Firebase
+        async function cargarProductos() {
+            try {
+                if (!db) {
+                    mostrarMensaje('Firebase no disponible', 'error');
+                    return;
+                }
+
+                mostrarLoading(true, "Cargando productos...");
+
+                const snapshot = await db.collection('products').get();
+                productos = [];
+
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    productos.push({
+                        id: doc.id, // Usamos el ID real del documento de Firebase
+                        sku: data.sku || '',
+                        name: data.name || 'Sin nombre',
+                        barcode: data.barcode || '',
+                        barcodes: data.barcodes || [],
+                        bodega: data.almacen || data.bodega || 0,
+                        tienda: data.tienda || 0
+                    });
+                });
+
+                console.log(`Cargados ${productos.length} productos`);
+                mostrarLoading(false);
+
+            } catch (error) {
+                console.error('Error cargando productos:', error);
+                mostrarMensaje('Error cargando productos', 'error');
+                mostrarLoading(false);
+            }
+        }
+
+        // Buscar productos en página principal
+        function buscarProductos() {
+            const termino = searchInput.value.trim();
+
+            if (!termino) {
+                mostrarMensaje('Ingresa un término de búsqueda', 'info');
+                return;
+            }
+
+            // Filtrar productos (búsqueda insensible a mayúsculas/minúsculas)
+            const resultados = productos.filter(producto => {
+                const nombre = producto.name.toLowerCase();
+                const sku = producto.sku.toLowerCase();
+                const terminoLower = termino.toLowerCase();
+
+                // Buscar en nombre
+                if (nombre.includes(terminoLower)) {
+                    return true;
+                }
+                
+                // Buscar en SKU (insensible a mayúsculas/minúsculas)
+                if (sku.includes(terminoLower)) {
+                    return true;
+                }
+                
+                // Buscar en código de barras principal
+                if (producto.barcode && producto.barcode.toLowerCase().includes(terminoLower)) {
+                    return true;
+                }
+                
+                // Buscar en todos los códigos de barras
+                if (producto.barcodes && producto.barcodes.some(b => 
+                    b && b.toLowerCase().includes(terminoLower))) {
+                    return true;
+                }
+                
+                return false;
+            });
+
+            mostrarResultados(resultados);
+        }
+
+        // Mostrar resultados de búsqueda en página principal (SIN CONTADOR)
+        function mostrarResultados(resultados) {
+            contentArea.innerHTML = '';
+
+            if (resultados.length === 0) {
+                contentArea.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">
+                            <i class="fas fa-search"></i>
+                        </div>
+                        <div class="empty-text">
+                            No se encontraron productos
+                        </div>
+                        <div style="font-size: 0.9rem; color: #888;">
+                            Intenta con otro término de búsqueda
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+
+            // Crear contenedor de resultados
+            const resultsContainer = document.createElement('div');
+            resultsContainer.className = 'results-container';
+
+            // Crear tarjetas para cada resultado (SIN MOSTRAR CONTADOR DE CÓDIGOS)
+            resultados.forEach(producto => {
+                const card = document.createElement('div');
+                card.className = 'product-card';
+                card.dataset.id = producto.id;
+
+                card.innerHTML = `
+                    <div class="product-name">${producto.name}</div>
+                    <div class="product-details">
+                        <div class="product-sku">SKU: ${producto.sku}</div>
+                        <div class="product-stock">${producto.bodega} unidades</div>
+                    </div>
+                `;
+
+                // Agregar evento click
+                card.addEventListener('click', () => {
+                    mostrarModalProducto(producto);
+                });
+
+                resultsContainer.appendChild(card);
+            });
+
+            contentArea.appendChild(resultsContainer);
+        }
+
+        // Mostrar modal con información del producto
+        function mostrarModalProducto(producto) {
+            currentProduct = producto;
+
+            modalProductName.textContent = producto.name;
+            modalProductSku.textContent = `SKU: ${producto.sku}`;
+            modalStockAmount.textContent = producto.bodega;
+
+            productModal.style.display = 'flex';
+        }
+
+        // Mostrar loading
+        function mostrarLoading(mostrar, texto = "Cargando...") {
+            if (mostrar) {
+                contentArea.innerHTML = `
+                    <div class="loading">
+                        <div class="spinner"></div>${texto}
+                    </div>
+                `;
+            } else {
+                contentArea.innerHTML = '';
+                mostrarEstadoInicial();
+            }
+        }
+
+        // Mostrar estado inicial
+        function mostrarEstadoInicial() {
+            contentArea.appendChild(emptyState);
+        }
+
+        // Mostrar mensaje simple
+        function mostrarMensaje(texto, tipo = 'info') {
+            alert(texto);
+        }
+    </script>
+</body>
+</html>
