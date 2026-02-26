@@ -1,0 +1,2741 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Inventario - Ultra Optimizado</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="https://cdn-icons-png.flaticon.com/512/891/891419.png">
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+    
+    <!-- Firebase SDK Versión 9 -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    
+    <!-- SheetJS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    
+    <style>
+        /* ==============================================
+           PALETA DE COLORES AZUL CORPORATIVO MODERNO
+           ============================================== */
+        :root {
+            --primary-blue: #1a56db;
+            --primary-dark: #1e429f;
+            --secondary-blue: #3b82f6;
+            --accent-blue: #93c5fd;
+            --light-blue: #dbeafe;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --info: #8b5cf6;
+            --light: #f8fafc;
+            --dark: #1f2937;
+            --text-primary: #111827;
+            --text-secondary: #6b7280;
+            --border: #e5e7eb;
+            --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
+            --card-shadow-hover: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.3s;
+            backdrop-filter: blur(4px);
+        }
+        
+        .modal::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f9fafb;
+            color: var(--text-primary);
+            line-height: 1.6;
+            font-size: 0.9375rem;
+        }
+        
+        header {
+            background: linear-gradient(135deg, var(--primary-blue), var(--primary-dark));
+            color: white;
+            padding: 1.5rem 2rem;
+            margin-bottom: 2rem;
+            border-radius: 16px;
+            box-shadow: var(--card-shadow-hover);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle at center, rgba(255,255,255,0.1) 0%, transparent 70%);
+            border-radius: 50%;
+            transform: translate(30%, -30%);
+        }
+        
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+            position: relative;
+            z-index: 1;
+        }
+        
+        h1 {
+            font-size: 1.75rem;
+            margin-bottom: 0.25rem;
+            font-weight: 700;
+        }
+        
+        .subtitle {
+            font-size: 0.95rem;
+            opacity: 0.9;
+        }
+        
+        .connection-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.85rem;
+            padding: 8px 16px;
+            border-radius: 20px;
+            background-color: rgba(255, 255, 255, 0.15);
+            font-weight: 500;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 16px;
+            background-color: rgba(255, 255, 255, 0.15);
+            border-radius: 50px;
+            color: white;
+            font-weight: 500;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .user-info i {
+            font-size: 1.2rem;
+        }
+        
+        .btn-logout {
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            padding: 5px 10px;
+            border-radius: 6px;
+            transition: background-color 0.3s;
+        }
+        
+        .btn-logout:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 1.5rem;
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2.5rem;
+        }
+        
+        .stat-card {
+            background-color: white;
+            padding: 1.5rem;
+            border-radius: 16px;
+            box-shadow: var(--card-shadow);
+            display: flex;
+            align-items: center;
+            transition: all 0.3s ease;
+            border: 1px solid var(--border);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--card-shadow-hover);
+        }
+        
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: var(--primary-blue);
+        }
+        
+        .stat-icon {
+            font-size: 2.25rem;
+            margin-right: 1rem;
+            width: 64px;
+            height: 64px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        
+        .bodega-icon {
+            background: linear-gradient(135deg, rgba(26, 86, 219, 0.1), rgba(59, 130, 246, 0.2));
+            color: var(--primary-blue);
+        }
+        
+        .tienda-icon {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(16, 185, 129, 0.2));
+            color: var(--success);
+        }
+        
+        .proveedor-icon {
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(139, 92, 246, 0.2));
+            color: var(--info);
+        }
+        
+        .historial-icon {
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(245, 158, 11, 0.2));
+            color: var(--warning);
+        }
+        
+        .stat-info h3 {
+            font-size: 1.75rem;
+            margin-bottom: 0.25rem;
+            color: var(--text-primary);
+        }
+        
+        .stat-info p {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+        
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+            font-size: 0.875rem;
+            letter-spacing: 0.3px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-blue), var(--secondary-blue));
+            color: white;
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, var(--success), #34d399);
+            color: white;
+        }
+        
+        .btn-warning {
+            background: linear-gradient(135deg, var(--warning), #fbbf24);
+            color: white;
+        }
+        
+        .btn-info {
+            background: linear-gradient(135deg, var(--info), #a78bfa);
+            color: white;
+        }
+        
+        .btn-danger {
+            background: linear-gradient(135deg, var(--danger), #f87171);
+            color: white;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        }
+        
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            margin-bottom: 1.5rem;
+            padding: 1.5rem;
+            background: white;
+            border-radius: 16px;
+            box-shadow: var(--card-shadow);
+            border: 1px solid var(--border);
+        }
+        
+        .search-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            margin-bottom: 1.5rem;
+            background: white;
+            padding: 1.5rem;
+            border-radius: 16px;
+            box-shadow: var(--card-shadow);
+            border: 1px solid var(--border);
+            align-items: center;
+        }
+        
+        .search-box {
+            flex-grow: 1;
+            position: relative;
+            min-width: 250px;
+        }
+        
+        .search-box input {
+            width: 100%;
+            padding: 0.875rem 1rem 0.875rem 3rem;
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            font-size: 0.9375rem;
+            transition: all 0.2s;
+            background: white;
+        }
+        
+        .search-box input:focus {
+            border-color: var(--primary-blue);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(26, 86, 219, 0.1);
+        }
+        
+        .search-box i {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-secondary);
+        }
+        
+        .tabs-container {
+            position: relative;
+            margin-bottom: 2rem;
+        }
+        
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid var(--border);
+            overflow-x: auto;
+            background: white;
+            padding: 0.5rem;
+            border-radius: 12px 12px 0 0;
+            box-shadow: var(--card-shadow);
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+        
+        .tabs::-webkit-scrollbar {
+            display: none;
+        }
+        
+        .tabs-container::before,
+        .tabs-container::after {
+            content: '';
+            position: absolute;
+            top: 0.5rem;
+            bottom: 0;
+            width: 20px;
+            pointer-events: none;
+            z-index: 1;
+        }
+        
+        .tabs-container::before {
+            left: 0;
+            background: linear-gradient(90deg, white, transparent);
+        }
+        
+        .tabs-container::after {
+            right: 0;
+            background: linear-gradient(90deg, transparent, white);
+        }
+        
+        .tab-btn {
+            padding: 1rem 1.5rem;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            color: var(--text-secondary);
+            white-space: nowrap;
+            transition: all 0.3s;
+            border-radius: 8px;
+            margin: 0 2px;
+            font-size: 0.875rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .tab-btn:hover {
+            color: var(--primary-blue);
+            background: rgba(26, 86, 219, 0.05);
+        }
+        
+        .tab-btn.active {
+            color: var(--primary-blue);
+            background: rgba(26, 86, 219, 0.1);
+            position: relative;
+        }
+        
+        .tab-btn.active::after {
+            content: '';
+            position: absolute;
+            bottom: -11px;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: var(--primary-blue);
+            border-radius: 3px 3px 0 0;
+        }
+        
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.5s;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .inventory-table {
+            background-color: white;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: var(--card-shadow);
+            margin-bottom: 2rem;
+            overflow-x: auto;
+            border: 1px solid var(--border);
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.875rem;
+        }
+        
+        thead {
+            background: linear-gradient(135deg, var(--primary-blue), var(--secondary-blue));
+            color: white;
+        }
+        
+        th, td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        th {
+            font-weight: 600;
+            font-size: 0.8125rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            cursor: pointer;
+            user-select: none;
+        }
+        
+        th i {
+            margin-left: 5px;
+            font-size: 0.75rem;
+            opacity: 0.8;
+        }
+        
+        tbody tr {
+            transition: background-color 0.2s;
+        }
+        
+        tbody tr:hover {
+            background-color: rgba(26, 86, 219, 0.03);
+        }
+        
+        tbody tr:nth-child(even) {
+            background-color: #fafafa;
+        }
+        
+        tbody tr:nth-child(even):hover {
+            background-color: rgba(26, 86, 219, 0.05);
+        }
+        
+        .stock-cell {
+            font-weight: bold;
+            color: var(--success) !important;
+            position: relative;
+            padding-left: 20px;
+        }
+        
+        .stock-cell::before {
+            display: none;
+        }
+
+        .stock-cell.critico::before {
+            display: block;
+        }
+        
+        .stock-cell.critico {
+            color: var(--danger) !important;
+        }
+        
+        .stock-cell.critico::before {
+            background-color: var(--danger);
+        }
+        
+        .stock-cell.bajo {
+            color: var(--warning) !important;
+        }
+        
+        .stock-cell.bajo::before {
+            background-color: var(--warning);
+        }
+        
+        .actions-cell {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .action-btn {
+            padding: 0.5rem 0.75rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.75rem;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-weight: 600;
+        }
+        
+        .edit-btn {
+            background-color: rgba(26, 86, 219, 0.1);
+            color: var(--primary-blue);
+        }
+        
+        .delete-btn {
+            background-color: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
+        }
+        
+        .transfer-btn {
+            background-color: rgba(139, 92, 246, 0.1);
+            color: var(--info);
+        }
+        
+        .action-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .modal-content {
+            background-color: white;
+            padding: 2.5rem;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 600px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+            border: 1px solid var(--border);
+            animation: modalSlideIn 0.3s ease-out;
+        }
+        
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .modal-lg {
+            max-width: 800px;
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .modal-header h2 {
+            color: var(--primary-blue);
+            font-size: 1.5rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .close-modal {
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--text-secondary);
+            transition: color 0.3s;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+        }
+        
+        .close-modal:hover {
+            color: var(--danger);
+            background: rgba(239, 68, 68, 0.1);
+        }
+        
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            font-size: 0.875rem;
+        }
+        
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 0.875rem 1rem;
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            font-size: 0.9375rem;
+            transition: all 0.2s;
+            background: white;
+        }
+        
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+            border-color: var(--primary-blue);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(26, 86, 219, 0.1);
+        }
+        
+        .form-row {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+        
+        .form-row .form-group {
+            flex: 1;
+            margin-bottom: 0;
+        }
+        
+        .scanner-container {
+            text-align: center;
+            padding: 2rem;
+            background: linear-gradient(135deg, var(--light-blue), white);
+            border-radius: 16px;
+            margin-bottom: 2rem;
+            border: 1px solid var(--border);
+        }
+        
+        .scanner-input {
+            width: 100%;
+            padding: 1rem;
+            font-size: 1.125rem;
+            text-align: center;
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            margin-bottom: 1.5rem;
+            transition: all 0.3s;
+            background: white;
+        }
+        
+        .scanner-input:focus {
+            border-color: var(--primary-blue);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(26, 86, 219, 0.1);
+        }
+        
+        .proveedor-search-container {
+            margin-bottom: 2rem;
+            background: white;
+            padding: 2rem;
+            border-radius: 16px;
+            box-shadow: var(--card-shadow);
+            border: 1px solid var(--border);
+        }
+        
+        .proveedor-search-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            gap: 1rem;
+        }
+        
+        .proveedor-search-box {
+            flex: 1;
+            position: relative;
+        }
+        
+        .proveedor-search-box input {
+            width: 100%;
+            padding: 0.875rem 1rem 0.875rem 3rem;
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            font-size: 0.9375rem;
+            background: white;
+        }
+        
+        .proveedor-search-box input:focus {
+            border-color: var(--primary-blue);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(26, 86, 219, 0.1);
+        }
+        
+        .proveedor-search-box i {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-secondary);
+        }
+        
+        .proveedor-suggestions {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            box-shadow: var(--card-shadow-hover);
+            z-index: 100;
+            display: none;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .proveedor-suggestion {
+            padding: 12px 16px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .proveedor-suggestion:hover {
+            background-color: var(--light-blue);
+        }
+        
+        .proveedor-count {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            background: var(--light);
+            padding: 2px 8px;
+            border-radius: 12px;
+        }
+        
+        .proveedor-count-badge {
+            background: var(--info);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+        
+        .proveedor-card {
+            background: white;
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            box-shadow: var(--card-shadow);
+            border: 1px solid var(--border);
+            transition: all 0.3s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .proveedor-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--card-shadow-hover);
+        }
+        
+        .historial-item {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            box-shadow: var(--card-shadow);
+            border: 1px solid var(--border);
+            transition: all 0.3s;
+        }
+        
+        .historial-item:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--card-shadow-hover);
+        }
+        
+        .historial-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .historial-tipo {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .tipo-transferencia {
+            background-color: rgba(139, 92, 246, 0.1);
+            color: var(--info);
+        }
+        
+        .tipo-importacion {
+            background-color: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+        }
+        
+        .tipo-actualizacion {
+            background-color: rgba(245, 158, 11, 0.1);
+            color: var(--warning);
+        }
+        
+        .historial-fecha {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+        
+        .info-section {
+            background: white;
+            border-radius: 16px;
+            padding: 2.5rem;
+            box-shadow: var(--card-shadow);
+            margin-bottom: 2rem;
+            border: 1px solid var(--border);
+        }
+        
+        .info-section h3 {
+            color: var(--primary-blue);
+            margin-bottom: 2rem;
+            border-bottom: 2px solid var(--light-blue);
+            padding-bottom: 1rem;
+            font-size: 1.25rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+        
+        .info-card {
+            background: linear-gradient(135deg, #f8fafc, white);
+            border-radius: 12px;
+            padding: 1.5rem;
+            border: 1px solid var(--border);
+            transition: all 0.3s;
+        }
+        
+        .info-card:hover {
+            transform: translateY(-3px);
+            box-shadow: var(--card-shadow);
+        }
+        
+        .barcodes-container {
+            margin-top: 0.5rem;
+            background: #f8fafc;
+            padding: 1rem;
+            border-radius: 10px;
+            border: 1px dashed var(--border);
+        }
+        
+        .barcode-item {
+            display: flex;
+            gap: 0.75rem;
+            margin-bottom: 0.75rem;
+            align-items: center;
+        }
+        
+        .barcode-item input {
+            flex: 1;
+            padding: 0.75rem;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: white;
+        }
+        
+        .barcode-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .btn-small {
+            padding: 0.5rem 0.75rem;
+            font-size: 0.75rem;
+            border-radius: 8px;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+        }
+        
+        .spinner-large {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(26, 86, 219, 0.2);
+            border-radius: 50%;
+            border-top-color: var(--primary-blue);
+            animation: spin 1s ease-in-out infinite;
+        }
+        
+        @media (max-width: 768px) {
+            header {
+                padding: 1.25rem;
+            }
+            
+            .header-content {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1rem;
+            }
+            
+            .modal-content {
+                padding: 1.5rem;
+            }
+            
+            .form-row {
+                flex-direction: column;
+                gap: 0;
+            }
+            
+            .toolbar, .search-container {
+                flex-direction: column;
+            }
+            
+            .search-box {
+                width: 100%;
+                min-width: unset;
+            }
+            
+            .actions-cell {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            
+            .action-btn {
+                width: 100%;
+                justify-content: center;
+            }
+            
+            .proveedor-card {
+                flex-direction: column;
+                gap: 1rem;
+                align-items: flex-start;
+            }
+            
+            .barcode-item {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            
+            .barcode-actions {
+                width: 100%;
+                justify-content: flex-end;
+            }
+            
+            .tabs-container::before,
+            .tabs-container::after {
+                display: none;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .stats {
+                grid-template-columns: 1fr;
+            }
+            
+            .tabs {
+                font-size: 0.75rem;
+            }
+            
+            .tab-btn {
+                padding: 0.75rem;
+            }
+        }
+
+        /* Optimización: Indicadores de caché */
+        .cache-indicator {
+            font-size: 0.7rem;
+            padding: 2px 6px;
+            border-radius: 10px;
+            background: rgba(255,255,255,0.2);
+            margin-left: 8px;
+        }
+
+        .cache-status {
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            background: rgba(0,0,0,0.7);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            z-index: 9999;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+    <!-- Main Application -->
+    <div id="mainApp">
+        <div class="container">
+            <header>
+                <div class="header-content">
+                    <div>
+                        <h1><i class="fas fa-warehouse"></i> Sistema de Inventario</h1>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 15px;">
+                        <div id="connectionStatus" class="connection-status">
+                            <i class="fas fa-sync fa-spin"></i> Conectando...
+                        </div>
+                        <div class="user-info">
+                            <i class="fas fa-user-circle"></i>
+                            <span id="currentUsername">Usuario</span>
+                            <span id="userRoleBadge" class="role-badge" style="background: rgba(255,255,255,0.2); padding: 3px 8px; border-radius: 20px; font-size: 0.7rem;"></span>
+                            <button id="btnLogout" class="btn-logout">
+                                <i class="fas fa-sign-out-alt"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </header>
+            
+            <div class="tabs-container">
+                <div class="tabs">
+                    <button class="tab-btn active" data-tab="inventario">
+                        <i class="fas fa-boxes"></i> Inventario
+                    </button>
+                    <button class="tab-btn" data-tab="proveedores">
+                        <i class="fas fa-truck"></i> Por Proveedor
+                    </button>
+                    <button class="tab-btn" data-tab="gestionProveedores">
+                        <i class="fas fa-user-tie"></i> Gestión Proveedores
+                    </button>
+                    <button class="tab-btn" data-tab="actualizarStock">
+                        <i class="fas fa-sync-alt"></i> Actualizar Stock
+                    </button>
+                    <button class="tab-btn" data-tab="historial">
+                        <i class="fas fa-history"></i> Historial
+                    </button>
+                    <button class="tab-btn" data-tab="importar">
+                        <i class="fas fa-file-import"></i> Importar/Exportar
+                    </button>
+                    <button class="tab-btn" data-tab="informacion">
+                        <i class="fas fa-info-circle"></i> Información
+                    </button>
+                </div>
+            </div> 
+            
+            <!-- PESTAÑA INVENTARIO -->
+            <div class="tab-content active" id="inventarioTab">
+                <div class="search-container">
+                    <div class="search-box">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="searchInput" placeholder="Buscar productos...">
+                    </div>
+                    
+                    <button class="btn btn-primary" id="btnAddProductInventario" style="display: none;">
+                        <i class="fas fa-plus"></i> Agregar Producto
+                    </button>
+                    
+                    <button class="btn btn-primary" id="btnRefresh">
+                        <i class="fas fa-sync-alt"></i> Actualizar
+                    </button>
+
+                    <!-- Indicador de caché -->
+                    <span id="cacheIndicator" class="cache-indicator" style="display: none;">🔄</span>
+                </div>
+                
+                <div class="inventory-table">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th data-sort="sku">SKU <i class="fas fa-sort"></i></th>
+                                <th data-sort="name">Producto <i class="fas fa-sort"></i></th>
+                                <th data-sort="barcode">Cód. Barra <i class="fas fa-sort"></i></th>
+                                <th data-sort="proveedor">Proveedor <i class="fas fa-sort"></i></th>
+                                <th data-sort="stock">Stock Bodega <i class="fas fa-sort"></i></th>
+                                <th data-sort="envio">Último Envío a Tienda <i class="fas fa-sort"></i></th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="inventoryTableBody">
+                            <tr id="loadingRow">
+                                <td colspan="7" class="loading-spinner">
+                                    <div class="spinner-large"></div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <div class="tab-content" id="proveedoresTab">
+                <div class="proveedor-search-container">
+                    <div class="proveedor-search-header">
+                        <div class="proveedor-search-box">
+                            <i class="fas fa-search"></i>
+                            <input type="text" id="proveedorSearchInput" placeholder="Buscar proveedor...">
+                            <div class="proveedor-suggestions" id="proveedorSuggestions">
+                            </div>
+                        </div>
+                        <button class="btn btn-success" id="btnExportarProveedorExcel">
+                            <i class="fas fa-file-excel"></i> Exportar a Excel
+                        </button>
+                    </div>
+                    <div id="proveedorSelected" style="font-weight: 600; color: var(--info);">
+                        Mostrando todos los proveedores
+                    </div>
+                </div>
+                
+                <div class="search-container" style="margin-bottom: 15px;">
+                    <div class="search-box">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="proveedorProductSearch" placeholder="Buscar productos en esta pestaña...">
+                    </div>
+                    <button class="btn btn-primary" id="btnRefreshProveedores">
+                        <i class="fas fa-sync-alt"></i> Actualizar
+                    </button>
+                </div>
+                
+                <div class="inventory-table">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>SKU</th>
+                                <th>Producto</th>
+                                <th>Cód. Barra</th>
+                                <th>Proveedor</th>
+                                <th>Stock Bodega</th>
+                                <th>Último Envío a Tienda</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="proveedorTableBody">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <div class="tab-content" id="gestionProveedoresTab">
+                <div class="toolbar">
+                    <button class="btn btn-primary" id="btnAddProveedor" style="display: none;">
+                        <i class="fas fa-plus"></i> Agregar Proveedor
+                    </button>
+                    <button class="btn btn-info" id="btnExportarProveedores">
+                        <i class="fas fa-file-export"></i> Exportar Proveedores
+                    </button>
+                    <button class="btn btn-primary" id="btnRefreshGestionProveedores">
+                        <i class="fas fa-sync-alt"></i> Actualizar
+                    </button>
+                </div>
+                
+                <div id="proveedoresContainer">
+                </div>
+            </div>
+            
+            <div class="tab-content" id="actualizarStockTab">
+                <div class="toolbar">
+                    <button class="btn btn-primary" id="btnRefreshActualizarStock">
+                        <i class="fas fa-sync-alt"></i> Actualizar
+                    </button>
+                </div>
+                
+                <div class="form-group">
+                    <h3><i class="fas fa-sync-alt"></i> Actualización Masiva de Stock</h3>
+                    <p>Pega los datos en el formato: <strong>SKU | Existencia Bodega</strong></p>
+                    <p>Ejemplo: <code>DPI001 | 10</code></p>
+                    <p style="color: var(--info); font-size: 0.9rem; margin-top: 5px;">
+                        <i class="fas fa-info-circle"></i> Si hay múltiples líneas con el mismo SKU, sus cantidades se sumarán automáticamente.
+                    </p>
+                    <textarea id="actualizarStockData" rows="15" placeholder="DPI001 | 10&#10;DPI001 | 5&#10;DPI002 | 15"></textarea>
+                </div>
+                
+                <div class="checkbox-group" style="margin: 15px 0;">
+                    <input type="checkbox" id="actualizarSoloBodega" checked disabled>
+                    <label for="actualizarSoloBodega">Actualizar solo stock de bodega (única opción)</label>
+                </div>
+                
+                <div class="form-group">
+                    <button class="btn btn-warning" id="btnProcesarActualizacion" style="width: 100%; display: none;">
+                        <i class="fas fa-sync-alt"></i> Procesar Actualización de Stock
+                    </button>
+                </div>
+                
+                <div id="actualizacionResultado" style="margin-top: 20px; display: none;">
+                </div>
+            </div>
+            
+            <div class="tab-content" id="historialTab">
+                <div class="toolbar">
+                    <button class="btn btn-danger" id="btnLimpiarHistorial" style="display: none;">
+                        <i class="fas fa-trash"></i> Limpiar Historial
+                    </button>
+                    <button class="btn btn-primary" id="btnRefreshHistorial">
+                        <i class="fas fa-sync-alt"></i> Actualizar
+                    </button>
+                </div>
+                
+                <div id="historialContainer">
+                </div>
+            </div>
+            
+            <div class="tab-content" id="importarTab">
+                <div class="toolbar">
+                    <button class="btn btn-primary" id="btnRefreshImportar">
+                        <i class="fas fa-sync-alt"></i> Actualizar
+                    </button>
+                    
+                    <button class="btn btn-primary" id="btnAddProductImportar" style="display: none;">
+                        <i class="fas fa-plus"></i> Agregar Producto
+                    </button>
+                    
+                    <button class="btn btn-info" id="btnImportarRapidoImportar" style="display: none;">
+                        <i class="fas fa-file-import"></i> Importar Rápido
+                    </button>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group" style="flex: 1;">
+                        <h3><i class="fas fa-file-import"></i> Importar Datos</h3>
+                        <p>Sube un archivo JSON con el formato correcto para cargar productos al sistema.</p>
+                        
+                        <div class="file-upload" id="fileUploadArea">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                            <p>Arrastra y suelta tu archivo JSON aquí o haz clic para seleccionar</p>
+                            <input type="file" id="jsonFileInput" accept=".json" style="display: none;">
+                            <p class="subtitle" style="margin-top: 10px;">Formato esperado: SKU, Producto, Cód. Barra, Existencia</p>
+                        </div>
+                        
+                        <div class="checkbox-group">
+                            <input type="checkbox" id="importarActualizarStock">
+                            <label for="importarActualizarStock">Actualizar stock existente (en lugar de sumar)</label>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="importProveedor">Proveedor (se aplicará a todos los productos)</label>
+                            <select id="importProveedor">
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <button class="btn btn-success" id="btnImportarJSON" style="width: 100%; display: none;">
+                                <i class="fas fa-upload"></i> Importar Archivo JSON
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group" style="flex: 1;">
+                        <h3><i class="fas fa-file-export"></i> Exportar Datos</h3>
+                        <p>Descarga los datos actuales del inventario en diferentes formatos.</p>
+                        
+                        <div class="form-group">
+                            <label for="exportFormat">Formato de Exportación</label>
+                            <select id="exportFormat">
+                                <option value="json">JSON Completo</option>
+                                <option value="formatoProveedor">Formato Proveedor</option>
+                                <option value="csv">CSV</option>
+                                <option value="excel">Excel</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <button class="btn btn-primary" id="btnExportarJSON" style="width: 100%;">
+                                <i class="fas fa-download"></i> Exportar Datos
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="tab-content" id="informacionTab">
+                <div class="toolbar">
+                    <button class="btn btn-primary" id="btnRefreshInformacion">
+                        <i class="fas fa-sync-alt"></i> Actualizar
+                    </button>
+                </div>
+                
+                <div class="info-section">
+                    <h3><i class="fas fa-info-circle"></i> Información del Sistema</h3>
+                    
+                    <div class="stats" style="margin-bottom: 30px;">
+                        <div class="stat-card">
+                            <div class="stat-icon bodega-icon">
+                                <i class="fas fa-warehouse"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h3 id="totalBodega">0</h3>
+                                <p>Productos en bodega</p>
+                            </div>
+                        </div>
+                        
+                        <div class="stat-card">
+                            <div class="stat-icon tienda-icon">
+                                <i class="fas fa-store"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h3 id="totalTienda">0</h3>
+                                <p>Productos en tienda</p>
+                            </div>
+                        </div>
+                        
+                        <div class="stat-card">
+                            <div class="stat-icon proveedor-icon">
+                                <i class="fas fa-truck"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h3 id="totalProveedores">0</h3>
+                                <p>Proveedores</p>
+                            </div>
+                        </div>
+                        
+                        <div class="stat-card">
+                            <div class="stat-icon historial-icon">
+                                <i class="fas fa-history"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h3 id="totalMovimientos">0</h3>
+                                <p>Movimientos</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="info-grid">
+                        <div class="info-card">
+                            <h4><i class="fas fa-cogs"></i> Características del Sistema</h4>
+                            <ul>
+                                <li><strong>Inventario:</strong> Gestión completa de productos</li>
+                                <li><strong>Proveedores:</strong> Administración y filtrado</li>
+                                <li><strong>Actualización:</strong> Stock masivo y rápido</li>
+                                <li><strong>Historial:</strong> Registro de movimientos</li>
+                                <li><strong>Importación:</strong> Carga de datos desde archivos</li>
+                                <li><strong>Exportación:</strong> Descarga en múltiples formatos</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="info-card">
+                            <h4><i class="fas fa-shield-alt"></i> Seguridad y Acceso</h4>
+                            <ul>
+                                <li><strong>Sistema seguro:</strong> Autenticación de usuarios</li>
+                                <li><strong>Controles:</strong> Permisos según roles</li>
+                                <li><strong>Backup:</strong> Datos sincronizados en la nube</li>
+                                <li><strong>Confidencialidad:</strong> Protección de información</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Modal para agregar/editar producto -->
+        <div id="productModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 id="modalTitle">Agregar Producto</h2>
+                    <span class="close-modal" id="closeModal">&times;</span>
+                </div>
+                <form id="productForm">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="productSKU">SKU *</label>
+                            <input type="text" id="productSKU" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="productBarCode">Código de Barras Principal *</label>
+                            <input type="text" id="productBarCode" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Códigos de Barras Adicionales</label>
+                        <div class="barcodes-container" id="barcodesContainer">
+                        </div>
+                        <button type="button" class="btn btn-small btn-primary" id="btnAddBarcode" style="margin-top: 10px;">
+                            <i class="fas fa-plus"></i> Agregar Código de Barras
+                        </button>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="productName">Nombre del Producto *</label>
+                        <input type="text" id="productName" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="productProveedor">Proveedor *</label>
+                        <select id="productProveedor" required>
+                        </select>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="stockBodega">Stock en Bodega *</label>
+                            <input type="number" id="stockBodega" min="0" value="0" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="stockTienda">Stock en Tienda *</label>
+                            <input type="number" id="stockTienda" min="0" value="0" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <button type="submit" class="btn btn-primary" id="btnSubmitProduct" style="width: 100%;">
+                            <i class="fas fa-save"></i> Guardar Producto
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Modal para escanear/transferir -->
+        <div id="scannerModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2><i class="fas fa-barcode"></i> Escanear Producto</h2>
+                    <span class="close-modal" id="closeScannerModal">&times;</span>
+                </div>
+                
+                <div class="scanner-container">
+                    <p>Escanee el código de barras o ingrese el SKU del producto</p>
+                    <input type="text" id="scannerInput" class="scanner-input" placeholder="Escanee o escriba el código..." autofocus>
+                    
+                    <div class="scanner-buttons">
+                        <button class="btn btn-info" id="btnBuscarProducto">
+                            <i class="fas fa-search"></i> Buscar Producto
+                        </button>
+                        <button class="btn btn-secondary" id="btnLimpiarScanner">
+                            <i class="fas fa-eraser"></i> Limpiar
+                        </button>
+                    </div>
+                    
+                    <div id="scannerResult" class="scanner-result">
+                    </div>
+                </div>
+                
+                <div id="transferFormContainer" style="display: none;">
+                    <hr>
+                    <h3 style="margin-bottom: 20px;">Transferir Producto</h3>
+                    <form id="transferForm">
+                        <input type="hidden" id="transferProductId">
+                        
+                        <div class="form-group">
+                            <label for="transferType">Tipo de Transferencia *</label>
+                            <select id="transferType" required>
+                                <option value="bodegaToTienda">De Bodega a Tienda</option>
+                                <option value="tiendaToBodega">De Tienda a Bodega</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="transferQuantity">Cantidad a Transferir *</label>
+                            <input type="number" id="transferQuantity" min="1" value="1" required>
+                            <p id="availableStock" style="margin-top: 5px; font-size: 0.9rem; color: #666;"></p>
+                        </div>
+                        
+                        <div class="form-group">
+                            <button type="submit" class="btn btn-success" id="btnSubmitTransfer" style="width: 100%;">
+                                <i class="fas fa-exchange-alt"></i> Realizar Transferencia
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Modal para importación rápida -->
+        <div id="importModal" class="modal">
+            <div class="modal-content modal-lg">
+                <div class="modal-header">
+                    <h2><i class="fas fa-file-import"></i> Importación Rápida</h2>
+                    <span class="close-modal" id="closeImportModal">&times;</span>
+                </div>
+                <div class="form-group">
+                    <p>Pega los datos en el formato: <strong>SKU | Producto | Cód. Barra | Existencia</strong></p>
+                    <p>Ejemplo: <code>DPI001 | BACINICA PARA NIÑOS | DPI001 | 10</code></p>
+                    <textarea id="importData" rows="10" placeholder="DPI001 | BACINICA PARA NIÑOS | DPI001 | 10&#10;DPI002 | JARRA 1LITRO SURTIDA C/TAPA | DPI002 | 15&#10;DPI003 | PRODUCTO EJEMPLO | DPI003 | 20"></textarea>
+                </div>
+                
+                <div class="checkbox-group">
+                    <input type="checkbox" id="importRapidoActualizarStock">
+                    <label for="importRapidoActualizarStock">Actualizar stock existente (en lugar de sumar)</label>
+                </div>
+                
+                <div class="form-group">
+                    <label for="importRapidoProveedor">Proveedor (se aplicará a todos los productos)</label>
+                    <select id="importRapidoProveedor">
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <button class="btn btn-success" id="btnProcesarImportacion" style="width: 100%; display: none;">
+                        <i class="fas fa-bolt"></i> Procesar Importación
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Modal para agregar/editar proveedor -->
+        <div id="proveedorModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 id="proveedorModalTitle">Agregar Proveedor</h2>
+                    <span class="close-modal" id="closeProveedorModal">&times;</span>
+                </div>
+                <form id="proveedorForm">
+                    <div class="form-group">
+                        <label for="proveedorCodigo">Código *</label>
+                        <input type="text" id="proveedorCodigo" required placeholder="Ej: P00005">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="proveedorNombre">Nombre del Proveedor *</label>
+                        <input type="text" id="proveedorNombre" required placeholder="Ej: ROYALTEX S.A.">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="proveedorDescripcion">Descripción</label>
+                        <textarea id="proveedorDescripcion" rows="3" placeholder="Información adicional del proveedor..."></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="proveedorContacto">Contacto</label>
+                        <input type="text" id="proveedorContacto" placeholder="Nombre de contacto">
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="proveedorTelefono">Teléfono</label>
+                            <input type="text" id="proveedorTelefono" placeholder="Teléfono">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="proveedorEmail">Email</label>
+                            <input type="email" id="proveedorEmail" placeholder="correo@ejemplo.com">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <button type="submit" class="btn btn-primary" id="btnSubmitProveedor" style="width: 100%;">
+                            <i class="fas fa-save"></i> Guardar Proveedor
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Indicador de caché flotante -->
+        <div id="cacheStatus" class="cache-status" style="display: none;">
+            <i class="fas fa-database"></i> <span id="cacheInfo">Caché activo</span>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        // Configuración de Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyC5PwQQrY02yhICT4hl6nzZTEvA-CLgC2g",
+            authDomain: "thogar-de74d.firebaseapp.com",
+            projectId: "thogar-de74d",
+            storageBucket: "thogar-de74d.firebasestorage.app",
+            messagingSenderId: "605168322064",
+            appId: "1:605168322064:web:e0d9a16c5e5bc230d9ac95"
+        };
+
+        // Inicializar Firebase
+        let app, db;
+        try {
+            app = firebase.initializeApp(firebaseConfig);
+            db = firebase.firestore();
+            console.log("Firebase inicializado correctamente");
+        } catch (error) {
+            console.error("Error inicializando Firebase:", error);
+        }
+
+        // ==============================================
+        // CONFIGURACIÓN ULTRA OPTIMIZADA
+        // ==============================================
+        
+        const APP_CONFIG = {
+            // Cache
+            CACHE_DURATION: 30 * 60 * 1000, // 30 minutos en caché
+            FORCE_REFRESH_INTERVAL: 5 * 60 * 1000, // Refresh forzado cada 5 minutos
+            
+            // Firebase Limits
+            BATCH_SIZE: 400,
+            MAX_READS_PER_MINUTE: 50, // Objetivo: 50 lecturas por minuto máximo
+            MAX_WRITES_PER_SECOND: 8,
+            
+            // Data limits
+            MAX_HISTORY_ITEMS: 500, // Solo mantener 500 items en memoria
+            HISTORY_PAGE_SIZE: 50, // Cargar historial de 50 en 50
+            
+            // Retry
+            RETRY_ATTEMPTS: 3,
+            RETRY_DELAY: 1000
+        };
+
+        // ==============================================
+        // SISTEMA DE CACHÉ AVANZADO
+        // ==============================================
+        
+        const cache = {
+            inventory: {
+                data: null,
+                timestamp: null,
+                version: 0,
+                lastAccess: null
+            },
+            proveedores: {
+                data: null,
+                timestamp: null,
+                lastAccess: null
+            },
+            historial: {
+                data: null,
+                timestamp: null,
+                lastAccess: null
+            },
+            
+            // Estadísticas de caché
+            stats: {
+                reads: 0,
+                writes: 0,
+                cacheHits: 0,
+                cacheMisses: 0,
+                lastReset: Date.now()
+            },
+            
+            // Obtener datos con caché
+            get(key) {
+                this.stats.reads++;
+                const item = this[key];
+                
+                if (item && item.data && item.timestamp) {
+                    const age = Date.now() - item.timestamp;
+                    if (age < APP_CONFIG.CACHE_DURATION) {
+                        this.stats.cacheHits++;
+                        item.lastAccess = Date.now();
+                        return item.data;
+                    }
+                }
+                
+                this.stats.cacheMisses++;
+                return null;
+            },
+            
+            // Guardar en caché
+            set(key, data) {
+                this.stats.writes++;
+                this[key] = {
+                    data: data,
+                    timestamp: Date.now(),
+                    lastAccess: Date.now(),
+                    version: (this[key]?.version || 0) + 1
+                };
+                
+                // Actualizar indicador de caché
+                updateCacheIndicator();
+            },
+            
+            // Invalidar caché
+            invalidate(key) {
+                if (this[key]) {
+                    this[key].timestamp = null;
+                }
+            },
+            
+            // Obtener estadísticas
+            getStats() {
+                const hitRate = this.stats.cacheHits / (this.stats.cacheHits + this.stats.cacheMisses) * 100 || 0;
+                return {
+                    ...this.stats,
+                    hitRate: hitRate.toFixed(1) + '%'
+                };
+            }
+        };
+
+        // ==============================================
+        // CONTROL DE LECTURAS
+        // ==============================================
+        
+        const readController = {
+            readsThisMinute: 0,
+            minuteStart: Date.now(),
+            queue: [],
+            processing: false,
+            
+            // Solicitar lectura
+            async requestRead(operation) {
+                // Resetear contador cada minuto
+                const now = Date.now();
+                if (now - this.minuteStart > 60000) {
+                    this.readsThisMinute = 0;
+                    this.minuteStart = now;
+                }
+                
+                // Si excedemos límite, esperar
+                if (this.readsThisMinute >= APP_CONFIG.MAX_READS_PER_MINUTE) {
+                    const waitTime = 60000 - (now - this.minuteStart);
+                    if (waitTime > 0) {
+                        console.log(`Límite de lecturas alcanzado. Esperando ${waitTime/1000}s...`);
+                        await new Promise(resolve => setTimeout(resolve, waitTime));
+                        this.readsThisMinute = 0;
+                        this.minuteStart = Date.now();
+                    }
+                }
+                
+                this.readsThisMinute++;
+                return await operation();
+            },
+            
+            // Agregar a cola
+            async queueRead(operation) {
+                return new Promise((resolve, reject) => {
+                    this.queue.push({ operation, resolve, reject });
+                    if (!this.processing) {
+                        this.processQueue();
+                    }
+                });
+            },
+            
+            // Procesar cola
+            async processQueue() {
+                if (this.processing || this.queue.length === 0) return;
+                
+                this.processing = true;
+                
+                while (this.queue.length > 0) {
+                    const { operation, resolve, reject } = this.queue.shift();
+                    
+                    try {
+                        const result = await this.requestRead(operation);
+                        resolve(result);
+                    } catch (error) {
+                        reject(error);
+                    }
+                    
+                    // Pequeña pausa entre lecturas
+                    await new Promise(r => setTimeout(r, 100));
+                }
+                
+                this.processing = false;
+            }
+        };
+
+        // ==============================================
+        // ESCRITURAS OPTIMIZADAS
+        // ==============================================
+        
+        const writeController = {
+            pendingWrites: [],
+            processing: false,
+            writeCount: 0,
+            lastWriteTime: Date.now(),
+            
+            // Rate limiting
+            async checkRateLimit() {
+                const now = Date.now();
+                if (now - this.lastWriteTime < 1000) {
+                    this.writeCount++;
+                    if (this.writeCount >= APP_CONFIG.MAX_WRITES_PER_SECOND) {
+                        const waitTime = 1000 - (now - this.lastWriteTime);
+                        await new Promise(r => setTimeout(r, waitTime));
+                        this.writeCount = 0;
+                        this.lastWriteTime = Date.now();
+                    }
+                } else {
+                    this.writeCount = 1;
+                    this.lastWriteTime = now;
+                }
+            },
+            
+            // Agregar escritura a cola
+            queueWrite(collection, id, data, type = 'set', isUpdate = false) {
+                this.pendingWrites.push({
+                    type,
+                    collection,
+                    id,
+                    data,
+                    isUpdate,
+                    timestamp: Date.now()
+                });
+                
+                if (this.pendingWrites.length >= APP_CONFIG.BATCH_SIZE) {
+                    this.processWrites();
+                } else {
+                    setTimeout(() => this.processWrites(), 500);
+                }
+            },
+            
+            // Procesar escrituras en lote
+            async processWrites() {
+                if (this.processing || this.pendingWrites.length === 0) return;
+                
+                this.processing = true;
+                
+                while (this.pendingWrites.length > 0) {
+                    const batch = db.batch();
+                    const writes = this.pendingWrites.splice(0, APP_CONFIG.BATCH_SIZE);
+                    
+                    for (const write of writes) {
+                        const docRef = db.collection(write.collection).doc(write.id.toString());
+                        
+                        if (write.type === 'delete') {
+                            batch.delete(docRef);
+                        } else if (write.isUpdate) {
+                            batch.update(docRef, write.data);
+                        } else {
+                            batch.set(docRef, write.data);
+                        }
+                    }
+                    
+                    try {
+                        await this.checkRateLimit();
+                        await this.retryOperation(() => batch.commit());
+                        console.log(`Lote de ${writes.length} escrituras procesado`);
+                    } catch (error) {
+                        console.error('Error en lote:', error);
+                        // Reintentar más tarde
+                        this.pendingWrites.unshift(...writes);
+                        await new Promise(r => setTimeout(r, 5000));
+                    }
+                }
+                
+                this.processing = false;
+            },
+            
+            // Reintentar operación
+            async retryOperation(operation) {
+                for (let i = 0; i < APP_CONFIG.RETRY_ATTEMPTS; i++) {
+                    try {
+                        return await operation();
+                    } catch (error) {
+                        if (i === APP_CONFIG.RETRY_ATTEMPTS - 1) throw error;
+                        await new Promise(r => setTimeout(r, APP_CONFIG.RETRY_DELAY * Math.pow(2, i)));
+                    }
+                }
+            }
+        };
+
+        // ==============================================
+        // CARGA INICIAL OPTIMIZADA (UNA SOLA VEZ)
+        // ==============================================
+        
+        let initialLoadDone = false;
+        let loadPromise = null;
+
+        async function loadInitialData(forceRefresh = false) {
+            // Si ya se cargó y no es refresh forzado, usar caché
+            if (!forceRefresh && initialLoadDone) {
+                const cachedInventory = cache.get('inventory');
+                const cachedProveedores = cache.get('proveedores');
+                const cachedHistorial = cache.get('historial');
+                
+                if (cachedInventory && cachedProveedores) {
+                    inventory = cachedInventory;
+                    proveedores = cachedProveedores;
+                    historial = cachedHistorial || [];
+                    
+                    updateNextIds();
+                    renderAll();
+                    
+                    updateCacheIndicator(true);
+                    return true;
+                }
+            }
+            
+            // Si ya hay una carga en progreso, esperar
+            if (loadPromise) {
+                return loadPromise;
+            }
+            
+            loadPromise = (async () => {
+                try {
+                    console.log('Cargando datos iniciales...');
+                    
+                    // Cargar proveedores primero (son pocos)
+                    proveedores = await readController.queueRead(async () => {
+                        const snapshot = await db.collection('proveedores').orderBy('codigo').get();
+                        return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                    });
+                    
+                    // Cargar productos con paginación
+                    inventory = [];
+                    let lastDoc = null;
+                    const pageSize = 1000;
+                    
+                    do {
+                        const products = await readController.queueRead(async () => {
+                            let query = db.collection('products').orderBy('sku').limit(pageSize);
+                            if (lastDoc) query = query.startAfter(lastDoc);
+                            return await query.get();
+                        });
+                        
+                        if (products.empty) break;
+                        
+                        products.docs.forEach(doc => {
+                            inventory.push({ id: doc.id, ...doc.data() });
+                        });
+                        
+                        lastDoc = products.docs[products.docs.length - 1];
+                    } while (lastDoc);
+                    
+                    // Cargar historial reciente (limitado)
+                    historial = await readController.queueRead(async () => {
+                        const snapshot = await db.collection('historial')
+                            .orderBy('timestamp', 'desc')
+                            .limit(APP_CONFIG.MAX_HISTORY_ITEMS)
+                            .get();
+                        return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                    });
+                    
+                    // Guardar en caché
+                    cache.set('inventory', inventory);
+                    cache.set('proveedores', proveedores);
+                    cache.set('historial', historial);
+                    
+                    updateNextIds();
+                    initialLoadDone = true;
+                    
+                    renderAll();
+                    updateCacheIndicator(true);
+                    
+                    return true;
+                    
+                } catch (error) {
+                    console.error('Error en carga inicial:', error);
+                    return false;
+                } finally {
+                    loadPromise = null;
+                }
+            })();
+            
+            return loadPromise;
+        }
+
+        // ==============================================
+        // FUNCIONES DE RENDERIZADO
+        // ==============================================
+        
+        function renderAll() {
+            updateInventoryTable(searchInput?.value || '');
+            updateStats();
+            updateProveedorSelects();
+            updateProveedoresList();
+            updateHistorial();
+        }
+
+        function updateNextIds() {
+            if (inventory.length > 0) {
+                nextId = Math.max(...inventory.map(p => parseInt(p.id) || 0), 0) + 1;
+            }
+            if (proveedores.length > 0) {
+                nextProveedorId = Math.max(...proveedores.map(p => parseInt(p.id) || 0), 0) + 1;
+            }
+            if (historial.length > 0) {
+                nextHistorialId = Math.max(...historial.map(h => parseInt(h.id) || 0), 0) + 1;
+            }
+        }
+
+        function updateCacheIndicator(show = true) {
+            const indicator = document.getElementById('cacheIndicator');
+            const status = document.getElementById('cacheStatus');
+            
+            if (show && initialLoadDone) {
+                const stats = cache.getStats();
+                indicator.style.display = 'inline-block';
+                indicator.title = `Caché: ${stats.hitRate} aciertos | ${stats.reads} lecturas`;
+                
+                status.style.display = 'block';
+                document.getElementById('cacheInfo').innerHTML = `Caché: ${stats.hitRate} | ${stats.reads} lecturas`;
+            } else {
+                indicator.style.display = 'none';
+                status.style.display = 'none';
+            }
+        }
+
+        // ==============================================
+        // GUARDADO OPTIMIZADO
+        // ==============================================
+        
+        async function saveProduct(productData, isUpdate = false) {
+            // Actualizar memoria inmediatamente
+            if (isUpdate) {
+                const index = inventory.findIndex(p => p.id === productData.id);
+                if (index >= 0) inventory[index] = { ...inventory[index], ...productData };
+            } else {
+                inventory.push(productData);
+            }
+            
+            // Invalidar caché
+            cache.invalidate('inventory');
+            
+            // Guardar en Firebase
+            const dataToSave = {
+                id: productData.id,
+                sku: productData.sku,
+                barcode: productData.barcode,
+                barcodes: productData.barcodes || [],
+                name: productData.name,
+                proveedor: productData.proveedor,
+                bodega: productData.bodega,
+                tienda: productData.tienda || 0,
+                lastTransfer: productData.lastTransfer || null,
+                updatedAt: Date.now()
+            };
+            
+            if (isOnline && db) {
+                writeController.queueWrite('products', productData.id, dataToSave, 'set', isUpdate);
+            }
+            
+            // Renderizar
+            updateInventoryTable(searchInput?.value || '');
+            updateStats();
+            updateProveedorSelects();
+        }
+
+        async function saveProveedor(proveedorData, isUpdate = false) {
+            if (isUpdate) {
+                const index = proveedores.findIndex(p => p.id === proveedorData.id);
+                if (index >= 0) proveedores[index] = { ...proveedores[index], ...proveedorData };
+            } else {
+                proveedores.push(proveedorData);
+            }
+            
+            cache.invalidate('proveedores');
+            
+            if (isOnline && db) {
+                writeController.queueWrite('proveedores', proveedorData.id, proveedorData, 'set', isUpdate);
+            }
+            
+            updateProveedorSelects();
+            updateProveedoresList();
+        }
+
+        async function addToHistory(tipo, productoId, cantidad, origen, destino) {
+            const producto = inventory.find(p => p.id === productoId);
+            
+            const historyItem = {
+                id: nextHistorialId++,
+                timestamp: Date.now(),
+                tipo: tipo,
+                producto: producto ? producto.name : 'Importación múltiple',
+                sku: producto ? producto.sku : 'N/A',
+                cantidad: cantidad,
+                origen: origen,
+                destino: destino,
+                usuario: currentUser?.username || 'desconocido'
+            };
+            
+            // Mantener historial limitado
+            historial.unshift(historyItem);
+            if (historial.length > APP_CONFIG.MAX_HISTORY_ITEMS) {
+                historial.pop();
+            }
+            
+            cache.invalidate('historial');
+            
+            if (isOnline && db) {
+                writeController.queueWrite('historial', historyItem.id, historyItem, 'set', false);
+            }
+            
+            updateHistorial();
+            updateStats();
+        }
+
+        // ==============================================
+        // ACTUALIZACIÓN DE STOCK OPTIMIZADA (SOLO BODEGA)
+        // ==============================================
+        
+        btnProcesarActualizacion.addEventListener('click', async function() {
+            if (!currentUser || currentUser.role !== 'admin') {
+                Swal.fire('Acceso denegado', 'No tienes permisos', 'warning');
+                return;
+            }
+            
+            const datos = actualizarStockData.value.trim();
+            if (!datos) {
+                Swal.fire('Datos vacíos', 'Ingresa datos para actualizar', 'info');
+                return;
+            }
+            
+            const originalText = this.innerHTML;
+            this.innerHTML = '<span class="spinner"></span> Procesando...';
+            this.disabled = true;
+            
+            try {
+                const lineas = datos.split('\n');
+                const acumulados = {};
+                
+                // Acumular por SKU
+                for (const linea of lineas) {
+                    const lineaTrim = linea.trim();
+                    if (!lineaTrim) continue;
+                    
+                    const partes = lineaTrim.split('|').map(p => p.trim());
+                    const [sku, existencia] = partes;
+                    
+                    if (!sku) continue;
+                    
+                    if (!acumulados[sku]) {
+                        acumulados[sku] = { bodega: 0, contador: 0 };
+                    }
+                    
+                    acumulados[sku].bodega += parseInt(existencia) || 0;
+                    acumulados[sku].contador++;
+                }
+                
+                // Procesar actualizaciones
+                let actualizados = 0;
+                let noEncontrados = 0;
+                const resultados = [];
+                const updates = [];
+                
+                for (const [sku, valores] of Object.entries(acumulados)) {
+                    const producto = inventory.find(p => p.sku === sku);
+                    
+                    if (producto) {
+                        const viejoBodega = producto.bodega;
+                        producto.bodega = valores.bodega;
+                        
+                        updates.push({
+                            id: producto.id,
+                            data: { bodega: producto.bodega }
+                        });
+                        
+                        actualizados++;
+                        resultados.push({
+                            sku,
+                            nombre: producto.name,
+                            viejoBodega,
+                            nuevoBodega: producto.bodega,
+                            lineas: valores.contador
+                        });
+                    } else {
+                        noEncontrados++;
+                        resultados.push({ sku, error: 'No encontrado' });
+                    }
+                }
+                
+                // Guardar en Firebase por lotes
+                if (isOnline && db && updates.length > 0) {
+                    for (let i = 0; i < updates.length; i += APP_CONFIG.BATCH_SIZE) {
+                        const batch = db.batch();
+                        updates.slice(i, i + APP_CONFIG.BATCH_SIZE).forEach(u => {
+                            batch.update(db.collection('products').doc(u.id.toString()), u.data);
+                        });
+                        await writeController.checkRateLimit();
+                        await batch.commit();
+                    }
+                }
+                
+                // Invalidar caché
+                cache.invalidate('inventory');
+                
+                // Agregar al historial (solo un registro)
+                if (actualizados > 0) {
+                    await addToHistory('actualizacion_stock', null, actualizados, 'sistema', 'inventario');
+                }
+                
+                // Renderizar
+                updateInventoryTable(searchInput?.value || '');
+                updateStats();
+                
+                // Mostrar resultados
+                Swal.fire({
+                    title: 'Actualización completada',
+                    html: `Actualizados: <strong>${actualizados}</strong><br>No encontrados: <strong>${noEncontrados}</strong>`,
+                    icon: 'success'
+                });
+                
+            } catch (error) {
+                console.error('Error:', error);
+                Swal.fire('Error', 'No se pudo completar la actualización', 'error');
+            } finally {
+                this.innerHTML = originalText;
+                this.disabled = false;
+            }
+        });
+
+        // ==============================================
+        // CONFIGURACIÓN DE EVENTOS Y AUTENTICACIÓN
+        // ==============================================
+        
+        let currentUser = null;
+        let inventory = [];
+        let proveedores = [];
+        let historial = [];
+        let nextId = 1;
+        let nextProveedorId = 1;
+        let nextHistorialId = 1;
+        let isOnline = navigator.onLine;
+
+        // Elementos del DOM (selectores rápidos)
+        const searchInput = document.getElementById('searchInput');
+        const proveedorProductSearch = document.getElementById('proveedorProductSearch');
+        const tableHeaders = document.querySelectorAll('#inventarioTab th[data-sort]');
+
+        // Configurar autenticación
+        window.addEventListener('message', (event) => {
+            if (event.data?.type === 'USER_ROLE') {
+                currentUser = {
+                    username: event.data.username,
+                    role: event.data.role
+                };
+                
+                document.getElementById('currentUsername').textContent = currentUser.username;
+                document.getElementById('userRoleBadge').textContent = currentUser.role.toUpperCase();
+                
+                configurePermissions();
+                loadInitialData();
+            }
+        });
+
+        function requestUserRole() {
+            window.parent.postMessage({ type: 'REQUEST_USER_ROLE' }, '*');
+        }
+
+        function configurePermissions() {
+            const isAdmin = currentUser?.role === 'admin';
+            const adminButtons = [
+                'btnAddProductInventario', 'btnAddProductImportar', 'btnAddProveedor',
+                'btnImportarRapidoImportar', 'btnProcesarActualizacion', 'btnImportarJSON',
+                'btnProcesarImportacion', 'btnLimpiarHistorial'
+            ];
+            
+            adminButtons.forEach(id => {
+                const btn = document.getElementById(id);
+                if (btn) btn.style.display = isAdmin ? 'inline-flex' : 'none';
+            });
+        }
+
+        // Configurar pestañas
+        function setupTabs() {
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const tabId = this.dataset.tab;
+                    
+                    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                    
+                    this.classList.add('active');
+                    document.getElementById(tabId + 'Tab').classList.add('active');
+                    
+                    // Renderizar según pestaña
+                    if (tabId === 'proveedores') updateProveedorTable();
+                    else if (tabId === 'gestionProveedores') updateProveedoresList();
+                    else if (tabId === 'historial') updateHistorial();
+                    else if (tabId === 'informacion') updateStats();
+                });
+            });
+        }
+
+        // Inicialización
+        document.addEventListener('DOMContentLoaded', () => {
+            setupTabs();
+            requestUserRole();
+            
+            // Configurar búsqueda
+            if (searchInput) {
+                searchInput.addEventListener('input', () => updateInventoryTable(searchInput.value));
+            }
+            if (proveedorProductSearch) {
+                proveedorProductSearch.addEventListener('input', updateProveedorTable);
+            }
+            
+            // Configurar ordenamiento
+            tableHeaders.forEach(header => {
+                header.addEventListener('click', () => sortByField(header.dataset.sort));
+            });
+            
+            // Configurar botones de refresh (usan caché)
+            document.querySelectorAll('[id^="btnRefresh"]').forEach(btn => {
+                btn.addEventListener('click', () => loadInitialData(true));
+            });
+            
+            // Configurar logout
+            document.getElementById('btnLogout')?.addEventListener('click', logout);
+        });
+
+        // Funciones auxiliares (mantener las existentes pero optimizadas)
+        function logout() {
+            Swal.fire({
+                title: '¿Cerrar sesión?',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Sí'
+            }).then(result => {
+                if (result.isConfirmed) {
+                    localStorage.removeItem('userSession');
+                    sessionStorage.removeItem('userSession');
+                    window.location.href = 'login.html';
+                }
+            });
+        }
+
+        // Funciones de renderizado (simplificadas pero funcionales)
+        function updateInventoryTable(searchTerm = '') {
+            const tbody = document.getElementById('inventoryTableBody');
+            if (!tbody) return;
+            
+            if (!inventory.length) {
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align:center">Cargando...</td></tr>';
+                return;
+            }
+            
+            let filtered = inventory;
+            if (searchTerm) {
+                const term = searchTerm.toLowerCase();
+                filtered = inventory.filter(p => 
+                    p.sku?.toLowerCase().includes(term) ||
+                    p.name?.toLowerCase().includes(term) ||
+                    p.barcode?.toLowerCase().includes(term) ||
+                    p.proveedor?.toLowerCase().includes(term)
+                );
+            }
+            
+            tbody.innerHTML = filtered.map(p => `
+                <tr>
+                    <td>${p.sku || ''}</td>
+                    <td>${p.name || ''}</td>
+                    <td>${p.barcode || ''}</td>
+                    <td>${p.proveedor || ''}</td>
+                    <td class="stock-cell">${p.bodega || 0}</td>
+                    <td>${formatTimeAgo(p.lastTransfer)}</td>
+                    <td class="actions-cell">
+                        ${currentUser?.role === 'admin' ? `
+                            <button class="action-btn edit-btn" onclick="editProduct(${p.id})"><i class="fas fa-edit"></i></button>
+                            <button class="action-btn delete-btn" onclick="deleteProduct(${p.id})"><i class="fas fa-trash"></i></button>
+                        ` : ''}
+                        <button class="action-btn transfer-btn" onclick="openTransferScanner(${p.id})"><i class="fas fa-exchange-alt"></i></button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function updateProveedorTable() {
+            const tbody = document.getElementById('proveedorTableBody');
+            if (!tbody) return;
+            
+            let filtered = currentProveedorFilter ? 
+                inventory.filter(p => p.proveedor === currentProveedorFilter) : 
+                inventory;
+            
+            const searchTerm = proveedorProductSearch?.value.toLowerCase();
+            if (searchTerm) {
+                filtered = filtered.filter(p => 
+                    p.sku?.toLowerCase().includes(searchTerm) ||
+                    p.name?.toLowerCase().includes(searchTerm)
+                );
+            }
+            
+            tbody.innerHTML = filtered.map(p => `
+                <tr>
+                    <td>${p.sku || ''}</td>
+                    <td>${p.name || ''}</td>
+                    <td>${p.barcode || ''}</td>
+                    <td>${p.proveedor || ''}</td>
+                    <td class="stock-cell">${p.bodega || 0}</td>
+                    <td>${formatTimeAgo(p.lastTransfer)}</td>
+                    <td class="actions-cell">
+                        ${currentUser?.role === 'admin' ? `
+                            <button class="action-btn edit-btn" onclick="editProduct(${p.id})"><i class="fas fa-edit"></i></button>
+                        ` : ''}
+                        <button class="action-btn transfer-btn" onclick="openTransferScanner(${p.id})"><i class="fas fa-exchange-alt"></i></button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function updateStats() {
+            const totalBodega = inventory.reduce((s, p) => s + (p.bodega || 0), 0);
+            const totalTienda = inventory.reduce((s, p) => s + (p.tienda || 0), 0);
+            
+            document.getElementById('totalBodega').textContent = totalBodega;
+            document.getElementById('totalTienda').textContent = totalTienda;
+            document.getElementById('totalProveedores').textContent = proveedores.length;
+            document.getElementById('totalMovimientos').textContent = historial.length;
+        }
+
+        function updateHistorial() {
+            const container = document.getElementById('historialContainer');
+            if (!container) return;
+            
+            if (!historial.length) {
+                container.innerHTML = '<div style="text-align:center">Sin movimientos</div>';
+                return;
+            }
+            
+            container.innerHTML = historial.slice(0, 50).map(h => `
+                <div class="historial-item">
+                    <div class="historial-header">
+                        <span class="historial-fecha">${formatTimeAgo(h.timestamp)}</span>
+                        <span class="historial-tipo tipo-${h.tipo}">${h.tipo}</span>
+                    </div>
+                    <div><strong>${h.producto}</strong> - ${h.cantidad} unidades</div>
+                    <div>${h.origen} → ${h.destino}</div>
+                </div>
+            `).join('');
+        }
+
+        function updateProveedorSelects() {
+            const selects = ['productProveedor', 'importProveedor', 'importRapidoProveedor'];
+            selects.forEach(id => {
+                const select = document.getElementById(id);
+                if (!select) return;
+                
+                select.innerHTML = '<option value="">Seleccionar</option>';
+                proveedores.forEach(p => {
+                    select.innerHTML += `<option value="${p.codigo} - ${p.nombre}">${p.codigo} - ${p.nombre}</option>`;
+                });
+            });
+        }
+
+        function updateProveedoresList() {
+            const container = document.getElementById('proveedoresContainer');
+            if (!container) return;
+            
+            if (!proveedores.length) {
+                container.innerHTML = '<div style="text-align:center">Sin proveedores</div>';
+                return;
+            }
+            
+            container.innerHTML = proveedores.map(p => `
+                <div class="proveedor-card">
+                    <div>
+                        <h4>${p.codigo} - ${p.nombre}</h4>
+                        <p>${p.descripcion || ''}</p>
+                        <div>${p.contacto || ''} ${p.telefono || ''} ${p.email || ''}</div>
+                    </div>
+                    ${currentUser?.role === 'admin' ? `
+                        <div>
+                            <button class="action-btn edit-btn" onclick="editProveedor(${p.id})"><i class="fas fa-edit"></i></button>
+                            <button class="action-btn delete-btn" onclick="deleteProveedor(${p.id})"><i class="fas fa-trash"></i></button>
+                        </div>
+                    ` : ''}
+                </div>
+            `).join('');
+        }
+
+        // Utilidades
+        function formatTimeAgo(timestamp) {
+            if (!timestamp) return 'Nunca';
+            const seconds = Math.floor((Date.now() - timestamp) / 1000);
+            if (seconds < 60) return 'hace un momento';
+            if (seconds < 3600) return `hace ${Math.floor(seconds/60)} min`;
+            if (seconds < 86400) return `hace ${Math.floor(seconds/3600)} h`;
+            return `hace ${Math.floor(seconds/86400)} d`;
+        }
+
+        // Variables de ordenamiento
+        let currentSortField = null;
+        let currentSortDirection = 'asc';
+
+        function sortByField(field) {
+            if (currentSortField === field) {
+                currentSortDirection = currentSortDirection === 'asc' ? 'desc' : 'asc';
+            } else {
+                currentSortField = field;
+                currentSortDirection = 'asc';
+            }
+            
+            inventory.sort((a, b) => {
+                let aVal = a[field] || '';
+                let bVal = b[field] || '';
+                
+                if (typeof aVal === 'string') {
+                    return currentSortDirection === 'asc' ? 
+                        aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
+                } else {
+                    return currentSortDirection === 'asc' ? 
+                        aVal - bVal : bVal - aVal;
+                }
+            });
+            
+            updateInventoryTable(searchInput?.value);
+        }
+
+        // Funciones globales para botones
+        window.editProduct = (id) => {
+            const product = inventory.find(p => p.id === id);
+            if (!product) return;
+            
+            document.getElementById('productSKU').value = product.sku;
+            document.getElementById('productBarCode').value = product.barcode;
+            document.getElementById('productName').value = product.name;
+            document.getElementById('stockBodega').value = product.bodega;
+            document.getElementById('stockTienda').value = product.tienda;
+            
+            editingProductId = id;
+            document.getElementById('modalTitle').textContent = 'Editar Producto';
+            document.getElementById('productModal').style.display = 'flex';
+        };
+
+        window.deleteProduct = async (id) => {
+            if (currentUser?.role !== 'admin') return;
+            
+            const result = await Swal.fire({
+                title: '¿Eliminar?',
+                text: 'Esta acción no se puede deshacer',
+                icon: 'warning',
+                showCancelButton: true
+            });
+            
+            if (result.isConfirmed) {
+                inventory = inventory.filter(p => p.id !== id);
+                if (isOnline) writeController.queueWrite('products', id, null, 'delete');
+                cache.invalidate('inventory');
+                updateInventoryTable(searchInput?.value);
+                updateStats();
+            }
+        };
+
+        window.openTransferScanner = (id) => {
+            const product = inventory.find(p => p.id === id);
+            if (!product) return;
+            
+            document.getElementById('scannerInput').value = product.sku;
+            document.getElementById('scannerModal').style.display = 'flex';
+        };
+
+        window.editProveedor = (id) => {
+            const proveedor = proveedores.find(p => p.id === id);
+            if (!proveedor) return;
+            
+            document.getElementById('proveedorCodigo').value = proveedor.codigo;
+            document.getElementById('proveedorNombre').value = proveedor.nombre;
+            document.getElementById('proveedorDescripcion').value = proveedor.descripcion || '';
+            document.getElementById('proveedorContacto').value = proveedor.contacto || '';
+            document.getElementById('proveedorTelefono').value = proveedor.telefono || '';
+            document.getElementById('proveedorEmail').value = proveedor.email || '';
+            
+            editingProveedorId = id;
+            document.getElementById('proveedorModalTitle').textContent = 'Editar Proveedor';
+            document.getElementById('proveedorModal').style.display = 'flex';
+        };
+
+        window.deleteProveedor = async (id) => {
+            if (currentUser?.role !== 'admin') return;
+            
+            const result = await Swal.fire({
+                title: '¿Eliminar proveedor?',
+                text: 'Los productos asociados no se eliminarán',
+                icon: 'warning',
+                showCancelButton: true
+            });
+            
+            if (result.isConfirmed) {
+                proveedores = proveedores.filter(p => p.id !== id);
+                if (isOnline) writeController.queueWrite('proveedores', id, null, 'delete');
+                cache.invalidate('proveedores');
+                updateProveedorSelects();
+                updateProveedoresList();
+            }
+        };
+
+        // Variables de edición
+        let editingProductId = null;
+        let editingProveedorId = null;
+        let currentProveedorFilter = null;
+
+        // Configurar formularios
+        document.getElementById('productForm')?.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const productData = {
+                id: editingProductId || nextId,
+                sku: document.getElementById('productSKU').value,
+                barcode: document.getElementById('productBarCode').value,
+                name: document.getElementById('productName').value,
+                proveedor: document.getElementById('productProveedor').value,
+                bodega: parseInt(document.getElementById('stockBodega').value) || 0,
+                tienda: parseInt(document.getElementById('stockTienda').value) || 0,
+                lastTransfer: null
+            };
+            
+            await saveProduct(productData, !!editingProductId);
+            
+            if (!editingProductId) nextId++;
+            
+            document.getElementById('productModal').style.display = 'none';
+            
+            Swal.fire({
+                title: 'Éxito',
+                text: `Producto ${editingProductId ? 'actualizado' : 'agregado'}`,
+                icon: 'success',
+                timer: 1500
+            });
+        });
+
+        document.getElementById('proveedorForm')?.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const proveedorData = {
+                id: editingProveedorId || nextProveedorId,
+                codigo: document.getElementById('proveedorCodigo').value,
+                nombre: document.getElementById('proveedorNombre').value,
+                descripcion: document.getElementById('proveedorDescripcion').value,
+                contacto: document.getElementById('proveedorContacto').value,
+                telefono: document.getElementById('proveedorTelefono').value,
+                email: document.getElementById('proveedorEmail').value
+            };
+            
+            await saveProveedor(proveedorData, !!editingProveedorId);
+            
+            if (!editingProveedorId) nextProveedorId++;
+            
+            document.getElementById('proveedorModal').style.display = 'none';
+            
+            Swal.fire({
+                title: 'Éxito',
+                text: `Proveedor ${editingProveedorId ? 'actualizado' : 'agregado'}`,
+                icon: 'success',
+                timer: 1500
+            });
+        });
+
+        // Cerrar modales
+        document.querySelectorAll('.close-modal').forEach(btn => {
+            btn.addEventListener('click', () => {
+                btn.closest('.modal').style.display = 'none';
+            });
+        });
+
+        // Botones de agregar
+        document.getElementById('btnAddProductInventario')?.addEventListener('click', () => {
+            editingProductId = null;
+            document.getElementById('modalTitle').textContent = 'Agregar Producto';
+            document.getElementById('productForm').reset();
+            document.getElementById('productModal').style.display = 'flex';
+        });
+
+        document.getElementById('btnAddProveedor')?.addEventListener('click', () => {
+            editingProveedorId = null;
+            document.getElementById('proveedorModalTitle').textContent = 'Agregar Proveedor';
+            document.getElementById('proveedorForm').reset();
+            document.getElementById('proveedorModal').style.display = 'flex';
+        });
+
+        // ==============================================
+        // OPTIMIZACIÓN FINAL: Limpieza de memoria
+        // ==============================================
+        
+        // Limpiar caché viejo cada 30 minutos
+        setInterval(() => {
+            const now = Date.now();
+            ['inventory', 'proveedores', 'historial'].forEach(key => {
+                const item = cache[key];
+                if (item?.timestamp && (now - item.timestamp) > APP_CONFIG.CACHE_DURATION * 2) {
+                    cache[key].data = null;
+                    cache[key].timestamp = null;
+                }
+            });
+        }, 30 * 60 * 1000);
+
+        // Procesar escrituras pendientes al cerrar
+        window.addEventListener('beforeunload', () => {
+            if (writeController.pendingWrites.length > 0) {
+                writeController.processWrites();
+            }
+        });
+
+        console.log('Sistema ultra optimizado inicializado');
+    </script>
+</body>
+</html>
