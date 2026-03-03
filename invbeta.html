@@ -56,6 +56,16 @@
             backdrop-filter: blur(4px);
         }
         
+        .modal::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+        }
+        
         * {
             margin: 0;
             padding: 0;
@@ -81,6 +91,18 @@
             overflow: hidden;
         }
         
+        header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle at center, rgba(255,255,255,0.1) 0%, transparent 70%);
+            border-radius: 50%;
+            transform: translate(30%, -30%);
+        }
+        
         .header-content {
             display: flex;
             justify-content: space-between;
@@ -95,6 +117,11 @@
             font-size: 1.75rem;
             margin-bottom: 0.25rem;
             font-weight: 700;
+        }
+        
+        .subtitle {
+            font-size: 0.95rem;
+            opacity: 0.9;
         }
         
         .connection-status {
@@ -121,6 +148,10 @@
             font-weight: 500;
             backdrop-filter: blur(10px);
             border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .user-info i {
+            font-size: 1.2rem;
         }
         
         .btn-logout {
@@ -352,6 +383,27 @@
             display: none;
         }
         
+        .tabs-container::before,
+        .tabs-container::after {
+            content: '';
+            position: absolute;
+            top: 0.5rem;
+            bottom: 0;
+            width: 20px;
+            pointer-events: none;
+            z-index: 1;
+        }
+        
+        .tabs-container::before {
+            left: 0;
+            background: linear-gradient(90deg, white, transparent);
+        }
+        
+        .tabs-container::after {
+            right: 0;
+            background: linear-gradient(90deg, transparent, white);
+        }
+        
         .tab-btn {
             padding: 1rem 1.5rem;
             background: none;
@@ -448,6 +500,14 @@
         
         tbody tr:hover {
             background-color: rgba(26, 86, 219, 0.03);
+        }
+        
+        tbody tr:nth-child(even) {
+            background-color: #fafafa;
+        }
+        
+        tbody tr:nth-child(even):hover {
+            background-color: rgba(26, 86, 219, 0.05);
         }
         
         .stock-cell {
@@ -782,6 +842,26 @@
             gap: 10px;
         }
         
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+        
+        .info-card {
+            background: linear-gradient(135deg, #f8fafc, white);
+            border-radius: 12px;
+            padding: 1.5rem;
+            border: 1px solid var(--border);
+            transition: all 0.3s;
+        }
+        
+        .info-card:hover {
+            transform: translateY(-3px);
+            box-shadow: var(--card-shadow);
+        }
+        
         .barcodes-container {
             margin-top: 0.5rem;
             background: #f8fafc;
@@ -844,7 +924,80 @@
             animation: spin 1s ease-in-out infinite;
         }
         
+        .checkbox-group {
+            margin: 15px 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .checkbox-group input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+        
+        .checkbox-group label {
+            cursor: pointer;
+            user-select: none;
+        }
+        
+        .file-upload {
+            border: 2px dashed var(--border);
+            border-radius: 12px;
+            padding: 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-bottom: 1rem;
+            background: var(--light);
+        }
+        
+        .file-upload:hover {
+            border-color: var(--primary-blue);
+            background: var(--light-blue);
+        }
+        
+        .file-upload i {
+            font-size: 3rem;
+            color: var(--primary-blue);
+            margin-bottom: 1rem;
+        }
+        
+        .file-upload p {
+            color: var(--text-secondary);
+        }
+        
+        .file-upload .subtitle {
+            font-size: 0.85rem;
+            color: #999;
+        }
+        
+        .ultimo-envio.reciente {
+            color: var(--success);
+            font-weight: 500;
+        }
+        
+        .ultimo-envio.antiguo {
+            color: var(--text-secondary);
+        }
+        
+        .loading-spinner {
+            text-align: center;
+            padding: 40px;
+        }
+        
         @media (max-width: 768px) {
+            header {
+                padding: 1.25rem;
+            }
+            
+            .header-content {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1rem;
+            }
+            
             .modal-content {
                 padding: 1.5rem;
             }
@@ -858,6 +1011,11 @@
                 flex-direction: column;
             }
             
+            .search-box {
+                width: 100%;
+                min-width: unset;
+            }
+            
             .actions-cell {
                 flex-direction: column;
                 gap: 0.5rem;
@@ -867,17 +1025,41 @@
                 width: 100%;
                 justify-content: center;
             }
+            
+            .proveedor-card {
+                flex-direction: column;
+                gap: 1rem;
+                align-items: flex-start;
+            }
+            
+            .barcode-item {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            
+            .barcode-actions {
+                width: 100%;
+                justify-content: flex-end;
+            }
+            
+            .tabs-container::before,
+            .tabs-container::after {
+                display: none;
+            }
         }
         
-        #intelligentUpdateData {
-            font-family: 'Courier New', monospace;
-            font-size: 0.9rem;
-            line-height: 1.5;
-            background: #f8fafc;
-        }
-        
-        #intelligentUpdateResultado {
-            transition: all 0.3s ease;
+        @media (max-width: 480px) {
+            .stats {
+                grid-template-columns: 1fr;
+            }
+            
+            .tabs {
+                font-size: 0.75rem;
+            }
+            
+            .tab-btn {
+                padding: 0.75rem;
+            }
         }
     </style>
 </head>
@@ -940,10 +1122,12 @@
                         <input type="text" id="searchInput" placeholder="Buscar productos...">
                     </div>
                     
+                    <!-- Botón Agregar Producto (solo visible para admin) -->
                     <button class="btn btn-primary" id="btnAddProductInventario" style="display: none;">
                         <i class="fas fa-plus"></i> Agregar Producto
                     </button>
                     
+                    <!-- Botón Actualizar -->
                     <button class="btn btn-primary" id="btnRefresh">
                         <i class="fas fa-sync-alt"></i> Actualizar
                     </button>
@@ -958,7 +1142,7 @@
                                 <th data-sort="barcode">Cód. Barra <i class="fas fa-sort"></i></th>
                                 <th data-sort="proveedor">Proveedor <i class="fas fa-sort"></i></th>
                                 <th data-sort="stock">Stock Bodega <i class="fas fa-sort"></i></th>
-                                <th data-sort="envio">Último Envío <i class="fas fa-sort"></i></th>
+                                <th data-sort="envio">Último Envío a Tienda <i class="fas fa-sort"></i></th>
                                 <th>Acciones</th>
                             </tr>
                         </thead>
@@ -973,6 +1157,7 @@
                 </div>
             </div>
             
+            <!-- PESTAÑA PROVEEDORES -->
             <div class="tab-content" id="proveedoresTab">
                 <div class="proveedor-search-container">
                     <div class="proveedor-search-header">
@@ -1010,7 +1195,7 @@
                                 <th>Cód. Barra</th>
                                 <th>Proveedor</th>
                                 <th>Stock Bodega</th>
-                                <th>Último Envío</th>
+                                <th>Último Envío a Tienda</th>
                                 <th>Acciones</th>
                             </tr>
                         </thead>
@@ -1020,6 +1205,7 @@
                 </div>
             </div>
             
+            <!-- PESTAÑA GESTIÓN PROVEEDORES -->
             <div class="tab-content" id="gestionProveedoresTab">
                 <div class="toolbar">
                     <button class="btn btn-primary" id="btnAddProveedor" style="display: none;">
@@ -1037,6 +1223,7 @@
                 </div>
             </div>
             
+            <!-- PESTAÑA ACTUALIZAR STOCK -->
             <div class="tab-content" id="actualizarStockTab">
                 <div class="toolbar">
                     <button class="btn btn-primary" id="btnRefreshActualizarStock">
@@ -1048,12 +1235,15 @@
                     <h3><i class="fas fa-sync-alt"></i> Actualización Masiva de Stock</h3>
                     <p>Pega los datos en el formato: <strong>SKU | Existencia Bodega | Existencia Tienda</strong></p>
                     <p>Ejemplo: <code>DPI001 | 10 | 5</code></p>
+                    <p style="color: var(--info); font-size: 0.9rem; margin-top: 5px;">
+                        <i class="fas fa-info-circle"></i> Si hay múltiples líneas con el mismo SKU, sus cantidades se sumarán automáticamente.
+                    </p>
                     <textarea id="actualizarStockData" rows="15" placeholder="DPI001 | 10 | 5&#10;DPI001 | 5 | 2&#10;DPI002 | 15 | 8"></textarea>
                 </div>
                 
                 <div class="checkbox-group">
                     <input type="checkbox" id="actualizarSoloBodega">
-                    <label for="actualizarSoloBodega">Actualizar solo stock de bodega</label>
+                    <label for="actualizarSoloBodega">Actualizar solo stock de bodega (ignorar tienda)</label>
                 </div>
                 
                 <div class="form-group">
@@ -1066,6 +1256,7 @@
                 </div>
             </div>
             
+            <!-- PESTAÑA HISTORIAL -->
             <div class="tab-content" id="historialTab">
                 <div class="toolbar">
                     <button class="btn btn-danger" id="btnLimpiarHistorial" style="display: none;">
@@ -1080,19 +1271,26 @@
                 </div>
             </div>
             
-            <!-- PESTAÑA IMPORTAR - CON ACTUALIZACIÓN INTELIGENTE -->
+            <!-- PESTAÑA IMPORTAR/EXPORTAR - MODIFICADA: Nuevo botón Actualizar Items -->
             <div class="tab-content" id="importarTab">
                 <div class="toolbar">
                     <button class="btn btn-primary" id="btnRefreshImportar">
                         <i class="fas fa-sync-alt"></i> Actualizar
                     </button>
                     
+                    <!-- Botón Agregar Producto en pestaña Importar -->
                     <button class="btn btn-primary" id="btnAddProductImportar" style="display: none;">
                         <i class="fas fa-plus"></i> Agregar Producto
                     </button>
                     
+                    <!-- Botón Importar Rápido en pestaña Importar -->
                     <button class="btn btn-info" id="btnImportarRapidoImportar" style="display: none;">
                         <i class="fas fa-file-import"></i> Importar Rápido
+                    </button>
+                    
+                    <!-- MODIFICACIÓN: Nuevo botón Actualizar Items -->
+                    <button class="btn btn-warning" id="btnActualizarItems" style="display: none;">
+                        <i class="fas fa-sync-alt"></i> Actualizar Items
                     </button>
                 </div>
                 
@@ -1147,54 +1345,9 @@
                         </div>
                     </div>
                 </div>
-                
-                <!-- SECCIÓN: Actualización Inteligente de Productos -->
-                <div class="info-section" style="margin-top: 30px;">
-                    <h3><i class="fas fa-robot"></i> Actualización Inteligente de Productos</h3>
-                    <p>Pega los datos en formato: <strong>SKU | Producto | Cód. Barra</strong></p>
-                    <p class="subtitle">El sistema detectará automáticamente:</p>
-                    <ul style="margin: 10px 0 15px 20px; color: var(--text-secondary);">
-                        <li><i class="fas fa-plus-circle" style="color: var(--success);"></i> <strong>SKUs nuevos</strong> → Se agregarán automáticamente (sin stock)</li>
-                        <li><i class="fas fa-edit" style="color: var(--info);"></i> <strong>Cambios en nombre</strong> → Se actualizará el nombre</li>
-                        <li><i class="fas fa-barcode" style="color: var(--warning);"></i> <strong>Cambios en código de barras</strong> → Se actualizará el código</li>
-                        <li><i class="fas fa-boxes" style="color: var(--primary-blue);"></i> <strong>Stock existente</strong> → Se conserva sin cambios</li>
-                    </ul>
-                    <p class="subtitle" style="color: var(--info);">Ejemplo: <code>DPI001 | BACINICA PARA NIÑOS | 123456789</code></p>
-                    
-                    <div class="form-group">
-                        <label for="intelligentUpdateData">Datos a procesar:</label>
-                        <textarea id="intelligentUpdateData" rows="10" placeholder="SKU | Producto | Código de Barras&#10;DPI001 | BACINICA PARA NIÑOS | 123456789&#10;DPI002 | JARRA 1LITRO SURTIDA | 987654321&#10;DPI003 | PRODUCTO NUEVO | 555555555"></textarea>
-                    </div>
-                    
-                    <div class="form-row">
-                        <div class="form-group" style="flex: 1;">
-                            <label for="intelligentProveedor">Proveedor para productos nuevos:</label>
-                            <select id="intelligentProveedor">
-                            </select>
-                        </div>
-                    </div>
-                    
-                    <div class="checkbox-group">
-                        <input type="checkbox" id="intelligentActualizarNombres" checked>
-                        <label for="intelligentActualizarNombres">Actualizar nombres de productos existentes</label>
-                    </div>
-                    
-                    <div class="checkbox-group">
-                        <input type="checkbox" id="intelligentActualizarBarras" checked>
-                        <label for="intelligentActualizarBarras">Actualizar códigos de barras de productos existentes</label>
-                    </div>
-                    
-                    <div class="form-group">
-                        <button class="btn btn-info" id="btnProcesarActualizacionInteligente" style="width: 100%; display: none;">
-                            <i class="fas fa-magic"></i> Procesar Actualización Inteligente
-                        </button>
-                    </div>
-                    
-                    <div id="intelligentUpdateResultado" style="margin-top: 20px; display: none;">
-                    </div>
-                </div>
             </div>
             
+            <!-- PESTAÑA INFORMACIÓN -->
             <div class="tab-content" id="informacionTab">
                 <div class="toolbar">
                     <button class="btn btn-primary" id="btnRefreshInformacion">
@@ -1244,6 +1397,31 @@
                                 <h3 id="totalMovimientos">0</h3>
                                 <p>Movimientos</p>
                             </div>
+                        </div>
+                    </div>
+                    
+                    <div class="info-grid">
+                        <div class="info-card">
+                            <h4><i class="fas fa-cogs"></i> Características del Sistema</h4>
+                            <ul>
+                                <li><strong>Inventario:</strong> Gestión completa de productos</li>
+                                <li><strong>Proveedores:</strong> Administración y filtrado</li>
+                                <li><strong>Actualización:</strong> Stock masivo y rápido</li>
+                                <li><strong>Historial:</strong> Registro de movimientos</li>
+                                <li><strong>Importación:</strong> Carga de datos desde archivos</li>
+                                <li><strong>Exportación:</strong> Descarga en múltiples formatos</li>
+                                <li><strong>Actualizar Items:</strong> Sincroniza nombres y códigos sin afectar stock</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="info-card">
+                            <h4><i class="fas fa-shield-alt"></i> Seguridad y Acceso</h4>
+                            <ul>
+                                <li><strong>Sistema seguro:</strong> Autenticación de usuarios</li>
+                                <li><strong>Controles:</strong> Permisos según roles</li>
+                                <li><strong>Backup:</strong> Datos sincronizados en la nube</li>
+                                <li><strong>Confidencialidad:</strong> Protección de información</li>
+                            </ul>
                         </div>
                     </div>
                 </div>
@@ -1326,11 +1504,11 @@
                 
                 <div class="checkbox-group">
                     <input type="checkbox" id="importRapidoActualizarStock">
-                    <label for="importRapidoActualizarStock">Actualizar stock existente</label>
+                    <label for="importRapidoActualizarStock">Actualizar stock existente (en lugar de sumar)</label>
                 </div>
                 
                 <div class="form-group">
-                    <label for="importRapidoProveedor">Proveedor</label>
+                    <label for="importRapidoProveedor">Proveedor (se aplicará a todos los productos)</label>
                     <select id="importRapidoProveedor">
                     </select>
                 </div>
@@ -1363,22 +1541,20 @@
                     
                     <div class="form-group">
                         <label for="proveedorDescripcion">Descripción</label>
-                        <textarea id="proveedorDescripcion" rows="3" placeholder="Información adicional..."></textarea>
+                        <textarea id="proveedorDescripcion" rows="3" placeholder="Información adicional del proveedor..."></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="proveedorContacto">Contacto</label>
+                        <input type="text" id="proveedorContacto" placeholder="Nombre de contacto">
                     </div>
                     
                     <div class="form-row">
-                        <div class="form-group">
-                            <label for="proveedorContacto">Contacto</label>
-                            <input type="text" id="proveedorContacto" placeholder="Nombre de contacto">
-                        </div>
-                        
                         <div class="form-group">
                             <label for="proveedorTelefono">Teléfono</label>
                             <input type="text" id="proveedorTelefono" placeholder="Teléfono">
                         </div>
-                    </div>
-                    
-                    <div class="form-row">
+                        
                         <div class="form-group">
                             <label for="proveedorEmail">Email</label>
                             <input type="email" id="proveedorEmail" placeholder="correo@ejemplo.com">
@@ -1427,8 +1603,10 @@
         let nextId = 1;
         let nextHistorialId = 1;
         let nextProveedorId = 1;
+        let currentSearchFilter = "all";
         let currentProveedorFilter = null;
         let isOnline = navigator.onLine;
+        
         let currentSortField = null;
         let currentSortDirection = 'asc';
 
@@ -1478,8 +1656,12 @@
         const importarActualizarStock = document.getElementById('importarActualizarStock');
         const importProveedor = document.getElementById('importProveedor');
         const btnExportarProveedorExcel = document.getElementById('btnExportarProveedorExcel');
+        const loadingRow = document.getElementById('loadingRow');
         const btnSubmitProduct = document.getElementById('btnSubmitProduct');
         const btnSubmitProveedor = document.getElementById('btnSubmitProveedor');
+        
+        // MODIFICACIÓN: Nuevo elemento
+        const btnActualizarItems = document.getElementById('btnActualizarItems');
         
         const btnRefresh = document.getElementById('btnRefresh');
         const btnRefreshProveedores = document.getElementById('btnRefreshProveedores');
@@ -1493,339 +1675,9 @@
         const barcodesContainer = document.getElementById('barcodesContainer');
         const btnAddBarcode = document.getElementById('btnAddBarcode');
         const btnLimpiarHistorial = document.getElementById('btnLimpiarHistorial');
-        
-        // Nuevos elementos para actualización inteligente
-        const intelligentUpdateData = document.getElementById('intelligentUpdateData');
-        const intelligentProveedor = document.getElementById('intelligentProveedor');
-        const intelligentActualizarNombres = document.getElementById('intelligentActualizarNombres');
-        const intelligentActualizarBarras = document.getElementById('intelligentActualizarBarras');
-        const btnProcesarActualizacionInteligente = document.getElementById('btnProcesarActualizacionInteligente');
-        const intelligentUpdateResultado = document.getElementById('intelligentUpdateResultado');
 
         // ==============================================
-        // FUNCIÓN DE ACTUALIZACIÓN INTELIGENTE
-        // ==============================================
-
-        async function procesarActualizacionInteligente() {
-            if (currentUser && currentUser.role !== 'admin') {
-                Swal.fire({
-                    title: 'Acceso denegado',
-                    text: 'No tienes permisos para actualizar productos',
-                    icon: 'warning',
-                    confirmButtonText: 'Entendido',
-                    customClass: {
-                        confirmButton: 'btn btn-warning'
-                    },
-                    buttonsStyling: false
-                });
-                return false;
-            }
-            
-            const datos = intelligentUpdateData.value.trim();
-            const proveedorDefault = intelligentProveedor.value;
-            const actualizarNombres = intelligentActualizarNombres.checked;
-            const actualizarBarras = intelligentActualizarBarras.checked;
-            
-            if (!datos) {
-                Swal.fire({
-                    title: 'Datos vacíos',
-                    text: 'Por favor, ingresa datos para procesar',
-                    icon: 'info',
-                    confirmButtonText: 'Entendido',
-                    customClass: {
-                        confirmButton: 'btn btn-info'
-                    },
-                    buttonsStyling: false
-                });
-                return false;
-            }
-            
-            if (!proveedorDefault) {
-                Swal.fire({
-                    title: 'Proveedor requerido',
-                    text: 'Selecciona un proveedor para los productos nuevos',
-                    icon: 'warning',
-                    confirmButtonText: 'Entendido',
-                    customClass: {
-                        confirmButton: 'btn btn-warning'
-                    },
-                    buttonsStyling: false
-                });
-                return false;
-            }
-            
-            const btnProcesar = btnProcesarActualizacionInteligente;
-            const originalText = btnProcesar.innerHTML;
-            btnProcesar.innerHTML = '<span class="spinner"></span> Analizando...';
-            btnProcesar.disabled = true;
-            
-            try {
-                const lineas = datos.split('\n');
-                
-                const productosNuevos = [];
-                const productosActualizados = [];
-                const productosSinCambios = [];
-                const errores = [];
-                
-                for (const linea of lineas) {
-                    const lineaTrim = linea.trim();
-                    if (!lineaTrim) continue;
-                    
-                    let partes;
-                    if (lineaTrim.includes('|')) {
-                        partes = lineaTrim.split('|').map(p => p.trim());
-                    } else {
-                        errores.push(`Formato incorrecto: ${lineaTrim}`);
-                        continue;
-                    }
-                    
-                    if (partes.length < 3) {
-                        errores.push(`Faltan datos: ${lineaTrim} (se esperan SKU | Producto | Código)`);
-                        continue;
-                    }
-                    
-                    const [sku, nombre, barcode] = partes;
-                    
-                    if (!sku || !nombre || !barcode) {
-                        errores.push(`Campos vacíos: ${lineaTrim}`);
-                        continue;
-                    }
-                    
-                    const productoExistente = inventory.find(p => p.sku === sku);
-                    
-                    if (productoExistente) {
-                        const cambios = [];
-                        
-                        if (actualizarNombres && productoExistente.name !== nombre) {
-                            cambios.push({
-                                campo: 'nombre',
-                                valorAnterior: productoExistente.name,
-                                valorNuevo: nombre
-                            });
-                            productoExistente.name = nombre;
-                        }
-                        
-                        if (actualizarBarras && productoExistente.barcode !== barcode) {
-                            const barcodeExistente = inventory.find(p => 
-                                p.barcode === barcode && p.id !== productoExistente.id
-                            );
-                            
-                            if (barcodeExistente) {
-                                errores.push(`Código de barras duplicado: ${barcode} ya está en uso por SKU ${barcodeExistente.sku}`);
-                                continue;
-                            }
-                            
-                            cambios.push({
-                                campo: 'código de barras',
-                                valorAnterior: productoExistente.barcode,
-                                valorNuevo: barcode
-                            });
-                            productoExistente.barcode = barcode;
-                            
-                            if (productoExistente.barcodes && Array.isArray(productoExistente.barcodes)) {
-                                if (!productoExistente.barcodes.includes(barcode)) {
-                                    productoExistente.barcodes.push(barcode);
-                                }
-                            }
-                        }
-                        
-                        if (cambios.length > 0) {
-                            productosActualizados.push({
-                                sku: sku,
-                                nombre: productoExistente.name,
-                                cambios: cambios
-                            });
-                            
-                            if (isOnline && db) {
-                                await saveProductToFirebase(productoExistente, true);
-                            }
-                        } else {
-                            productosSinCambios.push({
-                                sku: sku,
-                                nombre: productoExistente.name
-                            });
-                        }
-                        
-                    } else {
-                        const skuExistente = inventory.find(p => p.sku === sku);
-                        const barcodeExistente = inventory.find(p => 
-                            p.barcode === barcode || 
-                            (p.barcodes && p.barcodes.includes(barcode))
-                        );
-                        
-                        if (skuExistente) {
-                            errores.push(`SKU ${sku} ya existe (inconsistencia en datos)`);
-                            continue;
-                        }
-                        
-                        if (barcodeExistente) {
-                            errores.push(`Código de barras ${barcode} ya está en uso por SKU ${barcodeExistente.sku}`);
-                            continue;
-                        }
-                        
-                        const nuevoProducto = {
-                            id: nextId++,
-                            sku: sku,
-                            name: nombre,
-                            barcode: barcode,
-                            barcodes: [barcode],
-                            proveedor: proveedorDefault,
-                            bodega: 0,
-                            tienda: 0,
-                            lastTransfer: null
-                        };
-                        
-                        productosNuevos.push({
-                            sku: sku,
-                            nombre: nombre,
-                            barcode: barcode
-                        });
-                        
-                        inventory.push(nuevoProducto);
-                        
-                        if (isOnline && db) {
-                            await saveProductToFirebase(nuevoProducto, false);
-                        }
-                    }
-                }
-                
-                if (productosNuevos.length > 0 || productosActualizados.length > 0) {
-                    const totalCambios = productosNuevos.length + productosActualizados.length;
-                    
-                    let descripcion = [];
-                    if (productosNuevos.length > 0) descripcion.push(`${productosNuevos.length} nuevos`);
-                    if (productosActualizados.length > 0) descripcion.push(`${productosActualizados.length} actualizados`);
-                    
-                    await agregarAlHistorial(
-                        'actualizacion_inteligente',
-                        null,
-                        totalCambios,
-                        descripcion.join(', '),
-                        'actualizacion_automatica'
-                    );
-                    
-                    updateInventoryTable(searchInput.value);
-                    updateStats();
-                    updateProveedorSelects();
-                }
-                
-                mostrarResultadosInteligentes(productosNuevos, productosActualizados, productosSinCambios, errores);
-                
-                let mensaje = '';
-                if (productosNuevos.length > 0) mensaje += `✅ ${productosNuevos.length} productos nuevos<br>`;
-                if (productosActualizados.length > 0) mensaje += `🔄 ${productosActualizados.length} productos actualizados<br>`;
-                if (productosSinCambios.length > 0) mensaje += `⏺️ ${productosSinCambios.length} productos sin cambios<br>`;
-                if (errores.length > 0) mensaje += `⚠️ ${errores.length} errores`;
-                
-                Swal.fire({
-                    title: 'Procesamiento completado',
-                    html: mensaje || 'No se procesaron productos',
-                    icon: productosNuevos.length > 0 || productosActualizados.length > 0 ? 'success' : 'info',
-                    confirmButtonText: 'OK',
-                    customClass: {
-                        confirmButton: (productosNuevos.length > 0 || productosActualizados.length > 0) ? 'btn btn-success' : 'btn btn-info'
-                    },
-                    buttonsStyling: false
-                });
-                
-            } catch (error) {
-                console.error('Error en actualización inteligente:', error);
-                Swal.fire({
-                    title: 'Error',
-                    text: 'No se pudo completar la actualización: ' + error.message,
-                    icon: 'error',
-                    confirmButtonText: 'OK',
-                    customClass: {
-                        confirmButton: 'btn btn-danger'
-                    },
-                    buttonsStyling: false
-                });
-            } finally {
-                btnProcesar.innerHTML = originalText;
-                btnProcesar.disabled = false;
-            }
-        }
-
-        function mostrarResultadosInteligentes(nuevos, actualizados, sinCambios, errores) {
-            const resultadoDiv = intelligentUpdateResultado;
-            resultadoDiv.innerHTML = '';
-            resultadoDiv.style.display = 'block';
-            
-            let html = `
-                <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-                    <h4 style="margin-bottom: 15px; color: var(--info);">
-                        <i class="fas fa-chart-pie"></i> Resultados del Análisis Inteligente
-                    </h4>
-                    <div style="display: flex; gap: 20px; margin-bottom: 20px; flex-wrap: wrap;">
-                        <div style="flex: 1; text-align: center; padding: 15px; background: #e8f5e9; border-radius: 8px;">
-                            <i class="fas fa-plus-circle" style="color: var(--success); font-size: 1.5rem;"></i>
-                            <div style="font-size: 1.5rem; font-weight: bold; color: var(--success);">${nuevos.length}</div>
-                            <div style="font-size: 0.9rem;">Productos Nuevos</div>
-                        </div>
-                        <div style="flex: 1; text-align: center; padding: 15px; background: #e3f2fd; border-radius: 8px;">
-                            <i class="fas fa-edit" style="color: var(--info); font-size: 1.5rem;"></i>
-                            <div style="font-size: 1.5rem; font-weight: bold; color: var(--info);">${actualizados.length}</div>
-                            <div style="font-size: 0.9rem;">Productos Actualizados</div>
-                        </div>
-                        <div style="flex: 1; text-align: center; padding: 15px; background: #f5f5f5; border-radius: 8px;">
-                            <i class="fas fa-minus-circle" style="color: var(--text-secondary); font-size: 1.5rem;"></i>
-                            <div style="font-size: 1.5rem; font-weight: bold; color: var(--text-secondary);">${sinCambios.length}</div>
-                            <div style="font-size: 0.9rem;">Sin Cambios</div>
-                        </div>
-                        <div style="flex: 1; text-align: center; padding: 15px; background: #ffebee; border-radius: 8px;">
-                            <i class="fas fa-exclamation-triangle" style="color: var(--danger); font-size: 1.5rem;"></i>
-                            <div style="font-size: 1.5rem; font-weight: bold; color: var(--danger);">${errores.length}</div>
-                            <div style="font-size: 0.9rem;">Errores</div>
-                        </div>
-                    </div>
-            `;
-            
-            if (actualizados.length > 0) {
-                html += `<h5 style="margin: 15px 0 10px; color: var(--info);">Productos Actualizados:</h5>`;
-                html += `<div style="max-height: 200px; overflow-y: auto; margin-bottom: 15px;">`;
-                actualizados.forEach(item => {
-                    html += `
-                        <div style="padding: 8px; margin-bottom: 5px; background: #e3f2fd; border-radius: 4px;">
-                            <strong>${item.sku}</strong> - ${item.nombre}<br>
-                            <small style="color: var(--info);">${item.cambios.map(c => `${c.campo}: ${c.valorAnterior} → ${c.valorNuevo}`).join(', ')}</small>
-                        </div>
-                    `;
-                });
-                html += `</div>`;
-            }
-            
-            if (nuevos.length > 0) {
-                html += `<h5 style="margin: 15px 0 10px; color: var(--success);">Productos Nuevos:</h5>`;
-                html += `<div style="max-height: 200px; overflow-y: auto; margin-bottom: 15px;">`;
-                nuevos.forEach(item => {
-                    html += `
-                        <div style="padding: 8px; margin-bottom: 5px; background: #e8f5e9; border-radius: 4px;">
-                            <strong>${item.sku}</strong> - ${item.nombre} (${item.barcode})
-                        </div>
-                    `;
-                });
-                html += `</div>`;
-            }
-            
-            if (errores.length > 0) {
-                html += `<h5 style="margin: 15px 0 10px; color: var(--danger);">Errores:</h5>`;
-                html += `<div style="max-height: 200px; overflow-y: auto;">`;
-                errores.forEach(error => {
-                    html += `
-                        <div style="padding: 8px; margin-bottom: 5px; background: #ffebee; border-radius: 4px; font-size: 0.85rem;">
-                            ${error}
-                        </div>
-                    `;
-                });
-                html += `</div>`;
-            }
-            
-            html += `</div>`;
-            resultadoDiv.innerHTML = html;
-        }
-
-        // ==============================================
-        // FUNCIÓN PARA VERIFICAR AUTENTICACIÓN
+        // VERIFICAR AUTENTICACIÓN
         // ==============================================
 
         function checkAuth() {
@@ -1882,17 +1734,52 @@
             const minutes = Math.floor(seconds / 60);
             const hours = Math.floor(minutes / 60);
             const days = Math.floor(hours / 24);
+            const weeks = Math.floor(days / 7);
+            const months = Math.floor(days / 30);
+            const years = Math.floor(days / 365);
             
-            if (seconds < 60) return "hace un momento";
-            if (minutes < 60) return minutes === 1 ? "hace 1 minuto" : `hace ${minutes} minutos`;
-            if (hours < 24) return hours === 1 ? "hace 1 hora" : `hace ${hours} horas`;
-            return days === 1 ? "hace 1 día" : `hace ${days} días`;
+            if (seconds < 60) {
+                return "hace un momento";
+            } else if (minutes < 60) {
+                return minutes === 1 ? "hace 1 minuto" : `hace ${minutes} minutos`;
+            } else if (hours < 24) {
+                return hours === 1 ? "hace 1 hora" : `hace ${hours} horas`;
+            } else if (days < 7) {
+                return days === 1 ? "hace 1 día" : `hace ${days} días`;
+            } else if (weeks < 4) {
+                return weeks === 1 ? "hace 1 semana" : `hace ${weeks} semanas`;
+            } else if (months < 12) {
+                return months === 1 ? "hace 1 mes" : `hace ${months} meses`;
+            } else {
+                return years === 1 ? "hace 1 año" : `hace ${years} años`;
+            }
         }
 
         function formatFullDate(timestamp) {
             if (!timestamp) return "Fecha no disponible";
+            
             const date = new Date(timestamp);
-            return date.toLocaleString('es-GT');
+            return date.toLocaleString('es-GT', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+        }
+
+        function getTimeAgoClass(timestamp) {
+            if (!timestamp) return "antiguo";
+            
+            const now = Date.now();
+            const diff = now - timestamp;
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+            
+            if (days === 0) return "reciente";
+            if (days <= 7) return "reciente";
+            if (days <= 30) return "";
+            return "antiguo";
         }
 
         function getStockLevelClass(stock) {
@@ -1902,7 +1789,7 @@
         }
 
         // ==============================================
-        // FUNCIÓN PARA CONFIGURAR PERMISOS SEGÚN ROL
+        // CONFIGURAR PERMISOS SEGÚN ROL
         // ==============================================
 
         function configurePermissionsByRole() {
@@ -1910,16 +1797,18 @@
             
             const isAdmin = currentUser.role === 'admin';
             
+            console.log('Configurando permisos para rol:', currentUser.role);
+            
             const adminButtons = [
                 btnAddProductInventario,
                 btnAddProductImportar,
                 btnAddProveedor,
                 btnImportarRapidoImportar,
+                btnActualizarItems,
                 btnProcesarActualizacion,
                 btnImportarJSON,
                 btnProcesarImportacion,
-                btnLimpiarHistorial,
-                btnProcesarActualizacionInteligente
+                btnLimpiarHistorial
             ];
             
             adminButtons.forEach(btn => {
@@ -1927,6 +1816,12 @@
                     btn.style.display = isAdmin ? 'inline-flex' : 'none';
                 }
             });
+            
+            setupTableActions();
+        }
+
+        function setupTableActions() {
+            const isAdmin = currentUser && currentUser.role === 'admin';
         }
 
         // ==============================================
@@ -1937,6 +1832,7 @@
             try {
                 if (!db) {
                     updateConnectionStatus(false);
+                    console.log("Firebase no disponible");
                     showLoadingSpinner();
                     return false;
                 }
@@ -1945,6 +1841,7 @@
                 inventory = [];
                 productsSnapshot.forEach(doc => {
                     const data = doc.data();
+                    
                     inventory.push({
                         id: data.id || doc.id,
                         ...data
@@ -1955,6 +1852,7 @@
                 historial = [];
                 historySnapshot.forEach(doc => {
                     const data = doc.data();
+                    
                     historial.push({
                         id: data.id || doc.id,
                         ...data
@@ -1965,6 +1863,7 @@
                 proveedores = [];
                 proveedoresSnapshot.forEach(doc => {
                     const data = doc.data();
+                    
                     proveedores.push({
                         id: data.id || doc.id,
                         ...data
@@ -1972,21 +1871,46 @@
                 });
                 
                 if (inventory.length > 0) {
-                    const ids = inventory.map(p => parseInt(p.id) || 0);
+                    const ids = inventory.map(p => {
+                        const id = parseInt(p.id);
+                        return isNaN(id) ? 0 : id;
+                    });
                     nextId = Math.max(...ids) + 1;
                 }
                 
+                if (historial.length > 0) {
+                    const histIds = historial.map(h => {
+                        const id = parseInt(h.id);
+                        return isNaN(id) ? 0 : id;
+                    });
+                    nextHistorialId = Math.max(...histIds) + 1;
+                }
+                
+                if (proveedores.length > 0) {
+                    const provIds = proveedores.map(p => {
+                        const id = parseInt(p.id);
+                        return isNaN(id) ? 0 : id;
+                    });
+                    nextProveedorId = Math.max(...provIds) + 1;
+                }
+                
                 updateConnectionStatus(true);
+                console.log('Datos cargados desde Firebase:', { 
+                    productos: inventory.length, 
+                    historial: historial.length,
+                    proveedores: proveedores.length
+                });
                 
                 updateInventoryTable();
                 updateStats();
                 updateHistorial();
                 updateProveedorSelects();
                 updateProveedoresList();
+                setupTableActions();
                 
                 return true;
             } catch (error) {
-                console.error('Error cargando datos:', error);
+                console.error('Error cargando datos de Firebase:', error);
                 updateConnectionStatus(false);
                 showLoadingSpinner();
                 return false;
@@ -2017,9 +1941,10 @@
                     await productRef.set(dataToSave);
                 }
                 
+                console.log('Producto guardado en Firebase:', productData.id);
                 return true;
             } catch (error) {
-                console.error('Error guardando producto:', error);
+                console.error('Error guardando producto en Firebase:', error);
                 throw error;
             }
         }
@@ -2027,10 +1952,16 @@
         async function saveHistoryToFirebase(historyItem) {
             try {
                 if (!db) throw new Error("Firebase no disponible");
-                await db.collection('historial').doc(historyItem.id.toString()).set(historyItem);
+                
+                const dataToSave = {
+                    ...historyItem
+                };
+                
+                await db.collection('historial').doc(historyItem.id.toString()).set(dataToSave);
+                console.log('Historial guardado en Firebase:', historyItem.id);
                 return true;
             } catch (error) {
-                console.error('Error guardando historial:', error);
+                console.error('Error guardando historial en Firebase:', error);
                 throw error;
             }
         }
@@ -2041,15 +1972,67 @@
                 
                 const proveedorRef = db.collection('proveedores').doc(proveedorData.id.toString());
                 
+                const dataToSave = {
+                    id: proveedorData.id,
+                    codigo: proveedorData.codigo,
+                    nombre: proveedorData.nombre,
+                    descripcion: proveedorData.descripcion || '',
+                    contacto: proveedorData.contacto || '',
+                    telefono: proveedorData.telefono || '',
+                    email: proveedorData.email || ''
+                };
+                
                 if (isUpdate) {
-                    await proveedorRef.update(proveedorData);
+                    await proveedorRef.update(dataToSave);
                 } else {
-                    await proveedorRef.set(proveedorData);
+                    await proveedorRef.set(dataToSave);
                 }
                 
+                console.log('Proveedor guardado en Firebase:', proveedorData.id);
                 return true;
             } catch (error) {
-                console.error('Error guardando proveedor:', error);
+                console.error('Error guardando proveedor en Firebase:', error);
+                throw error;
+            }
+        }
+
+        async function deleteProductFromFirebase(productId) {
+            try {
+                if (!db) throw new Error("Firebase no disponible");
+                await db.collection('products').doc(productId.toString()).delete();
+                console.log('Producto eliminado de Firebase:', productId);
+                return true;
+            } catch (error) {
+                console.error('Error eliminando producto de Firebase:', error);
+                throw error;
+            }
+        }
+
+        async function deleteProveedorFromFirebase(proveedorId) {
+            try {
+                if (!db) throw new Error("Firebase no disponible");
+                await db.collection('proveedores').doc(proveedorId.toString()).delete();
+                console.log('Proveedor eliminado de Firebase:', proveedorId);
+                return true;
+            } catch (error) {
+                console.error('Error eliminando proveedor de Firebase:', error);
+                throw error;
+            }
+        }
+
+        async function clearHistoryFromFirebase() {
+            try {
+                if (!db) throw new Error("Firebase no disponible");
+                const batch = db.batch();
+                const snapshot = await db.collection('historial').get();
+                snapshot.forEach(doc => {
+                    batch.delete(doc.ref);
+                });
+                await batch.commit();
+                console.log('Historial limpiado de Firebase');
+                return true;
+            } catch (error) {
+                console.error('Error limpiando historial de Firebase:', error);
                 throw error;
             }
         }
@@ -2085,6 +2068,7 @@
                 if (result.isConfirmed) {
                     localStorage.removeItem('userSession');
                     sessionStorage.removeItem('userSession');
+                    localStorage.removeItem('userRole');
                     window.location.href = 'login.html';
                 }
             });
@@ -2121,7 +2105,8 @@
                 const icon = header.querySelector('i');
                 if (icon) {
                     if (currentSortField === field) {
-                        icon.className = currentSortDirection === 'asc' ? 'fas fa-sort-up' : 'fas fa-sort-down';
+                        icon.className = currentSortDirection === 'asc' ? 
+                            'fas fa-sort-up' : 'fas fa-sort-down';
                     } else {
                         icon.className = 'fas fa-sort';
                     }
@@ -2130,28 +2115,54 @@
         }
 
         function sortProducts(products) {
-            if (!currentSortField) return products;
+            if (!currentSortField) {
+                return products;
+            }
             
-            return [...products].sort((a, b) => {
+            let sortedProducts = [...products];
+            
+            sortedProducts.sort((a, b) => {
                 let aValue, bValue;
                 
                 switch(currentSortField) {
-                    case 'sku': aValue = a.sku; bValue = b.sku; break;
-                    case 'name': aValue = a.name; bValue = b.name; break;
-                    case 'barcode': aValue = a.barcode; bValue = b.barcode; break;
-                    case 'proveedor': aValue = a.proveedor; bValue = b.proveedor; break;
-                    case 'stock': aValue = a.bodega; bValue = b.bodega; break;
-                    case 'envio': aValue = a.lastTransfer || 0; bValue = b.lastTransfer || 0; break;
-                    default: return 0;
+                    case 'sku':
+                        aValue = a.sku;
+                        bValue = b.sku;
+                        break;
+                    case 'name':
+                        aValue = a.name;
+                        bValue = b.name;
+                        break;
+                    case 'barcode':
+                        aValue = a.barcode;
+                        bValue = b.barcode;
+                        break;
+                    case 'proveedor':
+                        aValue = a.proveedor;
+                        bValue = b.proveedor;
+                        break;
+                    case 'stock':
+                        aValue = a.bodega;
+                        bValue = b.bodega;
+                        break;
+                    case 'envio':
+                        aValue = a.lastTransfer || 0;
+                        bValue = b.lastTransfer || 0;
+                        break;
+                    default:
+                        return 0;
                 }
                 
-                if (typeof aValue === 'string') {
+                if (typeof aValue === 'string' && typeof bValue === 'string') {
                     return currentSortDirection === 'asc' ? 
                         aValue.localeCompare(bValue) : bValue.localeCompare(aValue);
                 } else {
-                    return currentSortDirection === 'asc' ? aValue - bValue : bValue - aValue;
+                    return currentSortDirection === 'asc' ? 
+                        aValue - bValue : bValue - aValue;
                 }
             });
+            
+            return sortedProducts;
         }
 
         function addBarcodeField(value = '') {
@@ -2174,11 +2185,442 @@
             });
         }
 
+        function readFileAsJSON(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    try {
+                        const data = JSON.parse(e.target.result);
+                        resolve(data);
+                    } catch (error) {
+                        reject(error);
+                    }
+                };
+                reader.onerror = reject;
+                reader.readAsText(file);
+            });
+        }
+
+        function mostrarResultadosActualizacion(resultados, actualizados, noEncontrados) {
+            actualizacionResultado.innerHTML = '';
+            actualizacionResultado.style.display = 'block';
+            
+            let html = `
+                <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                    <h4 style="margin-bottom: 15px; color: var(--primary-blue);">
+                        <i class="fas fa-clipboard-check"></i> Resultados de la Actualización
+                    </h4>
+                    <div style="display: flex; gap: 20px; margin-bottom: 20px;">
+                        <div style="flex: 1; text-align: center; padding: 10px; background: #e8f5e9; border-radius: 6px;">
+                            <div style="font-size: 1.5rem; font-weight: bold; color: var(--success);">${actualizados}</div>
+                            <div style="font-size: 0.9rem; color: #666;">Actualizados</div>
+                        </div>
+                        <div style="flex: 1; text-align: center; padding: 10px; background: #fff3e0; border-radius: 6px;">
+                            <div style="font-size: 1.5rem; font-weight: bold; color: var(--warning);">${noEncontrados}</div>
+                            <div style="font-size: 0.9rem; color: #666;">No encontrados</div>
+                        </div>
+                    </div>
+            `;
+            
+            if (resultados.length > 0) {
+                html += `<div style="max-height: 300px; overflow-y: auto;">`;
+                resultados.forEach((resultado, index) => {
+                    if (resultado.error) {
+                        html += `
+                            <div style="padding: 10px; margin-bottom: 8px; background: #ffebee; border-left: 4px solid var(--danger); border-radius: 0 4px 4px 0;">
+                                <div style="font-weight: bold; color: var(--danger);">${resultado.sku}</div>
+                                <div style="font-size: 0.9rem; color: #666;">${resultado.error}</div>
+                            </div>
+                        `;
+                    } else {
+                        html += `
+                            <div style="padding: 10px; margin-bottom: 8px; background: #f9f9f9; border-left: 4px solid var(--success); border-radius: 0 4px 4px 0;">
+                                <div style="font-weight: bold; color: var(--primary-blue);">${resultado.sku} - ${resultado.nombre}</div>
+                                <div style="display: flex; gap: 15px; margin-top: 5px; font-size: 0.9rem;">
+                                    <div>
+                                        <span style="color: #666;">Bodega:</span>
+                                        <span style="margin-left: 5px; font-weight: bold; ${resultado.viejoBodega !== resultado.nuevoBodega ? 'color: var(--secondary-blue);' : 'color: #666;'}">
+                                            ${resultado.viejoBodega} → ${resultado.nuevoBodega}
+                                        </span>
+                                    </div>
+                                    <div>
+                                        <span style="color: #666;">Tienda:</span>
+                                        <span style="margin-left: 5px; font-weight: bold; ${resultado.viejoTienda !== resultado.nuevoTienda ? 'color: var(--secondary-blue);' : 'color: #666;'}">
+                                            ${resultado.viejoTienda} → ${resultado.nuevoTienda}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    }
+                });
+                html += `</div>`;
+            }
+            
+            html += `</div>`;
+            actualizacionResultado.innerHTML = html;
+        }
+
+        function exportarProveedores() {
+            let contenido = 'Código\tNombre\tDescripción\tContacto\tTeléfono\tEmail\n';
+            proveedores.forEach(proveedor => {
+                contenido += `${proveedor.codigo}\t${proveedor.nombre}\t${proveedor.descripcion || ''}\t${proveedor.contacto || ''}\t${proveedor.telefono || ''}\t${proveedor.email || ''}\n`;
+            });
+            
+            const blob = new Blob([contenido], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `proveedores_${new Date().toISOString().split('T')[0]}.txt`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            Swal.fire({
+                title: 'Proveedores exportados',
+                text: 'La lista de proveedores se ha exportado correctamente',
+                icon: 'success',
+                confirmButtonText: 'OK',
+                customClass: {
+                    confirmButton: 'btn btn-success'
+                },
+                buttonsStyling: false
+            });
+        }
+
+        function exportarInventarioPorProveedorExcel() {
+            if (!currentProveedorFilter) {
+                Swal.fire({
+                    title: 'Selecciona un proveedor',
+                    text: 'Primero debes seleccionar un proveedor para exportar su inventario',
+                    icon: 'info',
+                    confirmButtonText: 'Entendido',
+                    customClass: {
+                        confirmButton: 'btn btn-info'
+                    },
+                    buttonsStyling: false
+                });
+                return;
+            }
+            
+            const productosProveedor = inventory.filter(product => product.proveedor === currentProveedorFilter);
+            
+            if (productosProveedor.length === 0) {
+                Swal.fire({
+                    title: 'No hay productos',
+                    text: `El proveedor ${currentProveedorFilter} no tiene productos en el inventario`,
+                    icon: 'warning',
+                    confirmButtonText: 'Entendido',
+                    customClass: {
+                        confirmButton: 'btn btn-warning'
+                    },
+                    buttonsStyling: false
+                });
+                return;
+            }
+            
+            const datos = [
+                ['PROVEEDOR:', currentProveedorFilter],
+                ['FECHA EXPORTACIÓN:', new Date().toISOString().split('T')[0]],
+                ['TOTAL PRODUCTOS:', productosProveedor.length],
+                [],
+                ['SKU', 'PRODUCTO', 'CÓDIGO DE BARRAS', 'STOCK BODEGA', 'STOCK TIENDA', 'TOTAL', 'ÚLTIMO ENVÍO']
+            ];
+            
+            let totalBodega = 0;
+            let totalTienda = 0;
+            let totalGeneral = 0;
+            
+            productosProveedor.forEach(producto => {
+                const totalProducto = producto.bodega + producto.tienda;
+                totalBodega += producto.bodega;
+                totalTienda += producto.tienda;
+                totalGeneral += totalProducto;
+                
+                const ultimoEnvio = producto.lastTransfer ? 
+                    formatFullDate(producto.lastTransfer) : 'Nunca';
+                
+                datos.push([
+                    producto.sku,
+                    producto.name,
+                    producto.barcode,
+                    producto.bodega,
+                    producto.tienda,
+                    totalProducto,
+                    ultimoEnvio
+                ]);
+            });
+            
+            datos.push([]);
+            datos.push(['TOTALES:', '', '', totalBodega, totalTienda, totalGeneral, '']);
+            
+            const ws = XLSX.utils.aoa_to_sheet(datos);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Inventario");
+            
+            const proveedorNombre = currentProveedorFilter.replace(/[^\w\s]/gi, '').replace(/\s+/g, '_');
+            const filename = `inventario_${proveedorNombre}_${new Date().toISOString().split('T')[0]}.xlsx`;
+            
+            XLSX.writeFile(wb, filename);
+            
+            agregarAlHistorial(
+                'exportacion',
+                null,
+                productosProveedor.length,
+                `proveedor_${currentProveedorFilter}`,
+                'excel'
+            );
+            
+            Swal.fire({
+                title: 'Exportación exitosa',
+                html: `Se exportaron <strong>${productosProveedor.length}</strong> productos del proveedor <strong>${currentProveedorFilter}</strong> a Excel<br>
+                      <strong>Stock total:</strong> ${totalGeneral} unidades`,
+                icon: 'success',
+                confirmButtonText: 'OK',
+                customClass: {
+                    confirmButton: 'btn btn-success'
+                },
+                buttonsStyling: false
+            });
+        }
+
+        function exportarAExcel() {
+            const datos = [
+                ['INVENTARIO COMPLETO'],
+                ['FECHA EXPORTACIÓN:', new Date().toISOString().split('T')[0]],
+                ['TOTAL PRODUCTOS:', inventory.length],
+                [],
+                ['SKU', 'PRODUCTO', 'CÓDIGO DE BARRAS', 'PROVEEDOR', 'STOCK BODEGA', 'STOCK TIENDA', 'TOTAL', 'ÚLTIMO ENVÍO']
+            ];
+            
+            let totalBodega = 0;
+            let totalTienda = 0;
+            let totalGeneral = 0;
+            
+            inventory.forEach(producto => {
+                const totalProducto = producto.bodega + producto.tienda;
+                totalBodega += producto.bodega;
+                totalTienda += producto.tienda;
+                totalGeneral += totalProducto;
+                
+                const ultimoEnvio = producto.lastTransfer ? 
+                    formatFullDate(producto.lastTransfer) : 'Nunca';
+                
+                datos.push([
+                    producto.sku,
+                    producto.name,
+                    producto.barcode,
+                    producto.proveedor,
+                    producto.bodega,
+                    producto.tienda,
+                    totalProducto,
+                    ultimoEnvio
+                ]);
+            });
+            
+            datos.push([]);
+            datos.push(['TOTALES:', '', '', '', totalBodega, totalTienda, totalGeneral, '']);
+            
+            const ws = XLSX.utils.aoa_to_sheet(datos);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Inventario");
+            
+            const filename = `inventario_completo_${new Date().toISOString().split('T')[0]}.xlsx`;
+            
+            XLSX.writeFile(wb, filename);
+            
+            agregarAlHistorial(
+                'exportacion',
+                null,
+                inventory.length,
+                'sistema',
+                'excel'
+            );
+            
+            Swal.fire({
+                title: 'Exportación exitosa',
+                html: `Se exportaron <strong>${inventory.length}</strong> productos a Excel<br>
+                      <strong>Stock total:</strong> ${totalGeneral} unidades`,
+                icon: 'success',
+                confirmButtonText: 'OK',
+                customClass: {
+                    confirmButton: 'btn btn-success'
+                },
+                buttonsStyling: false
+            });
+        }
+
+        function getProveedoresUnicos() {
+            const proveedoresDeProductos = inventory.map(product => product.proveedor);
+            const proveedoresDeLista = proveedores.map(proveedor => `${proveedor.codigo} - ${proveedor.nombre}`);
+            const todosProveedores = [...new Set([...proveedoresDeProductos, ...proveedoresDeLista])];
+            return todosProveedores.sort();
+        }
+
+        function getUltimoEnvioFormateado(producto) {
+            if (!producto.lastTransfer) return "Nunca";
+            return formatTimeAgo(producto.lastTransfer);
+        }
+
+        function getClaseUltimoEnvio(producto) {
+            return getTimeAgoClass(producto.lastTransfer);
+        }
+
+        function updateProveedorSelects() {
+            const productProveedorSelect = document.getElementById('productProveedor');
+            const importProveedorSelect = document.getElementById('importProveedor');
+            const importRapidoProveedorSelect = document.getElementById('importRapidoProveedor');
+            
+            if (productProveedorSelect) {
+                productProveedorSelect.innerHTML = '<option value="">Seleccionar proveedor</option>';
+            }
+            if (importProveedorSelect) {
+                importProveedorSelect.innerHTML = '<option value="">Seleccionar proveedor</option>';
+            }
+            if (importRapidoProveedorSelect) {
+                importRapidoProveedorSelect.innerHTML = '<option value="">Seleccionar proveedor</option>';
+            }
+            
+            const nuevaOpcion = document.createElement('option');
+            nuevaOpcion.value = "nuevo";
+            nuevaOpcion.textContent = "[+] Agregar nuevo proveedor";
+            
+            if (productProveedorSelect) productProveedorSelect.appendChild(nuevaOpcion.cloneNode(true));
+            if (importProveedorSelect) importProveedorSelect.appendChild(nuevaOpcion.cloneNode(true));
+            if (importRapidoProveedorSelect) importRapidoProveedorSelect.appendChild(nuevaOpcion.cloneNode(true));
+            
+            const proveedoresList = proveedores.map(p => `${p.codigo} - ${p.nombre}`);
+            proveedoresList.forEach(proveedor => {
+                const option = document.createElement('option');
+                option.value = proveedor;
+                option.textContent = proveedor;
+                
+                if (productProveedorSelect) productProveedorSelect.appendChild(option.cloneNode(true));
+                if (importProveedorSelect) importProveedorSelect.appendChild(option.cloneNode(true));
+                if (importRapidoProveedorSelect) importRapidoProveedorSelect.appendChild(option.cloneNode(true));
+            });
+            
+            const proveedorSelects = [productProveedorSelect, importProveedorSelect, importRapidoProveedorSelect].filter(select => select);
+            
+            proveedorSelects.forEach(select => {
+                if (select) {
+                    select.addEventListener('change', function() {
+                        if (this.value === "nuevo") {
+                            if (currentUser && currentUser.role !== 'admin') {
+                                Swal.fire({
+                                    title: 'Acceso denegado',
+                                    text: 'No tienes permisos para agregar proveedores',
+                                    icon: 'warning',
+                                    confirmButtonText: 'Entendido',
+                                    customClass: {
+                                        confirmButton: 'btn btn-warning'
+                                    },
+                                    buttonsStyling: false
+                                });
+                                this.selectedIndex = 0;
+                                return;
+                            }
+                            
+                            Swal.fire({
+                                title: 'Nuevo Proveedor',
+                                input: 'text',
+                                inputLabel: 'Ingrese el nombre del nuevo proveedor',
+                                inputPlaceholder: 'Ej: P00005 - ROYALTEX S.A.',
+                                showCancelButton: true,
+                                confirmButtonText: 'Agregar',
+                                cancelButtonText: 'Cancelar',
+                                icon: 'question',
+                                customClass: {
+                                    confirmButton: 'btn btn-success',
+                                    cancelButton: 'btn btn-danger'
+                                },
+                                buttonsStyling: false
+                            }).then((result) => {
+                                if (result.isConfirmed && result.value.trim()) {
+                                    const nuevoProveedor = result.value.trim();
+                                    const option = document.createElement('option');
+                                    option.value = nuevoProveedor;
+                                    option.textContent = nuevoProveedor;
+                                    option.selected = true;
+                                    
+                                    proveedorSelects.forEach(sel => {
+                                        if (sel) {
+                                            sel.insertBefore(option.cloneNode(true), sel.lastChild);
+                                        }
+                                    });
+                                } else {
+                                    this.selectedIndex = 0;
+                                }
+                            });
+                        }
+                    });
+                }
+            });
+        }
+
+        function updateProveedoresList() {
+            proveedoresContainer.innerHTML = '';
+            
+            if (proveedores.length === 0) {
+                proveedoresContainer.innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: #666;">
+                        <i class="fas fa-truck" style="font-size: 3rem; margin-bottom: 15px; display: block; color: #ccc;"></i>
+                        No hay proveedores registrados. Agrega tu primer proveedor.
+                    </div>
+                `;
+                return;
+            }
+            
+            proveedores.forEach(proveedor => {
+                const card = document.createElement('div');
+                card.className = 'proveedor-card';
+                
+                const productosProveedor = inventory.filter(p => p.proveedor === `${proveedor.codigo} - ${proveedor.nombre}`);
+                const count = productosProveedor.length;
+                
+                const isAdmin = currentUser && currentUser.role === 'admin';
+                const actionsHtml = isAdmin ? `
+                    <div class="proveedor-actions">
+                        <button class="action-btn edit-btn" onclick="editProveedor(${proveedor.id})">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="action-btn delete-btn" onclick="deleteProveedor(${proveedor.id})">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                ` : '';
+                
+                card.innerHTML = `
+                    <div class="proveedor-info">
+                        <div class="proveedor-info-header">
+                            <h4>${proveedor.codigo} - ${proveedor.nombre}</h4>
+                            <span class="proveedor-count-badge">${count} productos</span>
+                        </div>
+                        ${proveedor.descripcion ? `<p>${proveedor.descripcion}</p>` : ''}
+                        <div style="display: flex; gap: 15px; margin-top: 10px; font-size: 0.9rem;">
+                            ${proveedor.contacto ? `<div><i class="fas fa-user"></i> ${proveedor.contacto}</div>` : ''}
+                            ${proveedor.telefono ? `<div><i class="fas fa-phone"></i> ${proveedor.telefono}</div>` : ''}
+                            ${proveedor.email ? `<div><i class="fas fa-envelope"></i> ${proveedor.email}</div>` : ''}
+                        </div>
+                    </div>
+                    ${actionsHtml}
+                `;
+                proveedoresContainer.appendChild(card);
+            });
+        }
+
         function updateInventoryTable(searchTerm = '') {
             inventoryTableBody.innerHTML = '';
             
             if (inventory.length === 0) {
-                inventoryTableBody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 40px;">No hay productos</td></tr>';
+                inventoryTableBody.innerHTML = `
+                    <tr id="loadingRow">
+                        <td colspan="7" class="loading-spinner">
+                            <div class="spinner-large"></div>
+                        </td>
+                    </tr>
+                `;
                 return;
             }
             
@@ -2188,16 +2630,19 @@
                 return product.sku.toLowerCase().includes(term) ||
                        product.name.toLowerCase().includes(term) ||
                        product.barcode.toLowerCase().includes(term) ||
+                       (product.barcodes && Array.isArray(product.barcodes) && 
+                        product.barcodes.some(bc => bc.toLowerCase().includes(term))) ||
                        product.proveedor.toLowerCase().includes(term);
             });
             
             const sortedProducts = sortProducts(filteredProducts);
-            const isAdmin = currentUser && currentUser.role === 'admin';
             
             sortedProducts.forEach(product => {
-                const ultimoEnvio = product.lastTransfer ? formatTimeAgo(product.lastTransfer) : "Nunca";
+                const ultimoEnvio = getUltimoEnvioFormateado(product);
+                const claseEnvio = getClaseUltimoEnvio(product);
                 const stockClass = getStockLevelClass(product.bodega);
                 
+                const isAdmin = currentUser && currentUser.role === 'admin';
                 const actionsHtml = isAdmin ? `
                     <td class="actions-cell">
                         <button class="action-btn edit-btn" onclick="editProduct(${product.id})">
@@ -2207,27 +2652,50 @@
                             <i class="fas fa-trash"></i>
                         </button>
                     </td>
-                ` : '<td></td>';
+                ` : `
+                    <td class="actions-cell">
+                        <span style="color: #999;">Solo lectura</span>
+                    </td>
+                `;
+                
+                const barcodeDisplay = product.barcode || '';
                 
                 const row = document.createElement('tr');
                 row.innerHTML = `
                     <td><strong>${product.sku}</strong></td>
                     <td>${product.name}</td>
-                    <td>${product.barcode}</td>
+                    <td>${barcodeDisplay}</td>
                     <td>${product.proveedor}</td>
                     <td class="stock-cell ${stockClass}">${product.bodega}</td>
-                    <td>${ultimoEnvio}</td>
+                    <td><span class="ultimo-envio ${claseEnvio}">${ultimoEnvio}</span></td>
                     ${actionsHtml}
                 `;
                 inventoryTableBody.appendChild(row);
             });
+            
+            if (filteredProducts.length === 0) {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td colspan="7" style="text-align: center; padding: 40px; color: #666;">
+                        <i class="fas fa-box-open" style="font-size: 2rem; margin-bottom: 10px; display: block; color: #ccc;"></i>
+                        ${inventory.length === 0 ? 'No hay productos en el inventario. Agrega tu primer producto.' : 'No se encontraron productos que coincidan'}
+                    </td>
+                `;
+                inventoryTableBody.appendChild(row);
+            }
         }
 
         function updateProveedorTable() {
             proveedorTableBody.innerHTML = '';
             
             if (inventory.length === 0) {
-                proveedorTableBody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 40px;">No hay productos</td></tr>';
+                proveedorTableBody.innerHTML = `
+                    <tr>
+                        <td colspan="7" class="loading-spinner">
+                            <div class="spinner-large"></div>
+                        </td>
+                    </tr>
+                `;
                 return;
             }
             
@@ -2237,23 +2705,33 @@
                 proveedorSelected.textContent = "Mostrando todos los proveedores";
             } else {
                 filteredProducts = inventory.filter(product => product.proveedor === currentProveedorFilter);
+                const productCount = filteredProducts.length;
+                proveedorSelected.innerHTML = `
+                    <div class="proveedor-info-header">
+                        <span>Mostrando: ${currentProveedorFilter}</span>
+                        <span class="proveedor-count-badge">${productCount} productos</span>
+                    </div>
+                `;
             }
             
             const searchTerm = proveedorProductSearch.value.toLowerCase().trim();
             if (searchTerm) {
-                filteredProducts = filteredProducts.filter(product => 
-                    product.sku.toLowerCase().includes(searchTerm) ||
-                    product.name.toLowerCase().includes(searchTerm) ||
-                    product.barcode.toLowerCase().includes(searchTerm)
-                );
+                filteredProducts = filteredProducts.filter(product => {
+                    return product.sku.toLowerCase().includes(searchTerm) ||
+                           product.name.toLowerCase().includes(searchTerm) ||
+                           product.barcode.toLowerCase().includes(searchTerm) ||
+                           (product.barcodes && Array.isArray(product.barcodes) && 
+                            product.barcodes.some(bc => bc.toLowerCase().includes(searchTerm))) ||
+                           product.proveedor.toLowerCase().includes(searchTerm);
+                });
             }
             
-            const isAdmin = currentUser && currentUser.role === 'admin';
-            
             filteredProducts.forEach(product => {
-                const ultimoEnvio = product.lastTransfer ? formatTimeAgo(product.lastTransfer) : "Nunca";
+                const ultimoEnvio = getUltimoEnvioFormateado(product);
+                const claseEnvio = getClaseUltimoEnvio(product);
                 const stockClass = getStockLevelClass(product.bodega);
                 
+                const isAdmin = currentUser && currentUser.role === 'admin';
                 const actionsHtml = isAdmin ? `
                     <td class="actions-cell">
                         <button class="action-btn edit-btn" onclick="editProduct(${product.id})">
@@ -2263,26 +2741,44 @@
                             <i class="fas fa-trash"></i>
                         </button>
                     </td>
-                ` : '<td></td>';
+                ` : `
+                    <td class="actions-cell">
+                        <span style="color: #999;">Solo lectura</span>
+                    </td>
+                `;
+                
+                const barcodeDisplay = product.barcode || '';
                 
                 const row = document.createElement('tr');
                 row.innerHTML = `
                     <td><strong>${product.sku}</strong></td>
                     <td>${product.name}</td>
-                    <td>${product.barcode}</td>
+                    <td>${barcodeDisplay}</td>
                     <td>${product.proveedor}</td>
                     <td class="stock-cell ${stockClass}">${product.bodega}</td>
-                    <td>${ultimoEnvio}</td>
+                    <td><span class="ultimo-envio ${claseEnvio}">${ultimoEnvio}</span></td>
                     ${actionsHtml}
                 `;
                 proveedorTableBody.appendChild(row);
             });
+            
+            if (filteredProducts.length === 0) {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td colspan="7" style="text-align: center; padding: 40px; color: #666;">
+                        <i class="fas fa-box-open" style="font-size: 2rem; margin-bottom: 10px; display: block; color: #ccc;"></i>
+                        ${!currentProveedorFilter ? 'No hay productos en el inventario' : `No hay productos del proveedor: ${currentProveedorFilter}`}
+                        ${searchTerm ? ` que coincidan con "${searchTerm}"` : ''}
+                    </td>
+                `;
+                proveedorTableBody.appendChild(row);
+            }
         }
 
         function updateStats() {
             const totalBodega = inventory.reduce((sum, product) => sum + product.bodega, 0);
             const totalTienda = inventory.reduce((sum, product) => sum + product.tienda, 0);
-            const totalProveedores = [...new Set(inventory.map(p => p.proveedor))].length;
+            const totalProveedores = getProveedoresUnicos().length;
             
             document.getElementById('totalBodega').textContent = totalBodega;
             document.getElementById('totalTienda').textContent = totalTienda;
@@ -2293,44 +2789,58 @@
         function updateHistorial() {
             historialContainer.innerHTML = '';
             
-            if (historial.length === 0) {
-                historialContainer.innerHTML = '<div style="text-align: center; padding: 40px;">No hay movimientos</div>';
+            const historialOrdenado = [...historial].sort((a, b) => {
+                return (b.timestamp || 0) - (a.timestamp || 0);
+            });
+            
+            if (historialOrdenado.length === 0) {
+                historialContainer.innerHTML = '<div style="text-align: center; padding: 40px; color: #666;"><i class="fas fa-history" style="font-size: 3rem; margin-bottom: 15px; display: block; color: #ccc;"></i>No hay movimientos registrados</div>';
                 return;
             }
             
-            historial.forEach(movimiento => {
+            historialOrdenado.forEach(movimiento => {
                 const item = document.createElement('div');
-                item.className = 'historial-item';
+                item.className = `historial-item`;
                 
                 let tipoBadge = '';
                 let icon = '';
                 let detalles = '';
                 let tipoClase = '';
                 
-                if (movimiento.tipo === 'actualizacion_inteligente') {
-                    tipoBadge = 'ACTUALIZACIÓN INTELIGENTE';
-                    icon = '<i class="fas fa-robot"></i>';
-                    detalles = `Cambios: ${movimiento.origen}`;
-                    tipoClase = 'tipo-actualizacion';
+                if (movimiento.tipo === 'transferencia') {
+                    tipoBadge = 'TRANSFERENCIA';
+                    icon = '<i class="fas fa-exchange-alt"></i>';
+                    detalles = `De <strong>${movimiento.origen}</strong> a <strong>${movimiento.destino}</strong>`;
+                    tipoClase = 'tipo-transferencia';
                 } else if (movimiento.tipo === 'importacion') {
                     tipoBadge = 'IMPORTACIÓN';
                     icon = '<i class="fas fa-file-import"></i>';
-                    detalles = `Origen: ${movimiento.origen}`;
+                    detalles = `Origen: <strong>${movimiento.origen}</strong>`;
                     tipoClase = 'tipo-importacion';
                 } else if (movimiento.tipo === 'actualizacion_stock') {
                     tipoBadge = 'ACTUALIZACIÓN STOCK';
                     icon = '<i class="fas fa-sync-alt"></i>';
-                    detalles = `Tipo: ${movimiento.origen}`;
+                    detalles = `Tipo: <strong>${movimiento.origen}</strong>`;
                     tipoClase = 'tipo-actualizacion';
+                } else if (movimiento.tipo === 'actualizacion_items') {
+                    tipoBadge = 'ACTUALIZACIÓN ITEMS';
+                    icon = '<i class="fas fa-sync-alt"></i>';
+                    detalles = `Items procesados: <strong>${movimiento.cantidad}</strong>`;
+                    tipoClase = 'tipo-actualizacion';
+                } else if (movimiento.tipo === 'exportacion') {
+                    tipoBadge = 'EXPORTACIÓN';
+                    icon = '<i class="fas fa-file-export"></i>';
+                    detalles = `Formato: <strong>${movimiento.origen}</strong>`;
+                    tipoClase = 'tipo-importacion';
                 } else if (movimiento.tipo === 'eliminacion') {
                     tipoBadge = 'ELIMINACIÓN';
                     icon = '<i class="fas fa-trash"></i>';
-                    detalles = `Producto: ${movimiento.producto}`;
+                    detalles = `De: <strong>${movimiento.origen}</strong>`;
                     tipoClase = 'tipo-transferencia';
                 } else {
                     tipoBadge = 'SISTEMA';
                     icon = '<i class="fas fa-cog"></i>';
-                    detalles = movimiento.origen;
+                    detalles = `Tipo: <strong>${movimiento.origen}</strong>`;
                     tipoClase = 'tipo-importacion';
                 }
                 
@@ -2349,7 +2859,9 @@
                     <div style="margin-bottom: 10px;">
                         <strong>${movimiento.producto}</strong> ${movimiento.sku !== 'N/A' ? '(SKU: ' + movimiento.sku + ')' : ''}
                     </div>
-                    <div style="margin-bottom: 10px;">${detalles}</div>
+                    <div style="margin-bottom: 10px;">
+                        ${detalles}
+                    </div>
                     <div style="color: #666; font-size: 0.9rem;">
                         <i class="fas fa-user"></i> ${movimiento.usuario}
                     </div>
@@ -2366,7 +2878,7 @@
                 id: nextHistorialId++,
                 timestamp: getCurrentTimestamp(),
                 tipo: tipo,
-                producto: producto ? producto.name : 'Múltiple',
+                producto: producto ? producto.name : 'Importación múltiple',
                 sku: producto ? producto.sku : 'N/A',
                 cantidad: cantidad,
                 origen: origen,
@@ -2378,19 +2890,249 @@
                 if (isOnline && db) {
                     await saveHistoryToFirebase(nuevoRegistro);
                 }
+                
                 historial.unshift(nuevoRegistro);
                 updateHistorial();
                 updateStats();
+                
+                return true;
             } catch (error) {
                 console.error('Error guardando historial:', error);
                 historial.unshift(nuevoRegistro);
                 updateHistorial();
+                updateStats();
+                return false;
+            }
+        }
+
+        // ==============================================
+        // MODIFICACIÓN: Función para Actualizar Items (sin modificar existencias)
+        // ==============================================
+        async function actualizarItemsDesdeTexto(datos, proveedor) {
+            if (!datos) {
+                Swal.fire({
+                    title: 'Datos vacíos',
+                    text: 'Por favor, ingresa datos para actualizar',
+                    icon: 'info',
+                    confirmButtonText: 'Entendido',
+                    customClass: {
+                        confirmButton: 'btn btn-info'
+                    },
+                    buttonsStyling: false
+                });
+                return;
+            }
+            
+            if (!proveedor) {
+                Swal.fire({
+                    title: 'Proveedor requerido',
+                    text: 'Selecciona un proveedor para los productos',
+                    icon: 'warning',
+                    confirmButtonText: 'Entendido',
+                    customClass: {
+                        confirmButton: 'btn btn-warning'
+                    },
+                    buttonsStyling: false
+                });
+                return;
+            }
+            
+            const originalText = btnActualizarItems?.innerHTML;
+            if (btnActualizarItems) {
+                btnActualizarItems.innerHTML = '<span class="spinner"></span> Procesando...';
+                btnActualizarItems.disabled = true;
+            }
+            
+            try {
+                const lineas = datos.split('\n');
+                let productosNuevos = 0;
+                let productosActualizados = 0;
+                let productosSinCambios = 0;
+                let errores = [];
+                
+                for (const linea of lineas) {
+                    const lineaTrim = linea.trim();
+                    if (!lineaTrim) continue;
+                    
+                    let partes;
+                    if (lineaTrim.includes('|')) {
+                        partes = lineaTrim.split('|').map(p => p.trim());
+                    } else if (lineaTrim.includes('\t')) {
+                        partes = lineaTrim.split('\t').map(p => p.trim());
+                    } else {
+                        partes = lineaTrim.split(/\s{2,}/).map(p => p.trim());
+                    }
+                    
+                    if (partes.length >= 3) {
+                        const [sku, nombre, barcode] = partes;
+                        
+                        if (!sku || !nombre || !barcode) {
+                            errores.push(`Línea inválida: ${lineaTrim}`);
+                            continue;
+                        }
+                        
+                        const existingIndex = inventory.findIndex(p => p.sku === sku);
+                        
+                        if (existingIndex >= 0) {
+                            // Producto existe - verificar cambios
+                            const producto = inventory[existingIndex];
+                            let cambios = [];
+                            
+                            // Verificar si cambió el nombre
+                            if (producto.name !== nombre) {
+                                producto.name = nombre;
+                                cambios.push('nombre');
+                            }
+                            
+                            // Verificar si cambió el código de barras principal
+                            if (producto.barcode !== barcode) {
+                                // Guardar el código anterior en barcodes si no existe
+                                if (!producto.barcodes) {
+                                    producto.barcodes = [producto.barcode];
+                                } else if (!producto.barcodes.includes(producto.barcode)) {
+                                    producto.barcodes.push(producto.barcode);
+                                }
+                                
+                                // Agregar nuevo código si no existe
+                                if (!producto.barcodes.includes(barcode)) {
+                                    producto.barcodes.push(barcode);
+                                }
+                                
+                                producto.barcode = barcode;
+                                cambios.push('código de barras');
+                            }
+                            
+                            // Verificar si cambió el proveedor (solo si se especifica)
+                            if (proveedor && producto.proveedor !== proveedor) {
+                                producto.proveedor = proveedor;
+                                cambios.push('proveedor');
+                            }
+                            
+                            if (cambios.length > 0) {
+                                // Guardar cambios en Firebase
+                                if (isOnline && db) {
+                                    await saveProductToFirebase(producto, true);
+                                }
+                                productosActualizados++;
+                                console.log(`Producto ${sku} actualizado: ${cambios.join(', ')}`);
+                            } else {
+                                productosSinCambios++;
+                            }
+                        } else {
+                            // Producto nuevo - crear con stock 0
+                            const nuevoProducto = {
+                                id: nextId++,
+                                sku: sku,
+                                name: nombre,
+                                barcode: barcode,
+                                barcodes: [barcode],
+                                proveedor: proveedor,
+                                bodega: 0,
+                                tienda: 0,
+                                lastTransfer: null
+                            };
+                            
+                            // Validar que no haya SKU duplicado (por si acaso)
+                            const skuDuplicado = inventory.find(p => p.sku === sku);
+                            if (!skuDuplicado) {
+                                if (isOnline && db) {
+                                    await saveProductToFirebase(nuevoProducto, false);
+                                }
+                                inventory.push(nuevoProducto);
+                                productosNuevos++;
+                            } else {
+                                errores.push(`SKU duplicado detectado: ${sku}`);
+                            }
+                        }
+                    } else {
+                        errores.push(`Formato incorrecto (se esperaban 3 campos): ${lineaTrim}`);
+                    }
+                }
+                
+                // Registrar en historial
+                if (productosNuevos > 0 || productosActualizados > 0) {
+                    await agregarAlHistorial(
+                        'actualizacion_items',
+                        null,
+                        productosNuevos + productosActualizados,
+                        'actualizacion_masiva',
+                        'sistema'
+                    );
+                    
+                    updateInventoryTable(searchInput.value);
+                    updateStats();
+                    updateProveedorSelects();
+                    
+                    // Mostrar resultados
+                    let mensaje = '';
+                    if (productosNuevos > 0) {
+                        mensaje += `<strong>${productosNuevos}</strong> productos nuevos agregados<br>`;
+                    }
+                    if (productosActualizados > 0) {
+                        mensaje += `<strong>${productosActualizados}</strong> productos actualizados<br>`;
+                    }
+                    if (productosSinCambios > 0) {
+                        mensaje += `<strong>${productosSinCambios}</strong> productos sin cambios<br>`;
+                    }
+                    if (errores.length > 0) {
+                        mensaje += `<br><span style="color: var(--warning);">⚠️ ${errores.length} errores</span>`;
+                    }
+                    
+                    Swal.fire({
+                        title: 'Actualización completada',
+                        html: mensaje,
+                        icon: 'success',
+                        confirmButtonText: 'OK',
+                        customClass: {
+                            confirmButton: 'btn btn-success'
+                        },
+                        buttonsStyling: false
+                    });
+                } else {
+                    Swal.fire({
+                        title: 'Sin cambios',
+                        html: `No se encontraron productos para actualizar.<br>
+                              ${errores.length > 0 ? `<br>Errores: ${errores.length}` : ''}`,
+                        icon: 'info',
+                        confirmButtonText: 'Entendido',
+                        customClass: {
+                            confirmButton: 'btn btn-info'
+                        },
+                        buttonsStyling: false
+                    });
+                }
+            } catch (error) {
+                console.error('Error en actualización de items:', error);
+                Swal.fire({
+                    title: 'Error',
+                    text: 'No se pudo completar la actualización. Inténtalo de nuevo.',
+                    icon: 'error',
+                    confirmButtonText: 'OK',
+                    customClass: {
+                        confirmButton: 'btn btn-danger'
+                    },
+                    buttonsStyling: false
+                });
+            } finally {
+                if (btnActualizarItems) {
+                    btnActualizarItems.innerHTML = originalText;
+                    btnActualizarItems.disabled = false;
+                }
             }
         }
 
         function editProduct(id) {
-            if (currentUser?.role !== 'admin') {
-                Swal.fire({ title: 'Acceso denegado', text: 'No tienes permisos para editar productos', icon: 'warning' });
+            if (currentUser.role !== 'admin') {
+                Swal.fire({
+                    title: 'Acceso denegado',
+                    text: 'No tienes permisos para editar productos',
+                    icon: 'warning',
+                    confirmButtonText: 'Entendido',
+                    customClass: {
+                        confirmButton: 'btn btn-warning'
+                    },
+                    buttonsStyling: false
+                });
                 return;
             }
             
@@ -2404,278 +3146,204 @@
             document.getElementById('productName').value = product.name;
             
             const proveedorSelect = document.getElementById('productProveedor');
-            Array.from(proveedorSelect.options).forEach((opt, idx) => {
-                if (opt.value === product.proveedor) proveedorSelect.selectedIndex = idx;
-            });
+            const options = Array.from(proveedorSelect.options);
+            const index = options.findIndex(option => option.value === product.proveedor);
+            if (index !== -1) {
+                proveedorSelect.selectedIndex = index;
+            }
             
             document.getElementById('stockBodega').value = product.bodega;
             document.getElementById('stockTienda').value = product.tienda;
             
             barcodesContainer.innerHTML = '';
-            if (product.barcodes) {
-                product.barcodes.forEach(bc => {
-                    if (bc !== product.barcode) addBarcodeField(bc);
+            if (product.barcodes && Array.isArray(product.barcodes)) {
+                product.barcodes.forEach((barcode, index) => {
+                    if (index > 0 || barcode !== product.barcode) {
+                        addBarcodeField(barcode);
+                    }
                 });
             }
             
             productModal.style.display = 'flex';
         }
 
-        async function deleteProduct(id) {
-            if (currentUser?.role !== 'admin') {
-                Swal.fire({ title: 'Acceso denegado', text: 'No tienes permisos para eliminar productos', icon: 'warning' });
+        function editProveedor(id) {
+            if (currentUser.role !== 'admin') {
+                Swal.fire({
+                    title: 'Acceso denegado',
+                    text: 'No tienes permisos para editar proveedores',
+                    icon: 'warning',
+                    confirmButtonText: 'Entendido',
+                    customClass: {
+                        confirmButton: 'btn btn-warning'
+                    },
+                    buttonsStyling: false
+                });
                 return;
             }
             
-            const result = await Swal.fire({
+            const proveedor = proveedores.find(p => p.id === id);
+            if (!proveedor) return;
+            
+            editingProveedorId = id;
+            document.getElementById('proveedorModalTitle').textContent = 'Editar Proveedor';
+            document.getElementById('proveedorCodigo').value = proveedor.codigo;
+            document.getElementById('proveedorNombre').value = proveedor.nombre;
+            document.getElementById('proveedorDescripcion').value = proveedor.descripcion || '';
+            document.getElementById('proveedorContacto').value = proveedor.contacto || '';
+            document.getElementById('proveedorTelefono').value = proveedor.telefono || '';
+            document.getElementById('proveedorEmail').value = proveedor.email || '';
+            proveedorModal.style.display = 'flex';
+        }
+
+        async function deleteProduct(id) {
+            if (currentUser.role !== 'admin') {
+                Swal.fire({
+                    title: 'Acceso denegado',
+                    text: 'No tienes permisos para eliminar productos',
+                    icon: 'warning',
+                    confirmButtonText: 'Entendido',
+                    customClass: {
+                        confirmButton: 'btn btn-warning'
+                    },
+                    buttonsStyling: false
+                });
+                return;
+            }
+            
+            Swal.fire({
                 title: '¿Eliminar producto?',
                 text: 'Esta acción no se puede deshacer',
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonText: 'Sí, eliminar',
-                cancelButtonText: 'Cancelar'
-            });
-            
-            if (result.isConfirmed) {
-                const producto = inventory.find(p => p.id === id);
-                if (producto) {
-                    try {
-                        if (isOnline && db) await db.collection('products').doc(id.toString()).delete();
-                        
-                        await agregarAlHistorial('eliminacion', id, producto.bodega + producto.tienda, 'inventario', 'eliminado');
-                        
-                        inventory = inventory.filter(p => p.id !== id);
-                        updateInventoryTable(searchInput.value);
-                        updateStats();
-                        
-                        Swal.fire({ title: 'Producto eliminado', icon: 'success' });
-                    } catch (error) {
-                        Swal.fire({ title: 'Error', text: 'No se pudo eliminar', icon: 'error' });
+                cancelButtonText: 'Cancelar',
+                customClass: {
+                    confirmButton: 'btn btn-danger',
+                    cancelButton: 'btn btn-secondary'
+                },
+                buttonsStyling: false
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    const producto = inventory.find(p => p.id === id);
+                    if (producto) {
+                        try {
+                            if (isOnline && db) {
+                                await deleteProductFromFirebase(id);
+                            }
+                            
+                            await agregarAlHistorial(
+                                'eliminacion',
+                                id,
+                                producto.bodega + producto.tienda,
+                                'inventario',
+                                'eliminado'
+                            );
+                            
+                            inventory = inventory.filter(p => p.id !== id);
+                            updateInventoryTable(searchInput.value);
+                            updateStats();
+                            updateProveedorSelects();
+                            
+                            Swal.fire({
+                                title: 'Producto eliminado',
+                                text: `El producto ${producto.name} ha sido eliminado`,
+                                icon: 'success',
+                                confirmButtonText: 'OK',
+                                customClass: {
+                                    confirmButton: 'btn btn-success'
+                                },
+                                buttonsStyling: false
+                            });
+                        } catch (error) {
+                            Swal.fire({
+                                title: 'Error',
+                                text: 'No se pudo eliminar el producto. Inténtalo de nuevo.',
+                                icon: 'error',
+                                confirmButtonText: 'OK',
+                                customClass: {
+                                    confirmButton: 'btn btn-danger'
+                                },
+                                buttonsStyling: false
+                            });
+                        }
                     }
                 }
-            }
-        }
-
-        window.editProduct = editProduct;
-        window.deleteProduct = deleteProduct;
-
-        // ==============================================
-        // FUNCIONES DE PROVEEDORES
-        // ==============================================
-
-        function getProveedoresUnicos() {
-            const deProductos = inventory.map(p => p.proveedor);
-            const deLista = proveedores.map(p => `${p.codigo} - ${p.nombre}`);
-            return [...new Set([...deProductos, ...deLista])].sort();
-        }
-
-        function contarProductosPorProveedor(proveedor) {
-            return inventory.filter(p => p.proveedor === proveedor).length;
-        }
-
-        function updateProveedorSelects() {
-            const selects = [
-                document.getElementById('productProveedor'),
-                document.getElementById('importProveedor'),
-                document.getElementById('importRapidoProveedor'),
-                document.getElementById('intelligentProveedor')
-            ];
-            
-            selects.forEach(select => {
-                if (!select) return;
-                select.innerHTML = '<option value="">Seleccionar proveedor</option>';
-                
-                const nuevaOpcion = document.createElement('option');
-                nuevaOpcion.value = 'nuevo';
-                nuevaOpcion.textContent = '[+] Agregar nuevo proveedor';
-                select.appendChild(nuevaOpcion);
-                
-                proveedores.forEach(p => {
-                    const val = `${p.codigo} - ${p.nombre}`;
-                    const opt = document.createElement('option');
-                    opt.value = val;
-                    opt.textContent = val;
-                    select.appendChild(opt);
-                });
             });
         }
 
-        function updateProveedoresList() {
-            proveedoresContainer.innerHTML = '';
-            
-            if (proveedores.length === 0) {
-                proveedoresContainer.innerHTML = '<div style="text-align: center; padding: 40px;">No hay proveedores</div>';
+        async function deleteProveedor(id) {
+            if (currentUser.role !== 'admin') {
+                Swal.fire({
+                    title: 'Acceso denegado',
+                    text: 'No tienes permisos para eliminar proveedores',
+                    icon: 'warning',
+                    confirmButtonText: 'Entendido',
+                    customClass: {
+                        confirmButton: 'btn btn-warning'
+                    },
+                    buttonsStyling: false
+                });
                 return;
             }
             
-            proveedores.forEach(proveedor => {
-                const card = document.createElement('div');
-                card.className = 'proveedor-card';
-                
-                const count = inventory.filter(p => p.proveedor === `${proveedor.codigo} - ${proveedor.nombre}`).length;
-                
-                card.innerHTML = `
-                    <div>
-                        <h4>${proveedor.codigo} - ${proveedor.nombre}</h4>
-                        <span class="proveedor-count-badge">${count} productos</span>
-                        ${proveedor.descripcion ? `<p>${proveedor.descripcion}</p>` : ''}
-                    </div>
-                `;
-                proveedoresContainer.appendChild(card);
-            });
-        }
-
-        // ==============================================
-        // CONFIGURACIÓN DE EVENTOS
-        // ==============================================
-
-        function setupTabs() {
-            tabButtons.forEach(button => {
-                button.addEventListener('click', function() {
-                    const tabId = this.getAttribute('data-tab');
-                    
-                    tabButtons.forEach(btn => btn.classList.remove('active'));
-                    tabContents.forEach(content => content.classList.remove('active'));
-                    
-                    this.classList.add('active');
-                    document.getElementById(`${tabId}Tab`).classList.add('active');
-                    
-                    if (tabId === 'proveedores') updateProveedorTable();
-                    else if (tabId === 'gestionProveedores') updateProveedoresList();
-                    else if (tabId === 'historial') updateHistorial();
-                    else if (tabId === 'informacion') updateStats();
-                });
-            });
-        }
-
-        function setupSearch() {
-            searchInput.addEventListener('input', () => updateInventoryTable(searchInput.value));
-            proveedorProductSearch.addEventListener('input', updateProveedorTable);
-        }
-
-        function setupProveedorSearch() {
-            let timeout;
-            proveedorSearchInput.addEventListener('input', function() {
-                clearTimeout(timeout);
-                timeout = setTimeout(() => {
-                    const term = this.value.toLowerCase().trim();
-                    const lista = getProveedoresUnicos();
-                    proveedorSuggestions.innerHTML = '';
-                    
-                    if (term.length === 0) {
-                        currentProveedorFilter = null;
-                        proveedorSelected.textContent = 'Mostrando todos los proveedores';
-                        updateProveedorTable();
-                        return;
+            Swal.fire({
+                title: '¿Eliminar proveedor?',
+                text: 'Esta acción no se puede deshacer. Los productos asociados a este proveedor no se eliminarán.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Sí, eliminar',
+                cancelButtonText: 'Cancelar',
+                customClass: {
+                    confirmButton: 'btn btn-danger',
+                    cancelButton: 'btn btn-secondary'
+                },
+                buttonsStyling: false
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    const proveedor = proveedores.find(p => p.id === id);
+                    if (proveedor) {
+                        try {
+                            if (isOnline && db) {
+                                await deleteProveedorFromFirebase(id);
+                            }
+                            
+                            proveedores = proveedores.filter(p => p.id !== id);
+                            updateProveedorSelects();
+                            updateProveedoresList();
+                            updateStats();
+                            
+                            Swal.fire({
+                                title: 'Proveedor eliminado',
+                                text: `El proveedor ${proveedor.nombre} ha sido eliminado`,
+                                icon: 'success',
+                                confirmButtonText: 'OK',
+                                customClass: {
+                                    confirmButton: 'btn btn-success'
+                                },
+                                buttonsStyling: false
+                            });
+                        } catch (error) {
+                            Swal.fire({
+                                title: 'Error',
+                                text: 'No se pudo eliminar el proveedor. Inténtalo de nuevo.',
+                                icon: 'error',
+                                confirmButtonText: 'OK',
+                                customClass: {
+                                    confirmButton: 'btn btn-danger'
+                                },
+                                buttonsStyling: false
+                            });
+                        }
                     }
-                    
-                    const filtrados = lista.filter(p => p.toLowerCase().includes(term));
-                    if (filtrados.length > 0) {
-                        filtrados.forEach(p => {
-                            const count = contarProductosPorProveedor(p);
-                            const div = document.createElement('div');
-                            div.className = 'proveedor-suggestion';
-                            div.innerHTML = `<span>${p}</span><span class="proveedor-count">${count} productos</span>`;
-                            div.onclick = () => {
-                                proveedorSearchInput.value = p;
-                                proveedorSuggestions.style.display = 'none';
-                                currentProveedorFilter = p;
-                                proveedorSelected.innerHTML = `<span>Mostrando: ${p} (${count} productos)</span>`;
-                                updateProveedorTable();
-                            };
-                            proveedorSuggestions.appendChild(div);
-                        });
-                        proveedorSuggestions.style.display = 'block';
-                    }
-                }, 300);
-            });
-        }
-
-        function setupEventListeners() {
-            btnLogout.addEventListener('click', logout);
-
-            window.addEventListener('online', () => updateConnectionStatus(true));
-            window.addEventListener('offline', () => updateConnectionStatus(false));
-
-            btnRefresh.addEventListener('click', () => { showLoadingSpinner(); loadDataFromFirebase(); });
-            btnRefreshProveedores.addEventListener('click', loadDataFromFirebase);
-            btnRefreshGestionProveedores.addEventListener('click', loadDataFromFirebase);
-            btnRefreshActualizarStock.addEventListener('click', loadDataFromFirebase);
-            btnRefreshHistorial.addEventListener('click', loadDataFromFirebase);
-            btnRefreshImportar.addEventListener('click', loadDataFromFirebase);
-            btnRefreshInformacion.addEventListener('click', loadDataFromFirebase);
-            
-            btnAddBarcode.addEventListener('click', () => addBarcodeField());
-            
-            btnAddProductInventario?.addEventListener('click', () => {
-                if (currentUser?.role !== 'admin') return;
-                editingProductId = null;
-                document.getElementById('modalTitle').textContent = 'Agregar Producto';
-                document.getElementById('productSKU').value = '';
-                document.getElementById('productBarCode').value = '';
-                document.getElementById('productName').value = '';
-                document.getElementById('productProveedor').selectedIndex = 0;
-                document.getElementById('stockBodega').value = '0';
-                document.getElementById('stockTienda').value = '0';
-                barcodesContainer.innerHTML = '';
-                productModal.style.display = 'flex';
-            });
-
-            btnAddProductImportar?.addEventListener('click', () => btnAddProductInventario.click());
-
-            btnImportarRapidoImportar?.addEventListener('click', () => {
-                if (currentUser?.role !== 'admin') return;
-                importModal.style.display = 'flex';
-            });
-
-            closeModalBtn.addEventListener('click', () => productModal.style.display = 'none');
-            closeImportModalBtn.addEventListener('click', () => importModal.style.display = 'none');
-            closeProveedorModalBtn.addEventListener('click', () => proveedorModal.style.display = 'none');
-
-            productForm.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                if (btnSubmitProduct.disabled) return;
-                
-                const barcodes = [...barcodesContainer.querySelectorAll('input')].map(i => i.value.trim()).filter(v => v);
-                const data = {
-                    id: editingProductId || nextId,
-                    sku: document.getElementById('productSKU').value,
-                    barcode: document.getElementById('productBarCode').value,
-                    barcodes: [document.getElementById('productBarCode').value, ...barcodes],
-                    name: document.getElementById('productName').value,
-                    proveedor: document.getElementById('productProveedor').value,
-                    bodega: parseInt(document.getElementById('stockBodega').value) || 0,
-                    tienda: parseInt(document.getElementById('stockTienda').value) || 0,
-                    lastTransfer: null
-                };
-                
-                if (inventory.some(p => p.sku === data.sku && p.id !== editingProductId)) {
-                    Swal.fire({ title: 'SKU duplicado', icon: 'error' });
-                    return;
-                }
-                
-                try {
-                    if (editingProductId) {
-                        const idx = inventory.findIndex(p => p.id === editingProductId);
-                        inventory[idx] = data;
-                        if (isOnline && db) await saveProductToFirebase(data, true);
-                    } else {
-                        inventory.push(data);
-                        nextId++;
-                        if (isOnline && db) await saveProductToFirebase(data, false);
-                    }
-                    
-                    updateInventoryTable(searchInput.value);
-                    updateStats();
-                    productModal.style.display = 'none';
-                    Swal.fire({ title: 'Producto guardado', icon: 'success' });
-                } catch (error) {
-                    Swal.fire({ title: 'Error', text: error.message, icon: 'error' });
                 }
             });
-
-            btnProcesarActualizacionInteligente.addEventListener('click', procesarActualizacionInteligente);
         }
+
+        window.editProduct = editProduct;
+        window.editProveedor = editProveedor;
+        window.deleteProduct = deleteProduct;
+        window.deleteProveedor = deleteProveedor;
 
         // ==============================================
         // INICIALIZACIÓN
@@ -2689,15 +3357,1256 @@
             
             tableHeaders.forEach(header => {
                 header.addEventListener('click', function() {
-                    sortByField(this.getAttribute('data-sort'));
+                    const sortField = this.getAttribute('data-sort');
+                    sortByField(sortField);
                 });
             });
             
             requestUserRole();
             
             const session = localStorage.getItem('userSession') || sessionStorage.getItem('userSession');
-            if (!session) window.location.href = 'login.html';
+            if (!session) {
+                window.location.href = 'login.html';
+            }
         });
+
+        function setupTabs() {
+            tabButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const tabId = this.getAttribute('data-tab');
+                    
+                    tabButtons.forEach(btn => btn.classList.remove('active'));
+                    tabContents.forEach(content => content.classList.remove('active'));
+                    
+                    this.classList.add('active');
+                    document.getElementById(`${tabId}Tab`).classList.add('active');
+                    
+                    if (tabId === 'proveedores') {
+                        updateProveedorTable();
+                    } else if (tabId === 'gestionProveedores') {
+                        updateProveedoresList();
+                    } else if (tabId === 'historial') {
+                        updateHistorial();
+                    } else if (tabId === 'informacion') {
+                        updateStats();
+                    }
+                });
+            });
+        }
+
+        function setupSearch() {
+            searchInput.addEventListener('input', function() {
+                updateInventoryTable(this.value);
+            });
+            
+            proveedorProductSearch.addEventListener('input', function() {
+                updateProveedorTable();
+            });
+        }
+
+        function contarProductosPorProveedor(proveedor) {
+            return inventory.filter(product => product.proveedor === proveedor).length;
+        }
+
+        function setupProveedorSearch() {
+            let searchTimeout;
+            
+            proveedorSearchInput.addEventListener('input', function() {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(() => {
+                    const searchTerm = this.value.toLowerCase().trim();
+                    const proveedoresList = getProveedoresUnicos();
+                    proveedorSuggestions.innerHTML = '';
+                    proveedorSuggestions.style.display = 'none';
+                    
+                    if (searchTerm.length === 0) {
+                        currentProveedorFilter = null;
+                        proveedorSelected.textContent = "Mostrando todos los proveedores";
+                        updateProveedorTable();
+                        return;
+                    }
+                    
+                    const filteredProveedores = proveedoresList.filter(proveedor => 
+                        proveedor.toLowerCase().includes(searchTerm)
+                    );
+                    
+                    if (filteredProveedores.length > 0) {
+                        filteredProveedores.forEach(proveedor => {
+                            const count = contarProductosPorProveedor(proveedor);
+                            const suggestion = document.createElement('div');
+                            suggestion.className = 'proveedor-suggestion';
+                            suggestion.innerHTML = `
+                                <span>${proveedor}</span>
+                                <span class="proveedor-count">${count} productos</span>
+                            `;
+                            suggestion.addEventListener('click', function() {
+                                proveedorSearchInput.value = proveedor;
+                                proveedorSuggestions.style.display = 'none';
+                                currentProveedorFilter = proveedor;
+                                const productCount = contarProductosPorProveedor(proveedor);
+                                proveedorSelected.innerHTML = `
+                                    <div class="proveedor-info-header">
+                                        <span>Mostrando: ${proveedor}</span>
+                                        <span class="proveedor-count-badge">${productCount} productos</span>
+                                    </div>
+                                `;
+                                updateProveedorTable();
+                            });
+                            proveedorSuggestions.appendChild(suggestion);
+                        });
+                        proveedorSuggestions.style.display = 'block';
+                    }
+                    
+                    if (filteredProveedores.length === 1 && searchTerm.length > 2) {
+                        currentProveedorFilter = filteredProveedores[0];
+                        const productCount = contarProductosPorProveedor(filteredProveedores[0]);
+                        proveedorSelected.innerHTML = `
+                            <div class="proveedor-info-header">
+                                <span>Mostrando: ${filteredProveedores[0]}</span>
+                                <span class="proveedor-count-badge">${productCount} productos</span>
+                            </div>
+                        `;
+                        updateProveedorTable();
+                    }
+                }, 300);
+            });
+            
+            document.addEventListener('click', function(event) {
+                if (!proveedorSearchInput.contains(event.target) && !proveedorSuggestions.contains(event.target)) {
+                    proveedorSuggestions.style.display = 'none';
+                }
+            });
+            
+            proveedorSearchInput.addEventListener('search', function() {
+                if (this.value === '') {
+                    currentProveedorFilter = null;
+                    proveedorSelected.textContent = "Mostrando todos los proveedores";
+                    updateProveedorTable();
+                }
+            });
+        }
+
+        function setupEventListeners() {
+            btnLogout.addEventListener('click', logout);
+
+            window.addEventListener('online', async () => {
+                updateConnectionStatus(true);
+                if (currentUser) {
+                    showLoadingSpinner();
+                    await loadDataFromFirebase();
+                }
+            });
+            
+            window.addEventListener('offline', () => {
+                updateConnectionStatus(false);
+            });
+
+            btnRefresh.addEventListener('click', async function() {
+                showLoadingSpinner();
+                await loadDataFromFirebase();
+            });
+            
+            btnRefreshProveedores.addEventListener('click', async function() {
+                const originalText = btnRefreshProveedores.innerHTML;
+                btnRefreshProveedores.innerHTML = '<span class="spinner"></span>';
+                await loadDataFromFirebase();
+                btnRefreshProveedores.innerHTML = originalText;
+            });
+            
+            btnRefreshGestionProveedores.addEventListener('click', async function() {
+                const originalText = btnRefreshGestionProveedores.innerHTML;
+                btnRefreshGestionProveedores.innerHTML = '<span class="spinner"></span>';
+                await loadDataFromFirebase();
+                btnRefreshGestionProveedores.innerHTML = originalText;
+            });
+            
+            btnRefreshActualizarStock.addEventListener('click', async function() {
+                const originalText = btnRefreshActualizarStock.innerHTML;
+                btnRefreshActualizarStock.innerHTML = '<span class="spinner"></span>';
+                await loadDataFromFirebase();
+                btnRefreshActualizarStock.innerHTML = originalText;
+            });
+            
+            btnRefreshHistorial.addEventListener('click', async function() {
+                const originalText = btnRefreshHistorial.innerHTML;
+                btnRefreshHistorial.innerHTML = '<span class="spinner"></span>';
+                await loadDataFromFirebase();
+                btnRefreshHistorial.innerHTML = originalText;
+            });
+            
+            btnRefreshImportar.addEventListener('click', async function() {
+                const originalText = btnRefreshImportar.innerHTML;
+                btnRefreshImportar.innerHTML = '<span class="spinner"></span>';
+                await loadDataFromFirebase();
+                btnRefreshImportar.innerHTML = originalText;
+            });
+            
+            btnRefreshInformacion.addEventListener('click', async function() {
+                const originalText = btnRefreshInformacion.innerHTML;
+                btnRefreshInformacion.innerHTML = '<span class="spinner"></span>';
+                await loadDataFromFirebase();
+                btnRefreshInformacion.innerHTML = originalText;
+            });
+            
+            btnAddBarcode.addEventListener('click', function() {
+                addBarcodeField();
+            });
+            
+            btnAddProductInventario?.addEventListener('click', function() {
+                if (currentUser && currentUser.role !== 'admin') {
+                    Swal.fire({
+                        title: 'Acceso denegado',
+                        text: 'No tienes permisos para agregar productos',
+                        icon: 'warning',
+                        confirmButtonText: 'Entendido',
+                        customClass: {
+                            confirmButton: 'btn btn-warning'
+                        },
+                        buttonsStyling: false
+                    });
+                    return;
+                }
+                
+                editingProductId = null;
+                document.getElementById('modalTitle').textContent = 'Agregar Producto';
+                document.getElementById('productSKU').value = '';
+                document.getElementById('productBarCode').value = '';
+                document.getElementById('productName').value = '';
+                document.getElementById('productProveedor').selectedIndex = 0;
+                document.getElementById('stockBodega').value = '0';
+                document.getElementById('stockTienda').value = '0';
+                
+                barcodesContainer.innerHTML = '';
+                
+                productModal.style.display = 'flex';
+            });
+
+            btnAddProductImportar?.addEventListener('click', function() {
+                if (currentUser && currentUser.role !== 'admin') {
+                    Swal.fire({
+                        title: 'Acceso denegado',
+                        text: 'No tienes permisos para agregar productos',
+                        icon: 'warning',
+                        confirmButtonText: 'Entendido',
+                        customClass: {
+                            confirmButton: 'btn btn-warning'
+                        },
+                        buttonsStyling: false
+                    });
+                    return;
+                }
+                
+                editingProductId = null;
+                document.getElementById('modalTitle').textContent = 'Agregar Producto';
+                document.getElementById('productSKU').value = '';
+                document.getElementById('productBarCode').value = '';
+                document.getElementById('productName').value = '';
+                document.getElementById('productProveedor').selectedIndex = 0;
+                document.getElementById('stockBodega').value = '0';
+                document.getElementById('stockTienda').value = '0';
+                
+                barcodesContainer.innerHTML = '';
+                
+                productModal.style.display = 'flex';
+            });
+
+            btnAddProveedor.addEventListener('click', function() {
+                if (currentUser && currentUser.role !== 'admin') {
+                    Swal.fire({
+                        title: 'Acceso denegado',
+                        text: 'No tienes permisos para agregar proveedores',
+                        icon: 'warning',
+                        confirmButtonText: 'Entendido',
+                        customClass: {
+                            confirmButton: 'btn btn-warning'
+                        },
+                        buttonsStyling: false
+                    });
+                    return;
+                }
+                
+                editingProveedorId = null;
+                document.getElementById('proveedorModalTitle').textContent = 'Agregar Proveedor';
+                document.getElementById('proveedorCodigo').value = '';
+                document.getElementById('proveedorNombre').value = '';
+                document.getElementById('proveedorDescripcion').value = '';
+                document.getElementById('proveedorContacto').value = '';
+                document.getElementById('proveedorTelefono').value = '';
+                document.getElementById('proveedorEmail').value = '';
+                proveedorModal.style.display = 'flex';
+            });
+
+            btnExportarProveedores.addEventListener('click', function() {
+                exportarProveedores();
+            });
+
+            btnExportarProveedorExcel.addEventListener('click', function() {
+                exportarInventarioPorProveedorExcel();
+            });
+
+            btnImportarRapidoImportar?.addEventListener('click', function() {
+                if (currentUser && currentUser.role !== 'admin') {
+                    Swal.fire({
+                        title: 'Acceso denegado',
+                        text: 'No tienes permisos para importar datos',
+                        icon: 'warning',
+                        confirmButtonText: 'Entendido',
+                        customClass: {
+                            confirmButton: 'btn btn-warning'
+                        },
+                        buttonsStyling: false
+                    });
+                    return;
+                }
+                importModal.style.display = 'flex';
+            });
+
+            // MODIFICACIÓN: Evento para Actualizar Items
+            btnActualizarItems?.addEventListener('click', function() {
+                if (currentUser && currentUser.role !== 'admin') {
+                    Swal.fire({
+                        title: 'Acceso denegado',
+                        text: 'No tienes permisos para actualizar items',
+                        icon: 'warning',
+                        confirmButtonText: 'Entendido',
+                        customClass: {
+                            confirmButton: 'btn btn-warning'
+                        },
+                        buttonsStyling: false
+                    });
+                    return;
+                }
+                
+                const datos = importDataTextarea.value.trim();
+                const proveedor = importRapidoProveedor.value;
+                
+                actualizarItemsDesdeTexto(datos, proveedor);
+            });
+
+            closeModalBtn.addEventListener('click', function() {
+                productModal.style.display = 'none';
+            });
+
+            closeImportModalBtn.addEventListener('click', function() {
+                importModal.style.display = 'none';
+            });
+
+            closeProveedorModalBtn.addEventListener('click', function() {
+                proveedorModal.style.display = 'none';
+            });
+
+            productForm.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                if (btnSubmitProduct.disabled) return;
+                const originalText = btnSubmitProduct.innerHTML;
+                btnSubmitProduct.innerHTML = '<span class="spinner"></span> Guardando...';
+                btnSubmitProduct.disabled = true;
+                
+                const additionalBarcodes = [];
+                const barcodeInputs = barcodesContainer.querySelectorAll('input[type="text"]');
+                barcodeInputs.forEach(input => {
+                    if (input.value.trim()) {
+                        additionalBarcodes.push(input.value.trim());
+                    }
+                });
+                
+                const productData = {
+                    id: editingProductId || nextId,
+                    sku: document.getElementById('productSKU').value,
+                    barcode: document.getElementById('productBarCode').value,
+                    barcodes: additionalBarcodes.length > 0 ? additionalBarcodes : [document.getElementById('productBarCode').value],
+                    name: document.getElementById('productName').value,
+                    proveedor: document.getElementById('productProveedor').value,
+                    bodega: parseInt(document.getElementById('stockBodega').value) || 0,
+                    tienda: parseInt(document.getElementById('stockTienda').value) || 0,
+                    lastTransfer: null
+                };
+                
+                const skuExists = inventory.find(p => p.sku === productData.sku && p.id !== editingProductId);
+                const barcodeExists = inventory.find(p => {
+                    if (p.barcode === productData.barcode && p.id !== editingProductId) return true;
+                    if (p.barcodes && Array.isArray(p.barcodes)) {
+                        return p.barcodes.some(bc => productData.barcodes.includes(bc) && p.id !== editingProductId);
+                    }
+                    return false;
+                });
+                
+                if (skuExists) {
+                    Swal.fire({
+                        title: 'SKU duplicado',
+                        text: 'Ya existe un producto con este SKU',
+                        icon: 'error',
+                        confirmButtonText: 'Entendido',
+                        customClass: {
+                            confirmButton: 'btn btn-danger'
+                        },
+                        buttonsStyling: false
+                    });
+                    btnSubmitProduct.innerHTML = originalText;
+                    btnSubmitProduct.disabled = false;
+                    return;
+                }
+                
+                if (barcodeExists) {
+                    Swal.fire({
+                        title: 'Código duplicado',
+                        text: 'Ya existe un producto con este código de barras',
+                        icon: 'error',
+                        confirmButtonText: 'Entendido',
+                        customClass: {
+                            confirmButton: 'btn btn-danger'
+                        },
+                        buttonsStyling: false
+                    });
+                    btnSubmitProduct.innerHTML = originalText;
+                    btnSubmitProduct.disabled = false;
+                    return;
+                }
+                
+                try {
+                    const isUpdate = !!editingProductId;
+                    if (isOnline && db) {
+                        await saveProductToFirebase(productData, isUpdate);
+                    }
+                    
+                    if (isUpdate) {
+                        const index = inventory.findIndex(p => p.id === editingProductId);
+                        inventory[index] = productData;
+                        Swal.fire({
+                            title: 'Producto actualizado',
+                            text: `El producto ${productData.name} ha sido actualizado correctamente`,
+                            icon: 'success',
+                            confirmButtonText: 'OK',
+                            customClass: {
+                                confirmButton: 'btn btn-success'
+                            },
+                            buttonsStyling: false
+                        });
+                    } else {
+                        inventory.push(productData);
+                        nextId++;
+                        await agregarAlHistorial(
+                            'importacion',
+                            productData.id,
+                            productData.bodega + productData.tienda,
+                            'sistema',
+                            'inventario'
+                        );
+                        Swal.fire({
+                            title: 'Producto agregado',
+                            text: `El producto ${productData.name} ha sido agregado correctamente`,
+                            icon: 'success',
+                            confirmButtonText: 'OK',
+                            customClass: {
+                                confirmButton: 'btn btn-success'
+                            },
+                            buttonsStyling: false
+                        });
+                    }
+                    
+                    updateInventoryTable(searchInput.value);
+                    updateStats();
+                    updateProveedorSelects();
+                    productModal.style.display = 'none';
+                } catch (error) {
+                    console.error('Error guardando producto:', error);
+                    Swal.fire({
+                        title: 'Error',
+                        text: 'No se pudo guardar el producto. Inténtalo de nuevo.',
+                        icon: 'error',
+                        confirmButtonText: 'OK',
+                        customClass: {
+                            confirmButton: 'btn btn-danger'
+                        },
+                        buttonsStyling: false
+                    });
+                } finally {
+                    btnSubmitProduct.innerHTML = originalText;
+                    btnSubmitProduct.disabled = false;
+                }
+            });
+
+            proveedorForm.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                if (btnSubmitProveedor.disabled) return;
+                const originalText = btnSubmitProveedor.innerHTML;
+                btnSubmitProveedor.innerHTML = '<span class="spinner"></span> Guardando...';
+                btnSubmitProveedor.disabled = true;
+                
+                const proveedorData = {
+                    id: editingProveedorId || nextProveedorId,
+                    codigo: document.getElementById('proveedorCodigo').value,
+                    nombre: document.getElementById('proveedorNombre').value,
+                    descripcion: document.getElementById('proveedorDescripcion').value,
+                    contacto: document.getElementById('proveedorContacto').value,
+                    telefono: document.getElementById('proveedorTelefono').value,
+                    email: document.getElementById('proveedorEmail').value
+                };
+                
+                const codigoExists = proveedores.find(p => p.codigo === proveedorData.codigo && p.id !== editingProveedorId);
+                
+                if (codigoExists) {
+                    Swal.fire({
+                        title: 'Código duplicado',
+                        text: 'Ya existe un proveedor con este código',
+                        icon: 'error',
+                        confirmButtonText: 'Entendido',
+                        customClass: {
+                            confirmButton: 'btn btn-danger'
+                        },
+                        buttonsStyling: false
+                    });
+                    btnSubmitProveedor.innerHTML = originalText;
+                    btnSubmitProveedor.disabled = false;
+                    return;
+                }
+                
+                try {
+                    const isUpdate = !!editingProveedorId;
+                    if (isOnline && db) {
+                        await saveProveedorToFirebase(proveedorData, isUpdate);
+                    }
+                    
+                    if (isUpdate) {
+                        const index = proveedores.findIndex(p => p.id === editingProveedorId);
+                        proveedores[index] = proveedorData;
+                        Swal.fire({
+                            title: 'Proveedor actualizado',
+                            text: `El proveedor ${proveedorData.nombre} ha sido actualizado correctamente`,
+                            icon: 'success',
+                            confirmButtonText: 'OK',
+                            customClass: {
+                                confirmButton: 'btn btn-success'
+                            },
+                            buttonsStyling: false
+                        });
+                    } else {
+                        proveedores.push(proveedorData);
+                        nextProveedorId++;
+                        Swal.fire({
+                            title: 'Proveedor agregado',
+                            text: `El proveedor ${proveedorData.nombre} ha sido agregado correctamente`,
+                            icon: 'success',
+                            confirmButtonText: 'OK',
+                            customClass: {
+                                confirmButton: 'btn btn-success'
+                            },
+                            buttonsStyling: false
+                        });
+                    }
+                    
+                    updateProveedorSelects();
+                    updateProveedoresList();
+                    proveedorModal.style.display = 'none';
+                } catch (error) {
+                    console.error('Error guardando proveedor:', error);
+                    Swal.fire({
+                        title: 'Error',
+                        text: 'No se pudo guardar el proveedor. Inténtalo de nuevo.',
+                        icon: 'error',
+                        confirmButtonText: 'OK',
+                        customClass: {
+                            confirmButton: 'btn btn-danger'
+                        },
+                        buttonsStyling: false
+                    });
+                } finally {
+                    btnSubmitProveedor.innerHTML = originalText;
+                    btnSubmitProveedor.disabled = false;
+                }
+            });
+
+            fileUploadArea.addEventListener('click', function() {
+                if (currentUser && currentUser.role !== 'admin') {
+                    Swal.fire({
+                        title: 'Acceso denegado',
+                        text: 'No tienes permisos para importar datos',
+                        icon: 'warning',
+                        confirmButtonText: 'Entendido',
+                        customClass: {
+                            confirmButton: 'btn btn-warning'
+                        },
+                        buttonsStyling: false
+                    });
+                    return;
+                }
+                jsonFileInput.click();
+            });
+            
+            jsonFileInput.addEventListener('change', function(e) {
+                if (this.files.length > 0) {
+                    const fileName = this.files[0].name;
+                    fileUploadArea.innerHTML = `
+                        <i class="fas fa-file-check" style="color: var(--success);"></i>
+                        <p>Archivo seleccionado: <strong>${fileName}</strong></p>
+                        <p class="subtitle">Haz clic en "Importar Archivo JSON" para procesar</p>
+                    `;
+                }
+            });
+
+            btnImportarJSON.addEventListener('click', async function() {
+                if (currentUser && currentUser.role !== 'admin') {
+                    Swal.fire({
+                        title: 'Acceso denegado',
+                        text: 'No tienes permisos para importar datos',
+                        icon: 'warning',
+                        confirmButtonText: 'Entendido',
+                        customClass: {
+                            confirmButton: 'btn btn-warning'
+                        },
+                        buttonsStyling: false
+                    });
+                    return;
+                }
+                
+                if (!jsonFileInput.files.length) {
+                    Swal.fire({
+                        title: 'Archivo requerido',
+                        text: 'Por favor, selecciona un archivo JSON primero',
+                        icon: 'info',
+                        confirmButtonText: 'Entendido',
+                        customClass: {
+                            confirmButton: 'btn btn-info'
+                        },
+                        buttonsStyling: false
+                    });
+                    return;
+                }
+                
+                const proveedor = importProveedor.value;
+                const actualizarStock = importarActualizarStock.checked;
+                
+                if (!proveedor) {
+                    Swal.fire({
+                        title: 'Proveedor requerido',
+                        text: 'Selecciona un proveedor para los productos',
+                        icon: 'warning',
+                        confirmButtonText: 'Entendido',
+                        customClass: {
+                            confirmButton: 'btn btn-warning'
+                        },
+                        buttonsStyling: false
+                    });
+                    return;
+                }
+                
+                const originalText = btnImportarJSON.innerHTML;
+                btnImportarJSON.innerHTML = '<span class="spinner"></span> Procesando...';
+                btnImportarJSON.disabled = true;
+                
+                try {
+                    const file = jsonFileInput.files[0];
+                    const data = await readFileAsJSON(file);
+                    
+                    let productosImportados = 0;
+                    let productosActualizados = 0;
+                    
+                    if (Array.isArray(data)) {
+                        for (const item of data) {
+                            let producto;
+                            
+                            if (item.SKU !== undefined) {
+                                producto = {
+                                    id: nextId++,
+                                    sku: item.SKU || item.sku || `IMP${nextId}`,
+                                    name: item.Producto || item.producto || item.Nombre || item.nombre || 'Producto sin nombre',
+                                    barcode: item['Cód. Barra'] || item.codigoBarra || item.barcode || item.SKU || '',
+                                    barcodes: [item['Cód. Barra'] || item.codigoBarra || item.barcode || item.SKU || ''],
+                                    proveedor: item.Proveedor || item.proveedor || proveedor,
+                                    bodega: parseInt(item.Existencia) || parseInt(item.existencia) || parseInt(item.bodega) || 0,
+                                    tienda: parseInt(item.tienda) || 0,
+                                    lastTransfer: null
+                                };
+                            } else if (item.sku !== undefined) {
+                                producto = {
+                                    id: nextId++,
+                                    sku: item.sku,
+                                    name: item.producto || item.nombre,
+                                    barcode: item.barcode || item.codigoBarra || item.sku,
+                                    barcodes: [item.barcode || item.codigoBarra || item.sku],
+                                    proveedor: item.proveedor || proveedor,
+                                    bodega: parseInt(item.existencia) || parseInt(item.bodega) || 0,
+                                    tienda: parseInt(item.tienda) || 0,
+                                    lastTransfer: null
+                                };
+                            }
+                            
+                            if (producto) {
+                                const existingIndex = inventory.findIndex(p => p.sku === producto.sku);
+                                
+                                if (existingIndex >= 0) {
+                                    if (actualizarStock) {
+                                        inventory[existingIndex].bodega = producto.bodega;
+                                        inventory[existingIndex].tienda = producto.tienda;
+                                        inventory[existingIndex].proveedor = proveedor;
+                                    } else {
+                                        inventory[existingIndex].bodega += producto.bodega;
+                                    }
+                                    productosActualizados++;
+                                    if (isOnline && db) {
+                                        await saveProductToFirebase(inventory[existingIndex], true);
+                                    }
+                                } else {
+                                    if (isOnline && db) {
+                                        await saveProductToFirebase(producto, false);
+                                    }
+                                    inventory.push(producto);
+                                    productosImportados++;
+                                }
+                            }
+                        }
+                    }
+                    
+                    if (productosImportados > 0 || productosActualizados > 0) {
+                        await agregarAlHistorial(
+                            'importacion',
+                            null,
+                            productosImportados + productosActualizados,
+                            'archivo_json',
+                            'inventario'
+                        );
+                        
+                        updateInventoryTable(searchInput.value);
+                        updateStats();
+                        updateProveedorSelects();
+                        fileUploadArea.innerHTML = `
+                            <i class="fas fa-cloud-upload-alt"></i>
+                            <p>Arrastra y suelta tu archivo JSON aquí o haz clic para seleccionar</p>
+                            <input type="file" id="jsonFileInput" accept=".json" style="display: none;">
+                            <p class="subtitle" style="margin-top: 10px;">Formato esperado: SKU, Producto, Cód. Barra, Existencia</p>
+                        `;
+                        jsonFileInput.value = '';
+                        
+                        document.getElementById('jsonFileInput').addEventListener('change', function(e) {
+                            if (this.files.length > 0) {
+                                const fileName = this.files[0].name;
+                                fileUploadArea.innerHTML = `
+                                    <i class="fas fa-file-check" style="color: var(--success);"></i>
+                                    <p>Archivo seleccionado: <strong>${fileName}</strong></p>
+                                    <p class="subtitle">Haz clic en "Importar Archivo JSON" para procesar</p>
+                                `;
+                            }
+                        });
+                        
+                        Swal.fire({
+                            title: 'Importación exitosa',
+                            html: `Se procesaron <strong>${productosImportados + productosActualizados}</strong> productos del archivo JSON<br>
+                                  <strong>${productosImportados}</strong> nuevos<br>
+                                  <strong>${productosActualizados}</strong> actualizados`,
+                            icon: 'success',
+                            confirmButtonText: 'OK',
+                            customClass: {
+                                confirmButton: 'btn btn-success'
+                            },
+                            buttonsStyling: false
+                        });
+                    } else {
+                        Swal.fire({
+                            title: 'Error en formato',
+                            text: 'No se pudieron procesar los datos del archivo JSON. Verifica el formato.',
+                            icon: 'error',
+                            confirmButtonText: 'Entendido',
+                            customClass: {
+                                confirmButton: 'btn btn-danger'
+                            },
+                            buttonsStyling: false
+                        });
+                    }
+                } catch (error) {
+                    Swal.fire({
+                        title: 'Error al procesar',
+                        text: 'Error al procesar el archivo JSON: ' + error.message,
+                        icon: 'error',
+                        confirmButtonText: 'Entendido',
+                        customClass: {
+                            confirmButton: 'btn btn-danger'
+                        },
+                        buttonsStyling: false
+                    });
+                } finally {
+                    btnImportarJSON.innerHTML = originalText;
+                    btnImportarJSON.disabled = false;
+                }
+            });
+
+            btnProcesarImportacion.addEventListener('click', async function() {
+                if (currentUser && currentUser.role !== 'admin') {
+                    Swal.fire({
+                        title: 'Acceso denegado',
+                        text: 'No tienes permisos para importar datos',
+                        icon: 'warning',
+                        confirmButtonText: 'Entendido',
+                        customClass: {
+                            confirmButton: 'btn btn-warning'
+                        },
+                        buttonsStyling: false
+                    });
+                    return;
+                }
+                
+                const datos = importDataTextarea.value.trim();
+                const proveedor = importRapidoProveedor.value;
+                const actualizarStock = importRapidoActualizarStock.checked;
+                
+                if (!datos) {
+                    Swal.fire({
+                        title: 'Datos vacíos',
+                        text: 'Por favor, ingresa datos para importar',
+                        icon: 'info',
+                        confirmButtonText: 'Entendido',
+                        customClass: {
+                            confirmButton: 'btn btn-info'
+                        },
+                        buttonsStyling: false
+                    });
+                    return;
+                }
+                
+                if (!proveedor) {
+                    Swal.fire({
+                        title: 'Proveedor requerido',
+                        text: 'Selecciona un proveedor para los productos',
+                        icon: 'warning',
+                        confirmButtonText: 'Entendido',
+                        customClass: {
+                            confirmButton: 'btn btn-warning'
+                        },
+                        buttonsStyling: false
+                    });
+                    return;
+                }
+                
+                const originalText = btnProcesarImportacion.innerHTML;
+                btnProcesarImportacion.innerHTML = '<span class="spinner"></span> Procesando...';
+                btnProcesarImportacion.disabled = true;
+                
+                try {
+                    const lineas = datos.split('\n');
+                    let productosImportados = 0;
+                    let productosActualizados = 0;
+                    
+                    for (const linea of lineas) {
+                        const lineaTrim = linea.trim();
+                        if (!lineaTrim) continue;
+                        
+                        let partes;
+                        if (lineaTrim.includes('|')) {
+                            partes = lineaTrim.split('|').map(p => p.trim());
+                        } else if (lineaTrim.includes('\t')) {
+                            partes = lineaTrim.split('\t').map(p => p.trim());
+                        } else {
+                            partes = lineaTrim.split(/\s{2,}/).map(p => p.trim());
+                        }
+                        
+                        if (partes.length >= 4) {
+                            const [sku, nombre, barcode, existencia] = partes;
+                            const existingIndex = inventory.findIndex(p => p.sku === sku);
+                            
+                            if (existingIndex >= 0) {
+                                if (actualizarStock) {
+                                    inventory[existingIndex].bodega = parseInt(existencia) || 0;
+                                    inventory[existingIndex].tienda = 0;
+                                    inventory[existingIndex].proveedor = proveedor;
+                                } else {
+                                    inventory[existingIndex].bodega += parseInt(existencia) || 0;
+                                }
+                                productosActualizados++;
+                                if (isOnline && db) {
+                                    await saveProductToFirebase(inventory[existingIndex], true);
+                                }
+                            } else {
+                                const nuevoProducto = {
+                                    id: nextId++,
+                                    sku: sku,
+                                    name: nombre,
+                                    barcode: barcode,
+                                    barcodes: [barcode],
+                                    proveedor: proveedor,
+                                    bodega: parseInt(existencia) || 0,
+                                    tienda: 0,
+                                    lastTransfer: null
+                                };
+                                if (isOnline && db) {
+                                    await saveProductToFirebase(nuevoProducto, false);
+                                }
+                                inventory.push(nuevoProducto);
+                                productosImportados++;
+                            }
+                        }
+                    }
+                    
+                    if (productosImportados > 0 || productosActualizados > 0) {
+                        await agregarAlHistorial(
+                            'importacion',
+                            null,
+                            productosImportados + productosActualizados,
+                            'importacion_rapida',
+                            'inventario'
+                        );
+                        
+                        updateInventoryTable(searchInput.value);
+                        updateStats();
+                        updateProveedorSelects();
+                        importModal.style.display = 'none';
+                        
+                        Swal.fire({
+                            title: 'Importación exitosa',
+                            html: `Se procesaron <strong>${productosImportados + productosActualizados}</strong> productos<br>
+                                  <strong>${productosImportados}</strong> nuevos<br>
+                                  <strong>${productosActualizados}</strong> actualizados`,
+                            icon: 'success',
+                            confirmButtonText: 'OK',
+                            customClass: {
+                                confirmButton: 'btn btn-success'
+                            },
+                            buttonsStyling: false
+                        });
+                    } else {
+                        Swal.fire({
+                            title: 'Error en formato',
+                            text: 'No se pudieron procesar los datos. Verifica el formato.',
+                            icon: 'error',
+                            confirmButtonText: 'Entendido',
+                            customClass: {
+                                confirmButton: 'btn btn-danger'
+                            },
+                            buttonsStyling: false
+                        });
+                    }
+                } catch (error) {
+                    console.error('Error en importación rápida:', error);
+                    Swal.fire({
+                        title: 'Error',
+                        text: 'No se pudo completar la importación. Inténtalo de nuevo.',
+                        icon: 'error',
+                        confirmButtonText: 'OK',
+                        customClass: {
+                            confirmButton: 'btn btn-danger'
+                        },
+                        buttonsStyling: false
+                    });
+                } finally {
+                    btnProcesarImportacion.innerHTML = originalText;
+                    btnProcesarImportacion.disabled = false;
+                }
+            });
+
+            btnProcesarActualizacion.addEventListener('click', async function() {
+                if (currentUser && currentUser.role !== 'admin') {
+                    Swal.fire({
+                        title: 'Acceso denegado',
+                        text: 'No tienes permisos para actualizar stock',
+                        icon: 'warning',
+                        confirmButtonText: 'Entendido',
+                        customClass: {
+                            confirmButton: 'btn btn-warning'
+                        },
+                        buttonsStyling: false
+                    });
+                    return;
+                }
+                
+                const datos = actualizarStockData.value.trim();
+                const soloBodega = actualizarSoloBodega.checked;
+                
+                if (!datos) {
+                    Swal.fire({
+                        title: 'Datos vacíos',
+                        text: 'Por favor, ingresa datos para actualizar stock',
+                        icon: 'info',
+                        confirmButtonText: 'Entendido',
+                        customClass: {
+                            confirmButton: 'btn btn-info'
+                        },
+                        buttonsStyling: false
+                    });
+                    return;
+                }
+                
+                const originalText = btnProcesarActualizacion.innerHTML;
+                btnProcesarActualizacion.innerHTML = '<span class="spinner"></span> Procesando...';
+                btnProcesarActualizacion.disabled = true;
+                
+                try {
+                    const lineas = datos.split('\n');
+                    
+                    const acumulados = {};
+                    
+                    for (const linea of lineas) {
+                        const lineaTrim = linea.trim();
+                        if (!lineaTrim) continue;
+                        
+                        let partes;
+                        if (lineaTrim.includes('|')) {
+                            partes = lineaTrim.split('|').map(p => p.trim());
+                        } else if (lineaTrim.includes('\t')) {
+                            partes = lineaTrim.split('\t').map(p => p.trim());
+                        } else {
+                            partes = lineaTrim.split(/\s{2,}/).map(p => p.trim());
+                        }
+                        
+                        if (partes.length >= 2) {
+                            const [sku, existenciaBodega, existenciaTienda] = partes;
+                            
+                            if (!acumulados[sku]) {
+                                acumulados[sku] = {
+                                    bodega: 0,
+                                    tienda: 0,
+                                    contador: 0
+                                };
+                            }
+                            
+                            acumulados[sku].bodega += parseInt(existenciaBodega) || 0;
+                            acumulados[sku].tienda += parseInt(existenciaTienda) || 0;
+                            acumulados[sku].contador++;
+                        }
+                    }
+                    
+                    let productosActualizados = 0;
+                    let productosNoEncontrados = 0;
+                    let resultados = [];
+                    
+                    for (const [sku, valores] of Object.entries(acumulados)) {
+                        const existingIndex = inventory.findIndex(p => p.sku === sku);
+                        
+                        if (existingIndex >= 0) {
+                            const producto = inventory[existingIndex];
+                            const viejoBodega = producto.bodega;
+                            const viejoTienda = producto.tienda;
+                            
+                            if (soloBodega) {
+                                producto.bodega = valores.bodega;
+                            } else {
+                                producto.bodega = valores.bodega;
+                                producto.tienda = valores.tienda;
+                            }
+                            
+                            if (isOnline && db) {
+                                await saveProductToFirebase(producto, true);
+                            }
+                            
+                            productosActualizados++;
+                            resultados.push({
+                                sku: sku,
+                                nombre: producto.name,
+                                viejoBodega: viejoBodega,
+                                viejoTienda: viejoTienda,
+                                nuevoBodega: producto.bodega,
+                                nuevoTienda: producto.tienda,
+                                lineasCombinadas: valores.contador
+                            });
+                        } else {
+                            productosNoEncontrados++;
+                            resultados.push({
+                                sku: sku,
+                                error: 'Producto no encontrado',
+                                lineas: valores.contador
+                            });
+                        }
+                    }
+                    
+                    if (productosActualizados > 0) {
+                        await agregarAlHistorial(
+                            'actualizacion_stock',
+                            null,
+                            productosActualizados,
+                            'sistema',
+                            'inventario'
+                        );
+                        
+                        updateInventoryTable(searchInput.value);
+                        updateStats();
+                        mostrarResultadosActualizacion(resultados, productosActualizados, productosNoEncontrados);
+                        
+                        Swal.fire({
+                            title: 'Actualización exitosa',
+                            html: `Se actualizaron <strong>${productosActualizados}</strong> productos<br>
+                                  <strong>${productosNoEncontrados}</strong> productos no encontrados<br>
+                                  <span style="color: var(--info);">Se combinaron múltiples líneas para los SKU duplicados</span>`,
+                            icon: 'success',
+                            confirmButtonText: 'OK',
+                            customClass: {
+                                confirmButton: 'btn btn-success'
+                            },
+                            buttonsStyling: false
+                        });
+                    } else if (productosNoEncontrados > 0) {
+                        Swal.fire({
+                            title: 'Productos no encontrados',
+                            text: `No se encontraron ${productosNoEncontrados} productos en el inventario.`,
+                            icon: 'warning',
+                            confirmButtonText: 'Entendido',
+                            customClass: {
+                                confirmButton: 'btn btn-warning'
+                            },
+                            buttonsStyling: false
+                        });
+                    } else {
+                        Swal.fire({
+                            title: 'Error en formato',
+                            text: 'No se pudieron procesar los datos. Verifica el formato.',
+                            icon: 'error',
+                            confirmButtonText: 'Entendido',
+                            customClass: {
+                                confirmButton: 'btn btn-danger'
+                            },
+                            buttonsStyling: false
+                        });
+                    }
+                } catch (error) {
+                    console.error('Error en actualización de stock:', error);
+                    Swal.fire({
+                        title: 'Error',
+                        text: 'No se pudo completar la actualización. Inténtalo de nuevo.',
+                        icon: 'error',
+                        confirmButtonText: 'OK',
+                        customClass: {
+                            confirmButton: 'btn btn-danger'
+                        },
+                        buttonsStyling: false
+                    });
+                } finally {
+                    btnProcesarActualizacion.innerHTML = originalText;
+                    btnProcesarActualizacion.disabled = false;
+                }
+            });
+
+            btnExportarJSON.addEventListener('click', function() {
+                const format = exportFormatSelect.value;
+                
+                if (format === 'excel') {
+                    exportarAExcel();
+                    return;
+                }
+                
+                let data, filename, contentType;
+                
+                if (format === 'json') {
+                    data = JSON.stringify({
+                        inventario: inventory,
+                        historial: historial,
+                        proveedores: proveedores,
+                        exportado: getCurrentTimestamp(),
+                        totalProductos: inventory.length,
+                        totalMovimientos: historial.length,
+                        totalProveedores: proveedores.length
+                    }, null, 2);
+                    filename = `inventario_completo_${new Date().toISOString().split('T')[0]}.json`;
+                    contentType = 'application/json';
+                } else if (format === 'formatoProveedor') {
+                    let contenido = `Proveedor: P00111 - STAMPO INTERNACIONAL, S.A\n\n`;
+                    contenido += `SKU\tProducto\tCód. Barra\tExistencia\n`;
+                    inventory.forEach(producto => {
+                        contenido += `${producto.sku}\t${producto.name}\t${producto.barcode}\t${producto.bodega + producto.tienda}\n`;
+                    });
+                    data = contenido;
+                    filename = `inventario_proveedor_${new Date().toISOString().split('T')[0]}.txt`;
+                    contentType = 'text/plain';
+                } else if (format === 'csv') {
+                    let contenido = 'SKU,Producto,Cód. Barra,Proveedor,Bodega,Tienda,Último Envío,Total\n';
+                    inventory.forEach(producto => {
+                        const ultimoEnvio = producto.lastTransfer ? 
+                            formatFullDate(producto.lastTransfer) : "";
+                        contenido += `${producto.sku},${producto.name},${producto.barcode},${producto.proveedor},${producto.bodega},${producto.tienda},${ultimoEnvio},${producto.bodega + producto.tienda}\n`;
+                    });
+                    data = contenido;
+                    filename = `inventario_${new Date().toISOString().split('T')[0]}.csv`;
+                    contentType = 'text/csv';
+                }
+                
+                const blob = new Blob([data], { type: contentType });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                
+                agregarAlHistorial(
+                    'exportacion',
+                    null,
+                    inventory.length,
+                    'sistema',
+                    'archivo'
+                );
+                
+                Swal.fire({
+                    title: 'Exportación exitosa',
+                    text: `Los datos se han exportado en formato ${format.toUpperCase()}`,
+                    icon: 'success',
+                    confirmButtonText: 'OK',
+                    customClass: {
+                        confirmButton: 'btn btn-success'
+                    },
+                    buttonsStyling: false
+                });
+            });
+
+            btnLimpiarHistorial.addEventListener('click', async function() {
+                if (currentUser && currentUser.role !== 'admin') {
+                    Swal.fire({
+                        title: 'Acceso denegado',
+                        text: 'No tienes permisos para limpiar el historial',
+                        icon: 'warning',
+                        confirmButtonText: 'Entendido',
+                        customClass: {
+                            confirmButton: 'btn btn-warning'
+                        },
+                        buttonsStyling: false
+                    });
+                    return;
+                }
+                
+                Swal.fire({
+                    title: '¿Limpiar historial?',
+                    text: 'Todos los registros de movimientos serán eliminados',
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonText: 'Sí, limpiar',
+                    cancelButtonText: 'Cancelar',
+                    customClass: {
+                        confirmButton: 'btn btn-danger',
+                        cancelButton: 'btn btn-secondary'
+                    },
+                    buttonsStyling: false
+                }).then(async (result) => {
+                    if (result.isConfirmed) {
+                        try {
+                            if (isOnline && db) {
+                                await clearHistoryFromFirebase();
+                            }
+                            historial = [];
+                            updateHistorial();
+                            updateStats();
+                            
+                            Swal.fire({
+                                title: 'Historial limpiado',
+                                text: 'Todos los registros han sido eliminados',
+                                icon: 'success',
+                                confirmButtonText: 'OK',
+                                customClass: {
+                                    confirmButton: 'btn btn-success'
+                                },
+                                buttonsStyling: false
+                            });
+                        } catch (error) {
+                            Swal.fire({
+                                title: 'Error',
+                                text: 'No se pudo limpiar el historial. Inténtalo de nuevo.',
+                                icon: 'error',
+                                confirmButtonText: 'OK',
+                                customClass: {
+                                    confirmButton: 'btn btn-danger'
+                                },
+                                buttonsStyling: false
+                            });
+                        }
+                    }
+                });
+            });
+        }
     </script>
 </body>
 </html>
