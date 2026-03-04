@@ -1271,7 +1271,7 @@
                 </div>
             </div>
             
-            <!-- PESTAÑA IMPORTAR/EXPORTAR - MODIFICADA: Nuevo botón Actualizar Items -->
+            <!-- PESTAÑA IMPORTAR/EXPORTAR -->
             <div class="tab-content" id="importarTab">
                 <div class="toolbar">
                     <button class="btn btn-primary" id="btnRefreshImportar">
@@ -1288,7 +1288,7 @@
                         <i class="fas fa-file-import"></i> Importar Rápido
                     </button>
                     
-                    <!-- MODIFICACIÓN: Nuevo botón Actualizar Items -->
+                    <!-- Botón Actualizar Items -->
                     <button class="btn btn-warning" id="btnActualizarItems" style="display: none;">
                         <i class="fas fa-sync-alt"></i> Actualizar Items
                     </button>
@@ -1521,6 +1521,34 @@
             </div>
         </div>
         
+        <!-- MODIFICACIÓN: Nuevo modal para Actualizar Items -->
+        <div id="actualizarItemsModal" class="modal">
+            <div class="modal-content modal-lg">
+                <div class="modal-header">
+                    <h2><i class="fas fa-sync-alt"></i> Actualizar Items</h2>
+                    <span class="close-modal" id="closeActualizarItemsModal">&times;</span>
+                </div>
+                <div class="form-group">
+                    <p>Pega los datos en el formato: <strong>SKU | Producto | Cód. Barra</strong></p>
+                    <p>Este proceso <strong style="color: var(--warning);">NO MODIFICARÁ</strong> las existencias actuales.</p>
+                    <p>Ejemplo: <code>DPI001 | BACINICA PARA NIÑOS | 123456789</code></p>
+                    <textarea id="actualizarItemsData" rows="10" placeholder="DPI001 | BACINICA PARA NIÑOS | 123456789&#10;DPI002 | JARRA 1LITRO SURTIDA C/TAPA | 987654321"></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="actualizarItemsProveedor">Proveedor (se aplicará a todos los productos)</label>
+                    <select id="actualizarItemsProveedor">
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <button class="btn btn-warning" id="btnProcesarActualizarItems" style="width: 100%;">
+                        <i class="fas fa-sync-alt"></i> Procesar Actualización
+                    </button>
+                </div>
+            </div>
+        </div>
+        
         <!-- Modal para agregar/editar proveedor -->
         <div id="proveedorModal" class="modal">
             <div class="modal-content">
@@ -1660,8 +1688,13 @@
         const btnSubmitProduct = document.getElementById('btnSubmitProduct');
         const btnSubmitProveedor = document.getElementById('btnSubmitProveedor');
         
-        // MODIFICACIÓN: Nuevo elemento
+        // MODIFICACIÓN: Nuevos elementos para Actualizar Items
         const btnActualizarItems = document.getElementById('btnActualizarItems');
+        const actualizarItemsModal = document.getElementById('actualizarItemsModal');
+        const closeActualizarItemsModal = document.getElementById('closeActualizarItemsModal');
+        const actualizarItemsData = document.getElementById('actualizarItemsData');
+        const actualizarItemsProveedor = document.getElementById('actualizarItemsProveedor');
+        const btnProcesarActualizarItems = document.getElementById('btnProcesarActualizarItems');
         
         const btnRefresh = document.getElementById('btnRefresh');
         const btnRefreshProveedores = document.getElementById('btnRefreshProveedores');
@@ -2471,6 +2504,7 @@
             const productProveedorSelect = document.getElementById('productProveedor');
             const importProveedorSelect = document.getElementById('importProveedor');
             const importRapidoProveedorSelect = document.getElementById('importRapidoProveedor');
+            const actualizarItemsProveedorSelect = document.getElementById('actualizarItemsProveedor');
             
             if (productProveedorSelect) {
                 productProveedorSelect.innerHTML = '<option value="">Seleccionar proveedor</option>';
@@ -2481,6 +2515,9 @@
             if (importRapidoProveedorSelect) {
                 importRapidoProveedorSelect.innerHTML = '<option value="">Seleccionar proveedor</option>';
             }
+            if (actualizarItemsProveedorSelect) {
+                actualizarItemsProveedorSelect.innerHTML = '<option value="">Seleccionar proveedor</option>';
+            }
             
             const nuevaOpcion = document.createElement('option');
             nuevaOpcion.value = "nuevo";
@@ -2489,6 +2526,7 @@
             if (productProveedorSelect) productProveedorSelect.appendChild(nuevaOpcion.cloneNode(true));
             if (importProveedorSelect) importProveedorSelect.appendChild(nuevaOpcion.cloneNode(true));
             if (importRapidoProveedorSelect) importRapidoProveedorSelect.appendChild(nuevaOpcion.cloneNode(true));
+            if (actualizarItemsProveedorSelect) actualizarItemsProveedorSelect.appendChild(nuevaOpcion.cloneNode(true));
             
             const proveedoresList = proveedores.map(p => `${p.codigo} - ${p.nombre}`);
             proveedoresList.forEach(proveedor => {
@@ -2499,9 +2537,15 @@
                 if (productProveedorSelect) productProveedorSelect.appendChild(option.cloneNode(true));
                 if (importProveedorSelect) importProveedorSelect.appendChild(option.cloneNode(true));
                 if (importRapidoProveedorSelect) importRapidoProveedorSelect.appendChild(option.cloneNode(true));
+                if (actualizarItemsProveedorSelect) actualizarItemsProveedorSelect.appendChild(option.cloneNode(true));
             });
             
-            const proveedorSelects = [productProveedorSelect, importProveedorSelect, importRapidoProveedorSelect].filter(select => select);
+            const proveedorSelects = [
+                productProveedorSelect, 
+                importProveedorSelect, 
+                importRapidoProveedorSelect,
+                actualizarItemsProveedorSelect
+            ].filter(select => select);
             
             proveedorSelects.forEach(select => {
                 if (select) {
@@ -2908,7 +2952,10 @@
         // ==============================================
         // MODIFICACIÓN: Función para Actualizar Items (sin modificar existencias)
         // ==============================================
-        async function actualizarItemsDesdeTexto(datos, proveedor) {
+        async function actualizarItemsDesdeTexto() {
+            const datos = actualizarItemsData ? actualizarItemsData.value.trim() : '';
+            const proveedor = actualizarItemsProveedor ? actualizarItemsProveedor.value : '';
+            
             if (!datos) {
                 Swal.fire({
                     title: 'Datos vacíos',
@@ -2937,10 +2984,10 @@
                 return;
             }
             
-            const originalText = btnActualizarItems?.innerHTML;
-            if (btnActualizarItems) {
-                btnActualizarItems.innerHTML = '<span class="spinner"></span> Procesando...';
-                btnActualizarItems.disabled = true;
+            const originalText = btnProcesarActualizarItems?.innerHTML;
+            if (btnProcesarActualizarItems) {
+                btnProcesarActualizarItems.innerHTML = '<span class="spinner"></span> Procesando...';
+                btnProcesarActualizarItems.disabled = true;
             }
             
             try {
@@ -3063,6 +3110,11 @@
                     updateStats();
                     updateProveedorSelects();
                     
+                    // Cerrar modal
+                    if (actualizarItemsModal) {
+                        actualizarItemsModal.style.display = 'none';
+                    }
+                    
                     // Mostrar resultados
                     let mensaje = '';
                     if (productosNuevos > 0) {
@@ -3114,9 +3166,9 @@
                     buttonsStyling: false
                 });
             } finally {
-                if (btnActualizarItems) {
-                    btnActualizarItems.innerHTML = originalText;
-                    btnActualizarItems.disabled = false;
+                if (btnProcesarActualizarItems) {
+                    btnProcesarActualizarItems.innerHTML = originalText;
+                    btnProcesarActualizarItems.disabled = false;
                 }
             }
         }
@@ -3661,7 +3713,7 @@
                 importModal.style.display = 'flex';
             });
 
-            // MODIFICACIÓN: Evento para Actualizar Items
+            // MODIFICACIÓN: Evento para Actualizar Items - AHORA ABRE MODAL
             btnActualizarItems?.addEventListener('click', function() {
                 if (currentUser && currentUser.role !== 'admin') {
                     Swal.fire({
@@ -3677,11 +3729,41 @@
                     return;
                 }
                 
-                const datos = importDataTextarea.value.trim();
-                const proveedor = importRapidoProveedor.value;
+                // Limpiar el textarea
+                if (actualizarItemsData) {
+                    actualizarItemsData.value = '';
+                }
                 
-                actualizarItemsDesdeTexto(datos, proveedor);
+                // Actualizar el select de proveedores
+                if (actualizarItemsProveedor) {
+                    actualizarItemsProveedor.innerHTML = '<option value="">Seleccionar proveedor</option>';
+                    
+                    const proveedoresList = proveedores.map(p => `${p.codigo} - ${p.nombre}`);
+                    proveedoresList.forEach(proveedor => {
+                        const option = document.createElement('option');
+                        option.value = proveedor;
+                        option.textContent = proveedor;
+                        actualizarItemsProveedor.appendChild(option);
+                    });
+                }
+                
+                // Mostrar el modal
+                actualizarItemsModal.style.display = 'flex';
             });
+
+            // MODIFICACIÓN: Cerrar modal de Actualizar Items
+            if (closeActualizarItemsModal) {
+                closeActualizarItemsModal.addEventListener('click', function() {
+                    actualizarItemsModal.style.display = 'none';
+                });
+            }
+
+            // MODIFICACIÓN: Evento para procesar actualización de items
+            if (btnProcesarActualizarItems) {
+                btnProcesarActualizarItems.addEventListener('click', function() {
+                    actualizarItemsDesdeTexto();
+                });
+            }
 
             closeModalBtn.addEventListener('click', function() {
                 productModal.style.display = 'none';
