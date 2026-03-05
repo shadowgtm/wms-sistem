@@ -1,0 +1,1813 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Inventario</title>
+    <link rel="icon" type="image/x-icon" href="https://cdn-icons-png.flaticon.com/512/891/891419.png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+
+    <!-- ✅ Supabase JS (reemplaza Firebase) -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <!-- SheetJS para exportar a Excel -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+    <style>
+        :root {
+            --primary-blue: #1a56db;
+            --primary-dark: #1e429f;
+            --secondary-blue: #3b82f6;
+            --accent-blue: #93c5fd;
+            --light-blue: #dbeafe;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --info: #8b5cf6;
+            --light: #f8fafc;
+            --dark: #1f2937;
+            --text-primary: #111827;
+            --text-secondary: #6b7280;
+            --border: #e5e7eb;
+            --card-shadow: 0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06);
+            --card-shadow-hover: 0 10px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0; top: 0;
+            width: 100%; height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.3s;
+            backdrop-filter: blur(4px);
+        }
+
+        * { margin:0; padding:0; box-sizing:border-box; font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Tahoma,Geneva,Verdana,sans-serif; }
+
+        body { background-color:#f9fafb; color:var(--text-primary); line-height:1.6; font-size:0.9375rem; }
+
+        header {
+            background: linear-gradient(135deg, var(--primary-blue), var(--primary-dark));
+            color: white;
+            padding: 1.5rem 2rem;
+            margin-bottom: 2rem;
+            border-radius: 16px;
+            box-shadow: var(--card-shadow-hover);
+            position: relative;
+            overflow: hidden;
+        }
+
+        header::before {
+            content:'';
+            position:absolute; top:0; right:0;
+            width:300px; height:300px;
+            background:radial-gradient(circle at center,rgba(255,255,255,0.1) 0%,transparent 70%);
+            border-radius:50%;
+            transform:translate(30%,-30%);
+        }
+
+        .header-content { display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1.5rem; position:relative; z-index:1; }
+
+        h1 { font-size:1.75rem; margin-bottom:0.25rem; font-weight:700; }
+
+        .connection-status {
+            display:flex; align-items:center; gap:8px;
+            font-size:0.85rem; padding:8px 16px; border-radius:20px;
+            background-color:rgba(255,255,255,0.15); font-weight:500;
+            backdrop-filter:blur(10px); border:1px solid rgba(255,255,255,0.2);
+        }
+
+        .user-info {
+            display:flex; align-items:center; gap:12px; padding:8px 16px;
+            background-color:rgba(255,255,255,0.15); border-radius:50px; color:white;
+            font-weight:500; backdrop-filter:blur(10px); border:1px solid rgba(255,255,255,0.2);
+        }
+
+        .btn-logout { background:none; border:none; color:white; cursor:pointer; font-size:1rem; display:flex; align-items:center; gap:5px; padding:5px 10px; border-radius:6px; transition:background-color 0.3s; }
+        .btn-logout:hover { background-color:rgba(255,255,255,0.2); }
+
+        .container { max-width:1400px; margin:0 auto; padding:0 1.5rem; }
+
+        .stats { display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:1.5rem; margin-bottom:2.5rem; }
+
+        .stat-card {
+            background-color:white; padding:1.5rem; border-radius:16px;
+            box-shadow:var(--card-shadow); display:flex; align-items:center;
+            transition:all 0.3s ease; border:1px solid var(--border);
+            position:relative; overflow:hidden;
+        }
+
+        .stat-card:hover { transform:translateY(-5px); box-shadow:var(--card-shadow-hover); }
+        .stat-card::before { content:''; position:absolute; top:0; left:0; width:4px; height:100%; background:var(--primary-blue); }
+
+        .stat-icon { font-size:2.25rem; margin-right:1rem; width:64px; height:64px; border-radius:12px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+        .bodega-icon { background:linear-gradient(135deg,rgba(26,86,219,0.1),rgba(59,130,246,0.2)); color:var(--primary-blue); }
+        .tienda-icon { background:linear-gradient(135deg,rgba(16,185,129,0.1),rgba(16,185,129,0.2)); color:var(--success); }
+        .proveedor-icon { background:linear-gradient(135deg,rgba(139,92,246,0.1),rgba(139,92,246,0.2)); color:var(--info); }
+        .historial-icon { background:linear-gradient(135deg,rgba(245,158,11,0.1),rgba(245,158,11,0.2)); color:var(--warning); }
+
+        .stat-info h3 { font-size:1.75rem; margin-bottom:0.25rem; }
+        .stat-info p { color:var(--text-secondary); font-size:0.875rem; font-weight:500; }
+
+        .btn { padding:0.75rem 1.5rem; border:none; border-radius:10px; cursor:pointer; font-weight:600; display:inline-flex; align-items:center; gap:8px; transition:all 0.3s ease; font-size:0.875rem; letter-spacing:0.3px; }
+        .btn-primary { background:linear-gradient(135deg,var(--primary-blue),var(--secondary-blue)); color:white; }
+        .btn-success { background:linear-gradient(135deg,var(--success),#34d399); color:white; }
+        .btn-warning { background:linear-gradient(135deg,var(--warning),#fbbf24); color:white; }
+        .btn-info { background:linear-gradient(135deg,var(--info),#a78bfa); color:white; }
+        .btn-danger { background:linear-gradient(135deg,var(--danger),#f87171); color:white; }
+        .btn:hover { transform:translateY(-2px); box-shadow:0 10px 20px rgba(0,0,0,0.1); }
+        .btn:disabled { opacity:0.6; cursor:not-allowed; transform:none; }
+
+        .toolbar, .search-container {
+            display:flex; flex-wrap:wrap; gap:0.75rem; margin-bottom:1.5rem;
+            padding:1.5rem; background:white; border-radius:16px;
+            box-shadow:var(--card-shadow); border:1px solid var(--border); align-items:center;
+        }
+
+        .search-box { flex-grow:1; position:relative; min-width:250px; }
+        .search-box input { width:100%; padding:0.875rem 1rem 0.875rem 3rem; border:2px solid var(--border); border-radius:10px; font-size:0.9375rem; transition:all 0.2s; background:white; }
+        .search-box input:focus { border-color:var(--primary-blue); outline:none; box-shadow:0 0 0 3px rgba(26,86,219,0.1); }
+        .search-box i { position:absolute; left:1rem; top:50%; transform:translateY(-50%); color:var(--text-secondary); }
+
+        .tabs-container { position:relative; margin-bottom:2rem; }
+        .tabs { display:flex; border-bottom:1px solid var(--border); overflow-x:auto; background:white; padding:0.5rem; border-radius:12px 12px 0 0; box-shadow:var(--card-shadow); scrollbar-width:none; }
+        .tabs::-webkit-scrollbar { display:none; }
+
+        .tab-btn { padding:1rem 1.5rem; background:none; border:none; cursor:pointer; font-weight:600; color:var(--text-secondary); white-space:nowrap; transition:all 0.3s; border-radius:8px; margin:0 2px; font-size:0.875rem; display:flex; align-items:center; gap:8px; }
+        .tab-btn:hover { color:var(--primary-blue); background:rgba(26,86,219,0.05); }
+        .tab-btn.active { color:var(--primary-blue); background:rgba(26,86,219,0.1); position:relative; }
+        .tab-btn.active::after { content:''; position:absolute; bottom:-11px; left:0; width:100%; height:3px; background:var(--primary-blue); border-radius:3px 3px 0 0; }
+
+        .tab-content { display:none; animation:fadeIn 0.5s; }
+        .tab-content.active { display:block; }
+
+        .inventory-table { background-color:white; border-radius:16px; overflow:hidden; box-shadow:var(--card-shadow); margin-bottom:2rem; overflow-x:auto; border:1px solid var(--border); }
+
+        table { width:100%; border-collapse:collapse; font-size:0.875rem; }
+        thead { background:linear-gradient(135deg,var(--primary-blue),var(--secondary-blue)); color:white; }
+        th, td { padding:1rem; text-align:left; border-bottom:1px solid var(--border); }
+        th { font-weight:600; font-size:0.8125rem; text-transform:uppercase; letter-spacing:0.5px; cursor:pointer; user-select:none; }
+        th i { margin-left:5px; font-size:0.75rem; opacity:0.8; }
+        tbody tr { transition:background-color 0.2s; }
+        tbody tr:hover { background-color:rgba(26,86,219,0.03); }
+        tbody tr:nth-child(even) { background-color:#fafafa; }
+        tbody tr:nth-child(even):hover { background-color:rgba(26,86,219,0.05); }
+
+        .stock-cell { font-weight:bold; color:var(--success) !important; }
+        .stock-cell.critico { color:var(--danger) !important; }
+        .stock-cell.bajo { color:var(--warning) !important; }
+
+        .actions-cell { display:flex; gap:0.5rem; }
+        .action-btn { padding:0.5rem 0.75rem; border:none; border-radius:8px; cursor:pointer; font-size:0.75rem; transition:all 0.2s ease; display:flex; align-items:center; gap:4px; font-weight:600; }
+        .edit-btn { background-color:rgba(26,86,219,0.1); color:var(--primary-blue); }
+        .delete-btn { background-color:rgba(239,68,68,0.1); color:var(--danger); }
+        .action-btn:hover { transform:translateY(-1px); box-shadow:0 4px 8px rgba(0,0,0,0.1); }
+
+        .modal-content { background-color:white; padding:2.5rem; border-radius:20px; width:90%; max-width:600px; box-shadow:0 25px 50px -12px rgba(0,0,0,0.25); max-height:90vh; overflow-y:auto; position:relative; border:1px solid var(--border); animation:modalSlideIn 0.3s ease-out; }
+        @keyframes modalSlideIn { from { opacity:0; transform:translateY(-20px); } to { opacity:1; transform:translateY(0); } }
+        .modal-lg { max-width:800px; }
+
+        .modal-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:2rem; padding-bottom:1.5rem; border-bottom:1px solid var(--border); }
+        .modal-header h2 { color:var(--primary-blue); font-size:1.5rem; font-weight:700; display:flex; align-items:center; gap:10px; }
+        .close-modal { font-size:1.5rem; cursor:pointer; color:var(--text-secondary); transition:color 0.3s; width:32px; height:32px; display:flex; align-items:center; justify-content:center; border-radius:8px; }
+        .close-modal:hover { color:var(--danger); background:rgba(239,68,68,0.1); }
+
+        .form-group { margin-bottom:1.5rem; }
+        .form-group label { display:block; margin-bottom:0.5rem; font-weight:600; color:var(--text-primary); font-size:0.875rem; }
+        .form-group input, .form-group select, .form-group textarea { width:100%; padding:0.875rem 1rem; border:2px solid var(--border); border-radius:10px; font-size:0.9375rem; transition:all 0.2s; background:white; }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color:var(--primary-blue); outline:none; box-shadow:0 0 0 3px rgba(26,86,219,0.1); }
+        .form-row { display:flex; gap:1rem; margin-bottom:1rem; }
+        .form-row .form-group { flex:1; margin-bottom:0; }
+
+        .proveedor-search-container { margin-bottom:2rem; background:white; padding:2rem; border-radius:16px; box-shadow:var(--card-shadow); border:1px solid var(--border); }
+        .proveedor-search-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem; gap:1rem; }
+        .proveedor-search-box { flex:1; position:relative; }
+        .proveedor-search-box input { width:100%; padding:0.875rem 1rem 0.875rem 3rem; border:2px solid var(--border); border-radius:10px; font-size:0.9375rem; background:white; }
+        .proveedor-search-box input:focus { border-color:var(--primary-blue); outline:none; box-shadow:0 0 0 3px rgba(26,86,219,0.1); }
+        .proveedor-search-box i { position:absolute; left:1rem; top:50%; transform:translateY(-50%); color:var(--text-secondary); }
+
+        .proveedor-suggestions { position:absolute; top:100%; left:0; right:0; background:white; border:1px solid var(--border); border-radius:8px; box-shadow:var(--card-shadow-hover); z-index:100; display:none; max-height:300px; overflow-y:auto; }
+        .proveedor-suggestion { padding:12px 16px; cursor:pointer; transition:background-color 0.2s; display:flex; justify-content:space-between; align-items:center; }
+        .proveedor-suggestion:hover { background-color:var(--light-blue); }
+        .proveedor-count { font-size:0.75rem; color:var(--text-secondary); background:var(--light); padding:2px 8px; border-radius:12px; }
+        .proveedor-count-badge { background:var(--info); color:white; padding:2px 8px; border-radius:12px; font-size:0.75rem; font-weight:500; }
+
+        .proveedor-card { background:white; border-radius:16px; padding:1.5rem; margin-bottom:1rem; box-shadow:var(--card-shadow); border:1px solid var(--border); transition:all 0.3s; display:flex; justify-content:space-between; align-items:center; }
+        .proveedor-card:hover { transform:translateY(-2px); box-shadow:var(--card-shadow-hover); }
+
+        .historial-item { background:white; border-radius:12px; padding:1.5rem; margin-bottom:1rem; box-shadow:var(--card-shadow); border:1px solid var(--border); transition:all 0.3s; }
+        .historial-item:hover { transform:translateY(-2px); box-shadow:var(--card-shadow-hover); }
+        .historial-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
+        .historial-tipo { padding:4px 12px; border-radius:20px; font-size:0.75rem; font-weight:600; text-transform:uppercase; letter-spacing:0.5px; }
+        .tipo-transferencia { background-color:rgba(139,92,246,0.1); color:var(--info); }
+        .tipo-importacion { background-color:rgba(16,185,129,0.1); color:var(--success); }
+        .tipo-actualizacion { background-color:rgba(245,158,11,0.1); color:var(--warning); }
+        .historial-fecha { font-size:0.875rem; color:var(--text-secondary); }
+
+        .info-section { background:white; border-radius:16px; padding:2.5rem; box-shadow:var(--card-shadow); margin-bottom:2rem; border:1px solid var(--border); }
+        .info-section h3 { color:var(--primary-blue); margin-bottom:2rem; border-bottom:2px solid var(--light-blue); padding-bottom:1rem; font-size:1.25rem; font-weight:700; display:flex; align-items:center; gap:10px; }
+        .info-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:1.5rem; margin-top:2rem; }
+        .info-card { background:linear-gradient(135deg,#f8fafc,white); border-radius:12px; padding:1.5rem; border:1px solid var(--border); transition:all 0.3s; }
+        .info-card:hover { transform:translateY(-3px); box-shadow:var(--card-shadow); }
+
+        .barcodes-container { margin-top:0.5rem; background:#f8fafc; padding:1rem; border-radius:10px; border:1px dashed var(--border); }
+        .barcode-item { display:flex; gap:0.75rem; margin-bottom:0.75rem; align-items:center; }
+        .barcode-item input { flex:1; padding:0.75rem; border:1px solid var(--border); border-radius:8px; background:white; }
+        .barcode-actions { display:flex; gap:0.5rem; }
+        .btn-small { padding:0.5rem 0.75rem; font-size:0.75rem; border-radius:8px; }
+
+        @keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
+        @keyframes spin { to { transform:rotate(360deg); } }
+        .spinner { display:inline-block; width:20px; height:20px; border:3px solid rgba(255,255,255,.3); border-radius:50%; border-top-color:white; animation:spin 1s ease-in-out infinite; }
+        .spinner-large { width:40px; height:40px; border:4px solid rgba(26,86,219,0.2); border-radius:50%; border-top-color:var(--primary-blue); animation:spin 1s ease-in-out infinite; }
+
+        .checkbox-group { margin:15px 0; display:flex; align-items:center; gap:10px; }
+        .checkbox-group input[type="checkbox"] { width:18px; height:18px; cursor:pointer; }
+        .checkbox-group label { cursor:pointer; user-select:none; }
+
+        .file-upload { border:2px dashed var(--border); border-radius:12px; padding:2rem; text-align:center; cursor:pointer; transition:all 0.3s; margin-bottom:1rem; background:var(--light); }
+        .file-upload:hover { border-color:var(--primary-blue); background:var(--light-blue); }
+        .file-upload i { font-size:3rem; color:var(--primary-blue); margin-bottom:1rem; }
+
+        .ultimo-envio.reciente { color:var(--success); font-weight:500; }
+        .ultimo-envio.antiguo { color:var(--text-secondary); }
+        .loading-spinner { text-align:center; padding:40px; }
+
+        @media (max-width:768px) {
+            .header-content { flex-direction:column; align-items:flex-start; }
+            .modal-content { padding:1.5rem; }
+            .form-row { flex-direction:column; gap:0; }
+            .toolbar, .search-container { flex-direction:column; }
+            .search-box { width:100%; min-width:unset; }
+            .actions-cell { flex-direction:column; gap:0.5rem; }
+            .action-btn { width:100%; justify-content:center; }
+            .proveedor-card { flex-direction:column; gap:1rem; align-items:flex-start; }
+            .barcode-item { flex-direction:column; gap:0.5rem; }
+            .barcode-actions { width:100%; justify-content:flex-end; }
+        }
+    </style>
+</head>
+<body>
+<div id="mainApp">
+    <div class="container">
+        <header>
+            <div class="header-content">
+                <div>
+                    <h1><i class="fas fa-warehouse"></i> Sistema de Inventario</h1>
+                </div>
+                <div style="display:flex;align-items:center;gap:15px;flex-wrap:wrap;">
+                    <div id="connectionStatus" class="connection-status">
+                        <i class="fas fa-sync fa-spin"></i> Conectando...
+                    </div>
+                    <div class="user-info">
+                        <i class="fas fa-user-circle"></i>
+                        <span id="currentUsername">Usuario</span>
+                        <span id="userRoleBadge" style="background:rgba(255,255,255,0.2);padding:3px 8px;border-radius:20px;font-size:0.7rem;"></span>
+                        <button id="btnLogout" class="btn-logout"><i class="fas fa-sign-out-alt"></i></button>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <div class="tabs-container">
+            <div class="tabs">
+                <button class="tab-btn active" data-tab="inventario"><i class="fas fa-boxes"></i> Inventario</button>
+                <button class="tab-btn" data-tab="proveedores"><i class="fas fa-truck"></i> Por Proveedor</button>
+                <button class="tab-btn" data-tab="gestionProveedores"><i class="fas fa-user-tie"></i> Gestión Proveedores</button>
+                <button class="tab-btn" data-tab="actualizarStock"><i class="fas fa-sync-alt"></i> Actualizar Stock</button>
+                <button class="tab-btn" data-tab="historial"><i class="fas fa-history"></i> Historial</button>
+                <button class="tab-btn" data-tab="importar"><i class="fas fa-file-import"></i> Importar/Exportar</button>
+                <button class="tab-btn" data-tab="informacion"><i class="fas fa-info-circle"></i> Información</button>
+            </div>
+        </div>
+
+        <!-- INVENTARIO -->
+        <div class="tab-content active" id="inventarioTab">
+            <div class="search-container">
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="searchInput" placeholder="Buscar productos...">
+                </div>
+                <button class="btn btn-primary" id="btnAddProductInventario" style="display:none;"><i class="fas fa-plus"></i> Agregar Producto</button>
+                <button class="btn btn-primary" id="btnRefresh"><i class="fas fa-sync-alt"></i> Actualizar</button>
+            </div>
+            <div class="inventory-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th data-sort="sku">SKU <i class="fas fa-sort"></i></th>
+                            <th data-sort="name">Producto <i class="fas fa-sort"></i></th>
+                            <th data-sort="barcode">Cód. Barra <i class="fas fa-sort"></i></th>
+                            <th data-sort="proveedor">Proveedor <i class="fas fa-sort"></i></th>
+                            <th data-sort="stock">Stock Bodega <i class="fas fa-sort"></i></th>
+                            <th data-sort="envio">Último Envío <i class="fas fa-sort"></i></th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="inventoryTableBody">
+                        <tr><td colspan="7" class="loading-spinner"><div class="spinner-large" style="margin:0 auto;"></div></td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- POR PROVEEDOR -->
+        <div class="tab-content" id="proveedoresTab">
+            <div class="proveedor-search-container">
+                <div class="proveedor-search-header">
+                    <div class="proveedor-search-box">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="proveedorSearchInput" placeholder="Buscar proveedor...">
+                        <div class="proveedor-suggestions" id="proveedorSuggestions"></div>
+                    </div>
+                    <button class="btn btn-success" id="btnExportarProveedorExcel"><i class="fas fa-file-excel"></i> Exportar a Excel</button>
+                </div>
+                <div id="proveedorSelected" style="font-weight:600;color:var(--info);">Mostrando todos los proveedores</div>
+            </div>
+            <div class="search-container" style="margin-bottom:15px;">
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="proveedorProductSearch" placeholder="Buscar productos en esta pestaña...">
+                </div>
+                <button class="btn btn-primary" id="btnRefreshProveedores"><i class="fas fa-sync-alt"></i> Actualizar</button>
+            </div>
+            <div class="inventory-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>SKU</th><th>Producto</th><th>Cód. Barra</th>
+                            <th>Proveedor</th><th>Stock Bodega</th><th>Último Envío</th><th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="proveedorTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- GESTIÓN PROVEEDORES -->
+        <div class="tab-content" id="gestionProveedoresTab">
+            <div class="toolbar">
+                <button class="btn btn-primary" id="btnAddProveedor" style="display:none;"><i class="fas fa-plus"></i> Agregar Proveedor</button>
+                <button class="btn btn-info" id="btnExportarProveedores"><i class="fas fa-file-export"></i> Exportar Proveedores</button>
+                <button class="btn btn-primary" id="btnRefreshGestionProveedores"><i class="fas fa-sync-alt"></i> Actualizar</button>
+            </div>
+            <div id="proveedoresContainer"></div>
+        </div>
+
+        <!-- ACTUALIZAR STOCK -->
+        <div class="tab-content" id="actualizarStockTab">
+            <div class="toolbar">
+                <button class="btn btn-primary" id="btnRefreshActualizarStock"><i class="fas fa-sync-alt"></i> Actualizar</button>
+            </div>
+            <div class="form-group">
+                <h3><i class="fas fa-sync-alt"></i> Actualización Masiva de Stock</h3>
+                <p>Formato: <strong>SKU | Existencia Bodega | Existencia Tienda</strong></p>
+                <p>Ejemplo: <code>DPI001 | 10 | 5</code></p>
+                <p style="color:var(--info);font-size:0.9rem;margin-top:5px;">
+                    <i class="fas fa-info-circle"></i> SKU duplicados en múltiples líneas se sumarán automáticamente.
+                </p>
+                <textarea id="actualizarStockData" rows="15" placeholder="DPI001 | 10 | 5&#10;DPI001 | 5 | 2&#10;DPI002 | 15 | 8" style="width:100%;padding:0.875rem 1rem;border:2px solid var(--border);border-radius:10px;font-size:0.9375rem;margin-top:1rem;"></textarea>
+            </div>
+            <div class="checkbox-group">
+                <input type="checkbox" id="actualizarSoloBodega">
+                <label for="actualizarSoloBodega">Actualizar solo stock de bodega (ignorar tienda)</label>
+            </div>
+            <button class="btn btn-warning" id="btnProcesarActualizacion" style="width:100%;display:none;">
+                <i class="fas fa-sync-alt"></i> Procesar Actualización de Stock
+            </button>
+            <div id="actualizacionResultado" style="margin-top:20px;display:none;"></div>
+        </div>
+
+        <!-- HISTORIAL -->
+        <div class="tab-content" id="historialTab">
+            <div class="toolbar">
+                <button class="btn btn-danger" id="btnLimpiarHistorial" style="display:none;"><i class="fas fa-trash"></i> Limpiar Historial</button>
+                <button class="btn btn-primary" id="btnRefreshHistorial"><i class="fas fa-sync-alt"></i> Actualizar</button>
+            </div>
+            <div id="historialContainer"></div>
+        </div>
+
+        <!-- IMPORTAR/EXPORTAR -->
+        <div class="tab-content" id="importarTab">
+            <div class="toolbar">
+                <button class="btn btn-primary" id="btnRefreshImportar"><i class="fas fa-sync-alt"></i> Actualizar</button>
+                <button class="btn btn-primary" id="btnAddProductImportar" style="display:none;"><i class="fas fa-plus"></i> Agregar Producto</button>
+                <button class="btn btn-info" id="btnImportarRapidoImportar" style="display:none;"><i class="fas fa-file-import"></i> Importar Rápido</button>
+                <button class="btn btn-warning" id="btnActualizarItems" style="display:none;"><i class="fas fa-sync-alt"></i> Actualizar Items</button>
+            </div>
+            <div class="form-row">
+                <div class="form-group" style="flex:1;">
+                    <h3><i class="fas fa-file-import"></i> Importar Datos</h3>
+                    <p>Sube un archivo JSON para cargar productos al sistema.</p>
+                    <div class="file-upload" id="fileUploadArea">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                        <p>Arrastra y suelta tu archivo JSON aquí o haz clic para seleccionar</p>
+                        <input type="file" id="jsonFileInput" accept=".json" style="display:none;">
+                        <p style="font-size:0.85rem;color:#999;margin-top:10px;">Formato: SKU | Producto | Cód. Barra | Existencia</p>
+                    </div>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="importarActualizarStock">
+                        <label for="importarActualizarStock">Actualizar stock existente (en lugar de sumar)</label>
+                    </div>
+                    <div class="form-group">
+                        <label for="importProveedor">Proveedor</label>
+                        <select id="importProveedor"></select>
+                    </div>
+                    <button class="btn btn-success" id="btnImportarJSON" style="width:100%;display:none;"><i class="fas fa-upload"></i> Importar Archivo JSON</button>
+                </div>
+                <div class="form-group" style="flex:1;">
+                    <h3><i class="fas fa-file-export"></i> Exportar Datos</h3>
+                    <p>Descarga los datos del inventario en diferentes formatos.</p>
+                    <div class="form-group">
+                        <label for="exportFormat">Formato de Exportación</label>
+                        <select id="exportFormat">
+                            <option value="json">JSON Completo</option>
+                            <option value="formatoProveedor">Formato Proveedor</option>
+                            <option value="csv">CSV</option>
+                            <option value="excel">Excel</option>
+                        </select>
+                    </div>
+                    <button class="btn btn-primary" id="btnExportarJSON" style="width:100%;"><i class="fas fa-download"></i> Exportar Datos</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- INFORMACIÓN -->
+        <div class="tab-content" id="informacionTab">
+            <div class="toolbar">
+                <button class="btn btn-primary" id="btnRefreshInformacion"><i class="fas fa-sync-alt"></i> Actualizar</button>
+            </div>
+            <div class="info-section">
+                <h3><i class="fas fa-info-circle"></i> Información del Sistema</h3>
+                <div class="stats" style="margin-bottom:30px;">
+                    <div class="stat-card"><div class="stat-icon bodega-icon"><i class="fas fa-warehouse"></i></div><div class="stat-info"><h3 id="totalBodega">0</h3><p>Productos en bodega</p></div></div>
+                    <div class="stat-card"><div class="stat-icon tienda-icon"><i class="fas fa-store"></i></div><div class="stat-info"><h3 id="totalTienda">0</h3><p>Productos en tienda</p></div></div>
+                    <div class="stat-card"><div class="stat-icon proveedor-icon"><i class="fas fa-truck"></i></div><div class="stat-info"><h3 id="totalProveedores">0</h3><p>Proveedores</p></div></div>
+                    <div class="stat-card"><div class="stat-icon historial-icon"><i class="fas fa-history"></i></div><div class="stat-info"><h3 id="totalMovimientos">0</h3><p>Movimientos</p></div></div>
+                </div>
+                <div class="info-grid">
+                    <div class="info-card">
+                        <h4><i class="fas fa-cogs"></i> Características del Sistema</h4>
+                        <ul>
+                            <li><strong>Inventario:</strong> Gestión completa de productos</li>
+                            <li><strong>Proveedores:</strong> Administración y filtrado</li>
+                            <li><strong>Actualización:</strong> Stock masivo y rápido</li>
+                            <li><strong>Historial:</strong> Registro de movimientos</li>
+                            <li><strong>Importación:</strong> Carga desde archivos</li>
+                            <li><strong>Exportación:</strong> Descarga en múltiples formatos</li>
+                            <li><strong>Actualizar Items:</strong> Sincroniza nombres/códigos sin afectar stock</li>
+                        </ul>
+                    </div>
+                    <div class="info-card">
+                        <h4><i class="fas fa-shield-alt"></i> Seguridad y Acceso</h4>
+                        <ul>
+                            <li><strong>Backend:</strong> Supabase (PostgreSQL)</li>
+                            <li><strong>Controles:</strong> Permisos según roles</li>
+                            <li><strong>Backup:</strong> Datos sincronizados en la nube</li>
+                            <li><strong>Confidencialidad:</strong> Protección de información</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Producto -->
+    <div id="productModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">Agregar Producto</h2>
+                <span class="close-modal" id="closeModal">&times;</span>
+            </div>
+            <form id="productForm">
+                <div class="form-row">
+                    <div class="form-group"><label>SKU *</label><input type="text" id="productSKU" required></div>
+                    <div class="form-group"><label>Código de Barras Principal *</label><input type="text" id="productBarCode" required></div>
+                </div>
+                <div class="form-group">
+                    <label>Códigos de Barras Adicionales</label>
+                    <div class="barcodes-container" id="barcodesContainer"></div>
+                    <button type="button" class="btn btn-small btn-primary" id="btnAddBarcode" style="margin-top:10px;"><i class="fas fa-plus"></i> Agregar Código</button>
+                </div>
+                <div class="form-group"><label>Nombre del Producto *</label><input type="text" id="productName" required></div>
+                <div class="form-group"><label>Proveedor *</label><select id="productProveedor" required></select></div>
+                <div class="form-row">
+                    <div class="form-group"><label>Stock en Bodega</label><input type="number" id="stockBodega" min="0" value="0"></div>
+                    <div class="form-group"><label>Stock en Tienda</label><input type="number" id="stockTienda" min="0" value="0"></div>
+                </div>
+                <button type="submit" class="btn btn-primary" id="btnSubmitProduct" style="width:100%;"><i class="fas fa-save"></i> Guardar Producto</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Importación Rápida -->
+    <div id="importModal" class="modal">
+        <div class="modal-content modal-lg">
+            <div class="modal-header">
+                <h2><i class="fas fa-file-import"></i> Importación Rápida</h2>
+                <span class="close-modal" id="closeImportModal">&times;</span>
+            </div>
+            <div class="form-group">
+                <p>Formato: <strong>SKU | Producto | Cód. Barra | Existencia</strong></p>
+                <textarea id="importData" rows="10" placeholder="DPI001 | BACINICA PARA NIÑOS | DPI001 | 10" style="width:100%;padding:0.875rem 1rem;border:2px solid var(--border);border-radius:10px;font-size:0.9375rem;margin-top:0.5rem;"></textarea>
+            </div>
+            <div class="checkbox-group">
+                <input type="checkbox" id="importRapidoActualizarStock">
+                <label for="importRapidoActualizarStock">Actualizar stock existente (en lugar de sumar)</label>
+            </div>
+            <div class="form-group">
+                <label for="importRapidoProveedor">Proveedor</label>
+                <select id="importRapidoProveedor"></select>
+            </div>
+            <button class="btn btn-success" id="btnProcesarImportacion" style="width:100%;display:none;"><i class="fas fa-bolt"></i> Procesar Importación</button>
+        </div>
+    </div>
+
+    <!-- Modal Actualizar Items -->
+    <div id="actualizarItemsModal" class="modal">
+        <div class="modal-content modal-lg">
+            <div class="modal-header">
+                <h2><i class="fas fa-sync-alt"></i> Actualizar Items</h2>
+                <span class="close-modal" id="closeActualizarItemsModal">&times;</span>
+            </div>
+            <div class="form-group">
+                <p>Formato: <strong>SKU | Producto | Cód. Barra</strong></p>
+                <p>Este proceso <strong style="color:var(--warning);">NO MODIFICARÁ</strong> las existencias actuales.</p>
+                <textarea id="actualizarItemsData" rows="10" placeholder="DPI001 | BACINICA PARA NIÑOS | 123456789" style="width:100%;padding:0.875rem 1rem;border:2px solid var(--border);border-radius:10px;font-size:0.9375rem;margin-top:0.5rem;"></textarea>
+            </div>
+            <div class="form-group">
+                <label for="actualizarItemsProveedor">Proveedor</label>
+                <select id="actualizarItemsProveedor"></select>
+            </div>
+            <button class="btn btn-warning" id="btnProcesarActualizarItems" style="width:100%;"><i class="fas fa-sync-alt"></i> Procesar Actualización</button>
+        </div>
+    </div>
+
+    <!-- Modal Proveedor -->
+    <div id="proveedorModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="proveedorModalTitle">Agregar Proveedor</h2>
+                <span class="close-modal" id="closeProveedorModal">&times;</span>
+            </div>
+            <form id="proveedorForm">
+                <div class="form-group"><label>Código *</label><input type="text" id="proveedorCodigo" required placeholder="Ej: P00005"></div>
+                <div class="form-group"><label>Nombre *</label><input type="text" id="proveedorNombre" required placeholder="Ej: ROYALTEX S.A."></div>
+                <div class="form-group"><label>Descripción</label><textarea id="proveedorDescripcion" rows="3" placeholder="Información adicional..." style="width:100%;padding:0.875rem 1rem;border:2px solid var(--border);border-radius:10px;font-size:0.9375rem;"></textarea></div>
+                <div class="form-group"><label>Contacto</label><input type="text" id="proveedorContacto" placeholder="Nombre de contacto"></div>
+                <div class="form-row">
+                    <div class="form-group"><label>Teléfono</label><input type="text" id="proveedorTelefono" placeholder="Teléfono"></div>
+                    <div class="form-group"><label>Email</label><input type="email" id="proveedorEmail" placeholder="correo@ejemplo.com"></div>
+                </div>
+                <button type="submit" class="btn btn-primary" id="btnSubmitProveedor" style="width:100%;"><i class="fas fa-save"></i> Guardar Proveedor</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+// ==============================================
+// ✅ CONFIGURACIÓN SUPABASE
+// ==============================================
+const SUPABASE_URL = 'https://cuxenrijxfnbubmdjizj.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_0kPsSgQZMWea4P-yjovhhA_fRkQewG0';
+
+// ✅ Usamos 'db' para evitar conflicto con window.supabase
+const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// ==============================================
+// ESTADO DE LA APLICACIÓN
+// ==============================================
+let currentUser = null;
+let inventory = [];
+let historial = [];
+let proveedores = [];
+let editingProductId = null;
+let editingProveedorId = null;
+let currentProveedorFilter = null;
+let isOnline = navigator.onLine;
+let currentSortField = null;
+let currentSortDirection = 'asc';
+
+// ==============================================
+// ELEMENTOS DOM
+// ==============================================
+const connectionStatus = document.getElementById('connectionStatus');
+const inventoryTableBody = document.getElementById('inventoryTableBody');
+const proveedorTableBody = document.getElementById('proveedorTableBody');
+const proveedorSearchInput = document.getElementById('proveedorSearchInput');
+const proveedorSuggestions = document.getElementById('proveedorSuggestions');
+const proveedorSelected = document.getElementById('proveedorSelected');
+const proveedoresContainer = document.getElementById('proveedoresContainer');
+const searchInput = document.getElementById('searchInput');
+const historialContainer = document.getElementById('historialContainer');
+const barcodesContainer = document.getElementById('barcodesContainer');
+const tableHeaders = document.querySelectorAll('#inventarioTab th[data-sort]');
+
+// ==============================================
+// CARGA DE DATOS DESDE SUPABASE
+// ==============================================
+async function loadDataFromSupabase() {
+    try {
+        updateConnectionStatus(false, true);
+
+        // 1. Proveedores
+        const { data: provData, error: provError } = await db
+            .from('proveedores')
+            .select('*')
+            .order('codigo');
+        if (provError) throw provError;
+        proveedores = (provData || []).map(p => ({
+            id: p.id,
+            codigo: p.codigo,
+            nombre: p.nombre,
+            descripcion: p.descripcion || '',
+            contacto: p.contacto || '',
+            telefono: p.telefono || '',
+            email: p.email || ''
+        }));
+
+        // 2. Productos
+        const { data: prodData, error: prodError } = await db
+            .from('productos')
+            .select('*')
+            .order('id');
+        if (prodError) throw prodError;
+        inventory = (prodData || []).map(p => {
+            const prov = proveedores.find(pr => pr.id === p.proveedor_id);
+            const provNombre = prov ? `${prov.codigo} - ${prov.nombre}` : (p.proveedor || 'Sin proveedor');
+            return {
+                id: p.id,
+                sku: p.sku,
+                name: p.nombre,
+                barcode: p.barcode_principal || '',
+                barcodes: p.barcodes || [p.barcode_principal || ''],
+                proveedor: provNombre,
+                proveedor_id: p.proveedor_id,
+                bodega: p.stock_bodega || 0,
+                tienda: p.stock_tienda || 0,
+                lastTransfer: p.ultimo_envio ? new Date(p.ultimo_envio).getTime() : null
+            };
+        });
+
+        // 3. Historial
+        const { data: histData, error: histError } = await db
+            .from('historial')
+            .select('*')
+            .order('created_at', { ascending: false })
+            .limit(100);
+        if (histError) throw histError;
+        historial = (histData || []).map(h => ({
+            id: h.id,
+            timestamp: new Date(h.created_at).getTime(),
+            tipo: h.tipo,
+            producto: h.producto_nombre,
+            sku: h.producto_sku,
+            cantidad: h.cantidad,
+            origen: h.origen,
+            destino: h.destino,
+            usuario: h.usuario
+        }));
+
+        updateConnectionStatus(true, false);
+        refreshAllUI();
+        return true;
+    } catch (error) {
+        console.error('Error cargando datos:', error);
+        updateConnectionStatus(false, false);
+        Swal.fire('Error de conexión', `No se pudo conectar a Supabase: ${error.message}`, 'error');
+        return false;
+    }
+}
+
+function refreshAllUI() {
+    updateInventoryTable(searchInput.value);
+    updateProveedorTable();
+    updateStats();
+    updateHistorial();
+    updateProveedorSelects();
+    updateProveedoresList();
+    setupTableActions();
+}
+
+// ==============================================
+// GUARDAR EN SUPABASE
+// ==============================================
+async function saveProductToSupabase(productData, isUpdate = false) {
+    let proveedorId = null;
+    if (productData.proveedor) {
+        const codigo = productData.proveedor.split(' - ')[0];
+        const prov = proveedores.find(p => p.codigo === codigo);
+        if (prov) proveedorId = prov.id;
+    }
+
+    const row = {
+        sku: productData.sku,
+        nombre: productData.name,
+        barcode_principal: productData.barcode,
+        barcodes: productData.barcodes || [productData.barcode],
+        proveedor_id: proveedorId,
+        stock_bodega: productData.bodega,
+        stock_tienda: productData.tienda
+    };
+
+    let result;
+    if (isUpdate) {
+        result = await db.from('productos').update(row).eq('id', productData.id).select();
+    } else {
+        result = await db.from('productos').insert([row]).select();
+    }
+
+    if (result.error) throw result.error;
+    return result.data[0];
+}
+
+async function deleteProductFromSupabase(id) {
+    const { error } = await db.from('productos').delete().eq('id', id);
+    if (error) throw error;
+}
+
+async function saveProveedorToSupabase(proveedorData, isUpdate = false) {
+    const row = {
+        codigo: proveedorData.codigo,
+        nombre: proveedorData.nombre,
+        descripcion: proveedorData.descripcion || null,
+        contacto: proveedorData.contacto || null,
+        telefono: proveedorData.telefono || null,
+        email: proveedorData.email || null
+    };
+
+    let result;
+    if (isUpdate) {
+        result = await db.from('proveedores').update(row).eq('id', proveedorData.id).select();
+    } else {
+        result = await db.from('proveedores').insert([row]).select();
+    }
+
+    if (result.error) throw result.error;
+    return result.data[0];
+}
+
+async function deleteProveedorFromSupabase(id) {
+    const { error } = await db.from('proveedores').delete().eq('id', id);
+    if (error) throw error;
+}
+
+async function saveHistoryToSupabase(tipo, productoId, cantidad, origen, destino) {
+    const producto = inventory.find(p => p.id === productoId);
+    const row = {
+        tipo,
+        producto_id: productoId || null,
+        producto_nombre: producto ? producto.name : 'Importación múltiple',
+        producto_sku: producto ? producto.sku : 'N/A',
+        cantidad,
+        origen,
+        destino,
+        usuario: currentUser ? currentUser.username : 'Admin'
+    };
+    const { error } = await db.from('historial').insert([row]);
+    if (error) console.warn('Error guardando historial:', error.message);
+}
+
+async function clearHistoryFromSupabase() {
+    const { error } = await db.from('historial').delete().neq('id', 0);
+    if (error) throw error;
+}
+
+// ==============================================
+// HELPERS
+// ==============================================
+function updateConnectionStatus(online, loading = false) {
+    isOnline = online;
+    if (loading) {
+        connectionStatus.innerHTML = '<i class="fas fa-sync fa-spin"></i> Cargando...';
+        connectionStatus.style.color = '';
+    } else if (online) {
+        connectionStatus.innerHTML = '<i class="fas fa-wifi"></i> Conectado';
+        connectionStatus.style.color = 'var(--success)';
+    } else {
+        connectionStatus.innerHTML = '<i class="fas fa-wifi-slash"></i> Sin conexión';
+        connectionStatus.style.color = 'var(--warning)';
+    }
+}
+
+function getCurrentTimestamp() { return Date.now(); }
+
+function formatTimeAgo(timestamp) {
+    if (!timestamp) return "Nunca";
+    const diff = Date.now() - timestamp;
+    const s = Math.floor(diff / 1000);
+    const m = Math.floor(s / 60);
+    const h = Math.floor(m / 60);
+    const d = Math.floor(h / 24);
+    const w = Math.floor(d / 7);
+    const mo = Math.floor(d / 30);
+    const y = Math.floor(d / 365);
+    if (s < 60) return "hace un momento";
+    if (m < 60) return m === 1 ? "hace 1 minuto" : `hace ${m} minutos`;
+    if (h < 24) return h === 1 ? "hace 1 hora" : `hace ${h} horas`;
+    if (d < 7) return d === 1 ? "hace 1 día" : `hace ${d} días`;
+    if (w < 4) return w === 1 ? "hace 1 semana" : `hace ${w} semanas`;
+    if (mo < 12) return mo === 1 ? "hace 1 mes" : `hace ${mo} meses`;
+    return y === 1 ? "hace 1 año" : `hace ${y} años`;
+}
+
+function formatFullDate(timestamp) {
+    if (!timestamp) return "Fecha no disponible";
+    return new Date(timestamp).toLocaleString('es-GT', { year:'numeric', month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit', second:'2-digit' });
+}
+
+function getTimeAgoClass(timestamp) {
+    if (!timestamp) return "antiguo";
+    const days = Math.floor((Date.now() - timestamp) / (1000 * 60 * 60 * 24));
+    if (days <= 7) return "reciente";
+    if (days <= 30) return "";
+    return "antiguo";
+}
+
+function getStockLevelClass(stock) {
+    if (stock <= 0) return 'critico';
+    if (stock <= 5) return 'bajo';
+    return '';
+}
+
+function getProveedoresUnicos() {
+    const fromProducts = inventory.map(p => p.proveedor);
+    const fromList = proveedores.map(p => `${p.codigo} - ${p.nombre}`);
+    return [...new Set([...fromProducts, ...fromList])].sort();
+}
+
+// ==============================================
+// ORDENAMIENTO
+// ==============================================
+function sortByField(field) {
+    if (currentSortField === field) {
+        currentSortDirection = currentSortDirection === 'asc' ? 'desc' : 'asc';
+    } else {
+        currentSortField = field;
+        currentSortDirection = 'asc';
+    }
+    updateInventoryTable(searchInput.value);
+    tableHeaders.forEach(h => {
+        const f = h.getAttribute('data-sort');
+        const i = h.querySelector('i');
+        if (i) i.className = currentSortField === f ? (currentSortDirection === 'asc' ? 'fas fa-sort-up' : 'fas fa-sort-down') : 'fas fa-sort';
+    });
+}
+
+function sortProducts(products) {
+    if (!currentSortField) return products;
+    return [...products].sort((a, b) => {
+        let av, bv;
+        switch(currentSortField) {
+            case 'sku': av = a.sku; bv = b.sku; break;
+            case 'name': av = a.name; bv = b.name; break;
+            case 'barcode': av = a.barcode; bv = b.barcode; break;
+            case 'proveedor': av = a.proveedor; bv = b.proveedor; break;
+            case 'stock': av = a.bodega; bv = b.bodega; break;
+            case 'envio': av = a.lastTransfer || 0; bv = b.lastTransfer || 0; break;
+            default: return 0;
+        }
+        if (typeof av === 'string') return currentSortDirection === 'asc' ? av.localeCompare(bv) : bv.localeCompare(av);
+        return currentSortDirection === 'asc' ? av - bv : bv - av;
+    });
+}
+
+// ==============================================
+// PERMISOS POR ROL
+// ==============================================
+function configurePermissionsByRole() {
+    if (!currentUser) return;
+    const isAdmin = currentUser.role === 'admin';
+    const adminBtns = [
+        'btnAddProductInventario','btnAddProductImportar','btnAddProveedor',
+        'btnImportarRapidoImportar','btnActualizarItems','btnProcesarActualizacion',
+        'btnImportarJSON','btnProcesarImportacion','btnLimpiarHistorial'
+    ];
+    adminBtns.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.style.display = isAdmin ? 'inline-flex' : 'none';
+    });
+}
+
+function setupTableActions() {}
+
+// ==============================================
+// ACTUALIZAR TABLAS
+// ==============================================
+function updateInventoryTable(searchTerm = '') {
+    inventoryTableBody.innerHTML = '';
+    if (inventory.length === 0) {
+        inventoryTableBody.innerHTML = '<tr><td colspan="7" class="loading-spinner"><div class="spinner-large" style="margin:0 auto;"></div></td></tr>';
+        return;
+    }
+
+    let filtered = inventory.filter(p => {
+        if (!searchTerm) return true;
+        const t = searchTerm.toLowerCase();
+        return p.sku.toLowerCase().includes(t) || p.name.toLowerCase().includes(t) ||
+               p.barcode.toLowerCase().includes(t) || p.proveedor.toLowerCase().includes(t) ||
+               (p.barcodes && p.barcodes.some(bc => bc.toLowerCase().includes(t)));
+    });
+
+    const sorted = sortProducts(filtered);
+    const isAdmin = currentUser && currentUser.role === 'admin';
+
+    if (sorted.length === 0) {
+        inventoryTableBody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:40px;color:#666;"><i class="fas fa-box-open" style="font-size:2rem;display:block;margin-bottom:10px;color:#ccc;"></i>${inventory.length === 0 ? 'No hay productos. Agrega tu primer producto.' : 'No se encontraron productos.'}</td></tr>`;
+        return;
+    }
+
+    sorted.forEach(p => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td><strong>${p.sku}</strong></td>
+            <td>${p.name}</td>
+            <td>${p.barcode}</td>
+            <td>${p.proveedor}</td>
+            <td class="stock-cell ${getStockLevelClass(p.bodega)}">${p.bodega}</td>
+            <td><span class="ultimo-envio ${getTimeAgoClass(p.lastTransfer)}">${formatTimeAgo(p.lastTransfer)}</span></td>
+            <td class="actions-cell">
+                ${isAdmin ? `
+                <button class="action-btn edit-btn" onclick="editProduct(${p.id})"><i class="fas fa-edit"></i></button>
+                <button class="action-btn delete-btn" onclick="deleteProduct(${p.id})"><i class="fas fa-trash"></i></button>
+                ` : '<span style="color:#999;">Solo lectura</span>'}
+            </td>
+        `;
+        inventoryTableBody.appendChild(row);
+    });
+}
+
+function updateProveedorTable() {
+    proveedorTableBody.innerHTML = '';
+    let filtered = currentProveedorFilter ? inventory.filter(p => p.proveedor === currentProveedorFilter) : [...inventory];
+
+    const term = document.getElementById('proveedorProductSearch')?.value.toLowerCase().trim();
+    if (term) {
+        filtered = filtered.filter(p =>
+            p.sku.toLowerCase().includes(term) || p.name.toLowerCase().includes(term) ||
+            p.barcode.toLowerCase().includes(term) || p.proveedor.toLowerCase().includes(term)
+        );
+    }
+
+    if (!currentProveedorFilter) {
+        proveedorSelected.textContent = 'Mostrando todos los proveedores';
+    } else {
+        proveedorSelected.innerHTML = `<span>Mostrando: ${currentProveedorFilter}</span> <span class="proveedor-count-badge">${filtered.length} productos</span>`;
+    }
+
+    if (filtered.length === 0) {
+        proveedorTableBody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:40px;color:#666;">No hay productos para este filtro</td></tr>`;
+        return;
+    }
+
+    const isAdmin = currentUser && currentUser.role === 'admin';
+    filtered.forEach(p => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td><strong>${p.sku}</strong></td>
+            <td>${p.name}</td>
+            <td>${p.barcode}</td>
+            <td>${p.proveedor}</td>
+            <td class="stock-cell ${getStockLevelClass(p.bodega)}">${p.bodega}</td>
+            <td><span class="ultimo-envio ${getTimeAgoClass(p.lastTransfer)}">${formatTimeAgo(p.lastTransfer)}</span></td>
+            <td class="actions-cell">
+                ${isAdmin ? `
+                <button class="action-btn edit-btn" onclick="editProduct(${p.id})"><i class="fas fa-edit"></i></button>
+                <button class="action-btn delete-btn" onclick="deleteProduct(${p.id})"><i class="fas fa-trash"></i></button>
+                ` : '<span style="color:#999;">Solo lectura</span>'}
+            </td>
+        `;
+        proveedorTableBody.appendChild(row);
+    });
+}
+
+function updateStats() {
+    document.getElementById('totalBodega').textContent = inventory.reduce((s, p) => s + p.bodega, 0);
+    document.getElementById('totalTienda').textContent = inventory.reduce((s, p) => s + p.tienda, 0);
+    document.getElementById('totalProveedores').textContent = proveedores.length;
+    document.getElementById('totalMovimientos').textContent = historial.length;
+}
+
+function updateProveedorSelects() {
+    const ids = ['productProveedor','importProveedor','importRapidoProveedor','actualizarItemsProveedor'];
+    ids.forEach(id => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        const val = el.value;
+        el.innerHTML = '<option value="">Seleccionar proveedor</option>';
+        proveedores.forEach(p => {
+            const opt = document.createElement('option');
+            opt.value = `${p.codigo} - ${p.nombre}`;
+            opt.textContent = `${p.codigo} - ${p.nombre}`;
+            el.appendChild(opt);
+        });
+        if (val) el.value = val;
+    });
+}
+
+function updateProveedoresList() {
+    proveedoresContainer.innerHTML = '';
+    if (proveedores.length === 0) {
+        proveedoresContainer.innerHTML = '<div style="text-align:center;padding:40px;color:#666;"><i class="fas fa-truck" style="font-size:3rem;display:block;margin-bottom:15px;color:#ccc;"></i>No hay proveedores registrados.</div>';
+        return;
+    }
+    const isAdmin = currentUser && currentUser.role === 'admin';
+    proveedores.forEach(p => {
+        const count = inventory.filter(prod => prod.proveedor === `${p.codigo} - ${p.nombre}`).length;
+        const card = document.createElement('div');
+        card.className = 'proveedor-card';
+        card.innerHTML = `
+            <div>
+                <h4 style="margin-bottom:0.5rem;">${p.codigo} - ${p.nombre} <span class="proveedor-count-badge">${count} productos</span></h4>
+                ${p.descripcion ? `<p style="color:var(--text-secondary);font-size:0.875rem;">${p.descripcion}</p>` : ''}
+                <div style="display:flex;gap:15px;margin-top:8px;font-size:0.875rem;color:var(--text-secondary);">
+                    ${p.contacto ? `<span><i class="fas fa-user"></i> ${p.contacto}</span>` : ''}
+                    ${p.telefono ? `<span><i class="fas fa-phone"></i> ${p.telefono}</span>` : ''}
+                    ${p.email ? `<span><i class="fas fa-envelope"></i> ${p.email}</span>` : ''}
+                </div>
+            </div>
+            ${isAdmin ? `
+            <div style="display:flex;gap:0.5rem;">
+                <button class="action-btn edit-btn" onclick="editProveedor(${p.id})"><i class="fas fa-edit"></i></button>
+                <button class="action-btn delete-btn" onclick="deleteProveedor(${p.id})"><i class="fas fa-trash"></i></button>
+            </div>` : ''}
+        `;
+        proveedoresContainer.appendChild(card);
+    });
+}
+
+function updateHistorial() {
+    historialContainer.innerHTML = '';
+    if (historial.length === 0) {
+        historialContainer.innerHTML = '<div style="text-align:center;padding:40px;color:#666;"><i class="fas fa-history" style="font-size:3rem;display:block;margin-bottom:15px;color:#ccc;"></i>No hay movimientos registrados</div>';
+        return;
+    }
+
+    historial.forEach(h => {
+        const tipoConfig = {
+            'transferencia': { badge:'TRANSFERENCIA', cls:'tipo-transferencia', icon:'fas fa-exchange-alt' },
+            'importacion': { badge:'IMPORTACIÓN', cls:'tipo-importacion', icon:'fas fa-file-import' },
+            'actualizacion_stock': { badge:'ACT. STOCK', cls:'tipo-actualizacion', icon:'fas fa-sync-alt' },
+            'actualizacion_items': { badge:'ACT. ITEMS', cls:'tipo-actualizacion', icon:'fas fa-sync-alt' },
+            'exportacion': { badge:'EXPORTACIÓN', cls:'tipo-importacion', icon:'fas fa-file-export' },
+            'eliminacion': { badge:'ELIMINACIÓN', cls:'tipo-transferencia', icon:'fas fa-trash' }
+        };
+        const cfg = tipoConfig[h.tipo] || { badge:'SISTEMA', cls:'tipo-importacion', icon:'fas fa-cog' };
+
+        const item = document.createElement('div');
+        item.className = 'historial-item';
+        item.innerHTML = `
+            <div class="historial-header">
+                <div>
+                    <span class="historial-fecha">${formatTimeAgo(h.timestamp)}</span>
+                    <span class="historial-tipo ${cfg.cls}">${cfg.badge}</span>
+                </div>
+                <div style="font-weight:bold;color:var(--primary-blue);"><i class="${cfg.icon}"></i> ${h.cantidad} unidades</div>
+            </div>
+            <div style="margin-bottom:8px;"><strong>${h.producto}</strong> ${h.sku !== 'N/A' ? `(SKU: ${h.sku})` : ''}</div>
+            <div style="margin-bottom:8px;color:var(--text-secondary);">${h.origen} → ${h.destino}</div>
+            <div style="color:#666;font-size:0.875rem;"><i class="fas fa-user"></i> ${h.usuario}</div>
+        `;
+        historialContainer.appendChild(item);
+    });
+}
+
+// ==============================================
+// FUNCIONES GLOBALES (onclick)
+// ==============================================
+function editProduct(id) {
+    if (!checkAdmin()) return;
+    const p = inventory.find(pr => pr.id === id);
+    if (!p) return;
+    editingProductId = id;
+    document.getElementById('modalTitle').textContent = 'Editar Producto';
+    document.getElementById('productSKU').value = p.sku;
+    document.getElementById('productBarCode').value = p.barcode;
+    document.getElementById('productName').value = p.name;
+    document.getElementById('productProveedor').value = p.proveedor;
+    document.getElementById('stockBodega').value = p.bodega;
+    document.getElementById('stockTienda').value = p.tienda;
+    barcodesContainer.innerHTML = '';
+    if (p.barcodes && Array.isArray(p.barcodes)) {
+        p.barcodes.forEach((bc, i) => { if (i > 0 || bc !== p.barcode) addBarcodeField(bc); });
+    }
+    document.getElementById('productModal').style.display = 'flex';
+}
+
+async function deleteProduct(id) {
+    if (!checkAdmin()) return;
+    const p = inventory.find(pr => pr.id === id);
+    const result = await Swal.fire({
+        title: '¿Eliminar producto?',
+        html: `<strong>${p?.name}</strong> (${p?.sku})<br>Esta acción no se puede deshacer.`,
+        icon: 'warning', showCancelButton: true,
+        confirmButtonText: 'Sí, eliminar', cancelButtonText: 'Cancelar'
+    });
+    if (!result.isConfirmed) return;
+    try {
+        await saveHistoryToSupabase('eliminacion', id, (p?.bodega||0)+(p?.tienda||0), 'inventario', 'eliminado');
+        await deleteProductFromSupabase(id);
+        await loadDataFromSupabase();
+        Swal.fire('Eliminado', `${p?.name} fue eliminado.`, 'success');
+    } catch (e) {
+        Swal.fire('Error', `No se pudo eliminar: ${e.message}`, 'error');
+    }
+}
+
+function editProveedor(id) {
+    if (!checkAdmin()) return;
+    const p = proveedores.find(pr => pr.id === id);
+    if (!p) return;
+    editingProveedorId = id;
+    document.getElementById('proveedorModalTitle').textContent = 'Editar Proveedor';
+    document.getElementById('proveedorCodigo').value = p.codigo;
+    document.getElementById('proveedorNombre').value = p.nombre;
+    document.getElementById('proveedorDescripcion').value = p.descripcion || '';
+    document.getElementById('proveedorContacto').value = p.contacto || '';
+    document.getElementById('proveedorTelefono').value = p.telefono || '';
+    document.getElementById('proveedorEmail').value = p.email || '';
+    document.getElementById('proveedorModal').style.display = 'flex';
+}
+
+async function deleteProveedor(id) {
+    if (!checkAdmin()) return;
+    const p = proveedores.find(pr => pr.id === id);
+    const count = inventory.filter(prod => prod.proveedor_id === id).length;
+    const result = await Swal.fire({
+        title: '¿Eliminar proveedor?',
+        html: `<strong>${p?.nombre}</strong><br>${count > 0 ? `⚠️ Tiene ${count} producto(s) asociado(s).` : ''}`,
+        icon: 'warning', showCancelButton: true,
+        confirmButtonText: 'Sí, eliminar', cancelButtonText: 'Cancelar'
+    });
+    if (!result.isConfirmed) return;
+    try {
+        await deleteProveedorFromSupabase(id);
+        await loadDataFromSupabase();
+        Swal.fire('Eliminado', `${p?.nombre} fue eliminado.`, 'success');
+    } catch (e) {
+        Swal.fire('Error', `No se pudo eliminar: ${e.message}`, 'error');
+    }
+}
+
+window.editProduct = editProduct;
+window.deleteProduct = deleteProduct;
+window.editProveedor = editProveedor;
+window.deleteProveedor = deleteProveedor;
+
+function checkAdmin() {
+    if (currentUser && currentUser.role !== 'admin') {
+        Swal.fire('Acceso denegado', 'No tienes permisos para realizar esta acción.', 'warning');
+        return false;
+    }
+    return true;
+}
+
+// ==============================================
+// ACTUALIZACIÓN MASIVA DE STOCK
+// ==============================================
+async function procesarActualizacionStock() {
+    if (!checkAdmin()) return;
+    const datos = document.getElementById('actualizarStockData').value.trim();
+    const soloBodega = document.getElementById('actualizarSoloBodega').checked;
+    if (!datos) { Swal.fire('Datos vacíos', 'Ingresa datos para actualizar.', 'info'); return; }
+
+    const btn = document.getElementById('btnProcesarActualizacion');
+    const orig = btn.innerHTML;
+    btn.innerHTML = '<span class="spinner"></span> Procesando...';
+    btn.disabled = true;
+
+    try {
+        const lineas = datos.split('\n');
+        const acumulados = {};
+        for (const linea of lineas) {
+            const t = linea.trim(); if (!t) continue;
+            const partes = t.split(/[|\t]/).map(p => p.trim());
+            if (partes.length >= 2) {
+                const [sku, bodega, tienda] = partes;
+                if (!acumulados[sku]) acumulados[sku] = { bodega: 0, tienda: 0 };
+                acumulados[sku].bodega += parseInt(bodega) || 0;
+                acumulados[sku].tienda += parseInt(tienda) || 0;
+            }
+        }
+
+        let actualizados = 0, noEncontrados = 0, resultados = [];
+        for (const [sku, vals] of Object.entries(acumulados)) {
+            const p = inventory.find(pr => pr.sku === sku);
+            if (!p) { noEncontrados++; resultados.push({ sku, error: 'No encontrado' }); continue; }
+            const update = { stock_bodega: vals.bodega };
+            if (!soloBodega) update.stock_tienda = vals.tienda;
+            const { error } = await db.from('productos').update(update).eq('id', p.id);
+            if (error) { resultados.push({ sku, error: error.message }); continue; }
+            resultados.push({ sku, nombre: p.name, viejoBodega: p.bodega, nuevoBodega: vals.bodega, viejoTienda: p.tienda, nuevoTienda: vals.tienda });
+            actualizados++;
+        }
+
+        if (actualizados > 0) {
+            await saveHistoryToSupabase('actualizacion_stock', null, actualizados, 'masiva', 'inventario');
+            await loadDataFromSupabase();
+            mostrarResultadosActualizacion(resultados, actualizados, noEncontrados);
+            Swal.fire('Actualización exitosa', `${actualizados} actualizados, ${noEncontrados} no encontrados.`, 'success');
+        } else {
+            Swal.fire('Sin cambios', `No se encontraron ${noEncontrados} productos.`, 'warning');
+        }
+    } catch (e) {
+        Swal.fire('Error', e.message, 'error');
+    } finally {
+        btn.innerHTML = orig;
+        btn.disabled = false;
+    }
+}
+
+function mostrarResultadosActualizacion(resultados, actualizados, noEncontrados) {
+    const el = document.getElementById('actualizacionResultado');
+    el.style.display = 'block';
+    let html = `<div style="background:white;padding:20px;border-radius:8px;box-shadow:0 2px 4px rgba(0,0,0,0.1);">
+        <h4 style="margin-bottom:15px;color:var(--primary-blue);"><i class="fas fa-clipboard-check"></i> Resultados</h4>
+        <div style="display:flex;gap:20px;margin-bottom:20px;">
+            <div style="flex:1;text-align:center;padding:10px;background:#e8f5e9;border-radius:6px;">
+                <div style="font-size:1.5rem;font-weight:bold;color:var(--success);">${actualizados}</div><div style="font-size:0.9rem;color:#666;">Actualizados</div>
+            </div>
+            <div style="flex:1;text-align:center;padding:10px;background:#fff3e0;border-radius:6px;">
+                <div style="font-size:1.5rem;font-weight:bold;color:var(--warning);">${noEncontrados}</div><div style="font-size:0.9rem;color:#666;">No encontrados</div>
+            </div>
+        </div><div style="max-height:300px;overflow-y:auto;">`;
+    resultados.forEach(r => {
+        if (r.error) {
+            html += `<div style="padding:10px;margin-bottom:8px;background:#ffebee;border-left:4px solid var(--danger);border-radius:0 4px 4px 0;">
+                <strong style="color:var(--danger);">${r.sku}</strong> — ${r.error}</div>`;
+        } else {
+            html += `<div style="padding:10px;margin-bottom:8px;background:#f9f9f9;border-left:4px solid var(--success);border-radius:0 4px 4px 0;">
+                <strong style="color:var(--primary-blue);">${r.sku} - ${r.nombre}</strong>
+                <div style="font-size:0.875rem;margin-top:4px;">
+                    Bodega: <strong>${r.viejoBodega} → ${r.nuevoBodega}</strong> &nbsp;|&nbsp; Tienda: <strong>${r.viejoTienda} → ${r.nuevoTienda}</strong>
+                </div></div>`;
+        }
+    });
+    html += `</div></div>`;
+    el.innerHTML = html;
+}
+
+// ==============================================
+// IMPORTACIÓN RÁPIDA
+// ==============================================
+async function procesarImportacionRapida() {
+    if (!checkAdmin()) return;
+    const datos = document.getElementById('importData').value.trim();
+    const proveedor = document.getElementById('importRapidoProveedor').value;
+    const actualizar = document.getElementById('importRapidoActualizarStock').checked;
+
+    if (!datos) { Swal.fire('Datos vacíos', 'Ingresa datos para importar.', 'info'); return; }
+    if (!proveedor) { Swal.fire('Proveedor requerido', 'Selecciona un proveedor.', 'warning'); return; }
+
+    const btn = document.getElementById('btnProcesarImportacion');
+    const orig = btn.innerHTML;
+    btn.innerHTML = '<span class="spinner"></span> Procesando...';
+    btn.disabled = true;
+
+    let proveedorId = null;
+    const codigo = proveedor.split(' - ')[0];
+    const prov = proveedores.find(p => p.codigo === codigo);
+    if (prov) proveedorId = prov.id;
+
+    try {
+        let importados = 0, actualizados = 0;
+        for (const linea of datos.split('\n')) {
+            const t = linea.trim(); if (!t) continue;
+            const partes = t.split(/[|\t]/).map(p => p.trim());
+            if (partes.length < 4) continue;
+            const [sku, nombre, barcode, existencia] = partes;
+            const existe = inventory.find(p => p.sku === sku);
+            if (existe) {
+                const update = actualizar
+                    ? { nombre, barcode_principal: barcode, proveedor_id: proveedorId, stock_bodega: parseInt(existencia)||0 }
+                    : { stock_bodega: (existe.bodega + (parseInt(existencia)||0)) };
+                const { error } = await db.from('productos').update(update).eq('id', existe.id);
+                if (!error) actualizados++;
+            } else {
+                const { error } = await db.from('productos').insert([{
+                    sku, nombre, barcode_principal: barcode, barcodes: [barcode],
+                    proveedor_id: proveedorId, stock_bodega: parseInt(existencia)||0, stock_tienda: 0
+                }]);
+                if (!error) importados++;
+            }
+        }
+        if (importados > 0 || actualizados > 0) {
+            await saveHistoryToSupabase('importacion', null, importados + actualizados, 'importacion_rapida', 'inventario');
+            await loadDataFromSupabase();
+            document.getElementById('importModal').style.display = 'none';
+            Swal.fire('Importación exitosa', `${importados} nuevos, ${actualizados} actualizados.`, 'success');
+        } else {
+            Swal.fire('Error en formato', 'Verifica el formato de los datos.', 'error');
+        }
+    } catch (e) {
+        Swal.fire('Error', e.message, 'error');
+    } finally {
+        btn.innerHTML = orig; btn.disabled = false;
+    }
+}
+
+// ==============================================
+// ACTUALIZAR ITEMS (sin modificar stock)
+// ==============================================
+async function actualizarItemsDesdeTexto() {
+    if (!checkAdmin()) return;
+    const datos = document.getElementById('actualizarItemsData').value.trim();
+    const proveedor = document.getElementById('actualizarItemsProveedor').value;
+
+    if (!datos) { Swal.fire('Datos vacíos', 'Ingresa datos para actualizar.', 'info'); return; }
+    if (!proveedor) { Swal.fire('Proveedor requerido', 'Selecciona un proveedor.', 'warning'); return; }
+
+    let proveedorId = null;
+    const codigo = proveedor.split(' - ')[0];
+    const prov = proveedores.find(p => p.codigo === codigo);
+    if (prov) proveedorId = prov.id;
+
+    const btn = document.getElementById('btnProcesarActualizarItems');
+    const orig = btn.innerHTML;
+    btn.innerHTML = '<span class="spinner"></span> Procesando...';
+    btn.disabled = true;
+
+    try {
+        let nuevos = 0, actualizados = 0, sinCambios = 0;
+        for (const linea of datos.split('\n')) {
+            const t = linea.trim(); if (!t) continue;
+            const partes = t.split(/[|\t]/).map(p => p.trim());
+            if (partes.length < 3) continue;
+            const [sku, nombre, barcode] = partes;
+            const existe = inventory.find(p => p.sku === sku);
+
+            if (existe) {
+                const cambios = {};
+                if (existe.name !== nombre) cambios.nombre = nombre;
+                if (existe.barcode !== barcode) {
+                    cambios.barcode_principal = barcode;
+                    const barcodes = [...new Set([...(existe.barcodes || []), barcode])];
+                    cambios.barcodes = barcodes;
+                }
+                if (proveedorId && existe.proveedor_id !== proveedorId) cambios.proveedor_id = proveedorId;
+
+                if (Object.keys(cambios).length > 0) {
+                    const { error } = await db.from('productos').update(cambios).eq('id', existe.id);
+                    if (!error) actualizados++;
+                } else {
+                    sinCambios++;
+                }
+            } else {
+                const { error } = await db.from('productos').insert([{
+                    sku, nombre, barcode_principal: barcode, barcodes: [barcode],
+                    proveedor_id: proveedorId, stock_bodega: 0, stock_tienda: 0
+                }]);
+                if (!error) nuevos++;
+            }
+        }
+
+        if (nuevos > 0 || actualizados > 0) {
+            await saveHistoryToSupabase('actualizacion_items', null, nuevos + actualizados, 'actualizacion_masiva', 'sistema');
+            await loadDataFromSupabase();
+            document.getElementById('actualizarItemsModal').style.display = 'none';
+            Swal.fire('Completado', `${nuevos} nuevos, ${actualizados} actualizados, ${sinCambios} sin cambios.`, 'success');
+        } else {
+            Swal.fire('Sin cambios', `No se encontraron productos para actualizar. ${sinCambios} sin cambios.`, 'info');
+        }
+    } catch (e) {
+        Swal.fire('Error', e.message, 'error');
+    } finally {
+        btn.innerHTML = orig; btn.disabled = false;
+    }
+}
+
+// ==============================================
+// EXPORTAR
+// ==============================================
+function exportarProveedores() {
+    let contenido = 'Código\tNombre\tDescripción\tContacto\tTeléfono\tEmail\n';
+    proveedores.forEach(p => {
+        contenido += `${p.codigo}\t${p.nombre}\t${p.descripcion||''}\t${p.contacto||''}\t${p.telefono||''}\t${p.email||''}\n`;
+    });
+    descargar(contenido, `proveedores_${new Date().toISOString().split('T')[0]}.txt`, 'text/plain');
+    Swal.fire('Exportado', 'Lista de proveedores exportada.', 'success');
+}
+
+function exportarInventarioPorProveedorExcel() {
+    if (!currentProveedorFilter) { Swal.fire('Selecciona un proveedor', '', 'info'); return; }
+    const productos = inventory.filter(p => p.proveedor === currentProveedorFilter);
+    if (productos.length === 0) { Swal.fire('Sin productos', `${currentProveedorFilter} no tiene productos.`, 'warning'); return; }
+    const datos = [['PROVEEDOR:', currentProveedorFilter], ['FECHA:', new Date().toISOString().split('T')[0]], [], ['SKU','PRODUCTO','CÓD. BARRA','STOCK BODEGA','STOCK TIENDA','TOTAL','ÚLTIMO ENVÍO']];
+    productos.forEach(p => datos.push([p.sku, p.name, p.barcode, p.bodega, p.tienda, p.bodega+p.tienda, formatTimeAgo(p.lastTransfer)]));
+    const ws = XLSX.utils.aoa_to_sheet(datos);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Inventario');
+    XLSX.writeFile(wb, `inventario_${currentProveedorFilter.replace(/\s+/g,'_')}_${new Date().toISOString().split('T')[0]}.xlsx`);
+}
+
+function exportarAExcel() {
+    const datos = [['INVENTARIO COMPLETO'], ['FECHA:', new Date().toISOString().split('T')[0]], [], ['SKU','PRODUCTO','CÓD. BARRA','PROVEEDOR','STOCK BODEGA','STOCK TIENDA','TOTAL','ÚLTIMO ENVÍO']];
+    inventory.forEach(p => datos.push([p.sku, p.name, p.barcode, p.proveedor, p.bodega, p.tienda, p.bodega+p.tienda, formatTimeAgo(p.lastTransfer)]));
+    const ws = XLSX.utils.aoa_to_sheet(datos);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Inventario');
+    XLSX.writeFile(wb, `inventario_completo_${new Date().toISOString().split('T')[0]}.xlsx`);
+    Swal.fire('Exportado', `${inventory.length} productos exportados a Excel.`, 'success');
+}
+
+function descargar(contenido, nombre, tipo) {
+    const blob = new Blob([contenido], { type: tipo });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = nombre;
+    document.body.appendChild(a); a.click();
+    document.body.removeChild(a); URL.revokeObjectURL(url);
+}
+
+function addBarcodeField(value = '') {
+    const item = document.createElement('div');
+    item.className = 'barcode-item';
+    item.innerHTML = `
+        <input type="text" class="additional-barcode" placeholder="Código de barras adicional" value="${value}">
+        <div class="barcode-actions">
+            <button type="button" class="btn btn-small btn-danger remove-barcode"><i class="fas fa-trash"></i></button>
+        </div>
+    `;
+    barcodesContainer.appendChild(item);
+    item.querySelector('.remove-barcode').addEventListener('click', () => item.remove());
+}
+
+// ==============================================
+// INICIALIZACIÓN
+// ==============================================
+document.addEventListener('DOMContentLoaded', function() {
+
+    // Autenticación: acepta sesión local O modo directo (sin login)
+    const session = localStorage.getItem('userSession') || sessionStorage.getItem('userSession');
+    if (session) {
+        try {
+            currentUser = JSON.parse(session);
+        } catch(e) {
+            currentUser = { username: 'Admin', role: 'admin' };
+        }
+    } else {
+        // Modo standalone: si no hay sesión, funciona como admin
+        currentUser = { username: 'Admin', role: 'admin' };
+    }
+
+    document.getElementById('currentUsername').textContent = currentUser.username;
+    document.getElementById('userRoleBadge').textContent = (currentUser.role || 'admin').toUpperCase();
+
+    // Escuchar rol del dashboard padre (iFrame)
+    window.addEventListener('message', (event) => {
+        if (event.data && event.data.type === 'USER_ROLE') {
+            currentUser = { username: event.data.username, role: event.data.role };
+            document.getElementById('currentUsername').textContent = currentUser.username;
+            document.getElementById('userRoleBadge').textContent = currentUser.role.toUpperCase();
+            configurePermissionsByRole();
+        }
+    });
+    window.parent.postMessage({ type: 'REQUEST_USER_ROLE' }, '*');
+
+    configurePermissionsByRole();
+
+    // Pestañas
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const tabId = this.getAttribute('data-tab');
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            this.classList.add('active');
+            document.getElementById(`${tabId}Tab`).classList.add('active');
+            if (tabId === 'proveedores') updateProveedorTable();
+            else if (tabId === 'gestionProveedores') updateProveedoresList();
+            else if (tabId === 'historial') updateHistorial();
+            else if (tabId === 'informacion') updateStats();
+        });
+    });
+
+    // Ordenamiento
+    tableHeaders.forEach(h => h.addEventListener('click', () => sortByField(h.getAttribute('data-sort'))));
+
+    // Búsqueda
+    searchInput.addEventListener('input', () => updateInventoryTable(searchInput.value));
+    document.getElementById('proveedorProductSearch').addEventListener('input', updateProveedorTable);
+
+    // Búsqueda por proveedor con sugerencias
+    let searchTimeout;
+    proveedorSearchInput.addEventListener('input', function() {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+            const term = this.value.toLowerCase().trim();
+            proveedorSuggestions.innerHTML = '';
+            proveedorSuggestions.style.display = 'none';
+            if (!term) {
+                currentProveedorFilter = null;
+                proveedorSelected.textContent = 'Mostrando todos los proveedores';
+                updateProveedorTable(); return;
+            }
+            const lista = getProveedoresUnicos().filter(p => p.toLowerCase().includes(term));
+            if (lista.length > 0) {
+                lista.forEach(prov => {
+                    const count = inventory.filter(p => p.proveedor === prov).length;
+                    const sug = document.createElement('div');
+                    sug.className = 'proveedor-suggestion';
+                    sug.innerHTML = `<span>${prov}</span><span class="proveedor-count">${count} productos</span>`;
+                    sug.addEventListener('click', () => {
+                        proveedorSearchInput.value = prov;
+                        proveedorSuggestions.style.display = 'none';
+                        currentProveedorFilter = prov;
+                        updateProveedorTable();
+                    });
+                    proveedorSuggestions.appendChild(sug);
+                });
+                proveedorSuggestions.style.display = 'block';
+            }
+            if (lista.length === 1 && term.length > 2) { currentProveedorFilter = lista[0]; updateProveedorTable(); }
+        }, 300);
+    });
+    document.addEventListener('click', e => {
+        if (!proveedorSearchInput.contains(e.target) && !proveedorSuggestions.contains(e.target))
+            proveedorSuggestions.style.display = 'none';
+    });
+
+    // Refresh
+    ['btnRefresh','btnRefreshProveedores','btnRefreshGestionProveedores','btnRefreshActualizarStock',
+     'btnRefreshHistorial','btnRefreshImportar','btnRefreshInformacion'].forEach(id => {
+        document.getElementById(id)?.addEventListener('click', loadDataFromSupabase);
+    });
+
+    // Logout
+    document.getElementById('btnLogout').addEventListener('click', () => {
+        Swal.fire({ title:'¿Cerrar sesión?', icon:'question', showCancelButton:true, confirmButtonText:'Sí', cancelButtonText:'Cancelar' })
+            .then(r => { if (r.isConfirmed) { localStorage.removeItem('userSession'); sessionStorage.removeItem('userSession'); window.location.href = 'login.html'; } });
+    });
+
+    // Abrir modales Agregar Producto
+    ['btnAddProductInventario','btnAddProductImportar'].forEach(id => {
+        document.getElementById(id)?.addEventListener('click', () => {
+            if (!checkAdmin()) return;
+            editingProductId = null;
+            document.getElementById('modalTitle').textContent = 'Agregar Producto';
+            document.getElementById('productForm').reset();
+            document.getElementById('stockBodega').value = '0';
+            document.getElementById('stockTienda').value = '0';
+            barcodesContainer.innerHTML = '';
+            document.getElementById('productModal').style.display = 'flex';
+        });
+    });
+
+    // Agregar proveedor
+    document.getElementById('btnAddProveedor').addEventListener('click', () => {
+        if (!checkAdmin()) return;
+        editingProveedorId = null;
+        document.getElementById('proveedorModalTitle').textContent = 'Agregar Proveedor';
+        document.getElementById('proveedorForm').reset();
+        document.getElementById('proveedorModal').style.display = 'flex';
+    });
+
+    // Importar rápido
+    document.getElementById('btnImportarRapidoImportar')?.addEventListener('click', () => {
+        if (!checkAdmin()) return;
+        document.getElementById('importModal').style.display = 'flex';
+    });
+
+    // Actualizar Items
+    document.getElementById('btnActualizarItems')?.addEventListener('click', () => {
+        if (!checkAdmin()) return;
+        document.getElementById('actualizarItemsData').value = '';
+        document.getElementById('actualizarItemsModal').style.display = 'flex';
+    });
+
+    // Cerrar modales
+    [['closeModal','productModal'],['closeImportModal','importModal'],
+     ['closeProveedorModal','proveedorModal'],['closeActualizarItemsModal','actualizarItemsModal']].forEach(([closeId, modalId]) => {
+        document.getElementById(closeId)?.addEventListener('click', () => {
+            document.getElementById(modalId).style.display = 'none';
+        });
+    });
+
+    // Cerrar modal al clic fuera
+    document.querySelectorAll('.modal').forEach(modal => {
+        modal.addEventListener('click', e => { if (e.target === modal) modal.style.display = 'none'; });
+    });
+
+    // Código de barras adicional
+    document.getElementById('btnAddBarcode').addEventListener('click', () => addBarcodeField());
+
+    // Formulario Producto
+    document.getElementById('productForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const btn = document.getElementById('btnSubmitProduct');
+        const orig = btn.innerHTML;
+        btn.innerHTML = '<span class="spinner"></span> Guardando...';
+        btn.disabled = true;
+
+        const barcodes = [];
+        barcodesContainer.querySelectorAll('input').forEach(i => { if (i.value.trim()) barcodes.push(i.value.trim()); });
+
+        const productData = {
+            id: editingProductId,
+            sku: document.getElementById('productSKU').value.trim(),
+            name: document.getElementById('productName').value.trim(),
+            barcode: document.getElementById('productBarCode').value.trim(),
+            barcodes: barcodes.length > 0 ? barcodes : [document.getElementById('productBarCode').value.trim()],
+            proveedor: document.getElementById('productProveedor').value,
+            bodega: parseInt(document.getElementById('stockBodega').value) || 0,
+            tienda: parseInt(document.getElementById('stockTienda').value) || 0
+        };
+
+        const skuDup = inventory.find(p => p.sku === productData.sku && p.id !== editingProductId);
+        if (skuDup) {
+            Swal.fire('SKU duplicado', 'Ya existe un producto con este SKU.', 'error');
+            btn.innerHTML = orig; btn.disabled = false; return;
+        }
+
+        try {
+            const isUpdate = !!editingProductId;
+            const saved = await saveProductToSupabase(productData, isUpdate);
+            if (!isUpdate) await saveHistoryToSupabase('importacion', saved.id, productData.bodega + productData.tienda, 'sistema', 'inventario');
+            await loadDataFromSupabase();
+            document.getElementById('productModal').style.display = 'none';
+            Swal.fire('¡Guardado!', `Producto "${productData.name}" ${isUpdate ? 'actualizado' : 'agregado'}.`, 'success');
+        } catch (err) {
+            Swal.fire('Error', `No se pudo guardar: ${err.message}`, 'error');
+        } finally {
+            btn.innerHTML = orig; btn.disabled = false;
+        }
+    });
+
+    // Formulario Proveedor
+    document.getElementById('proveedorForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const btn = document.getElementById('btnSubmitProveedor');
+        const orig = btn.innerHTML;
+        btn.innerHTML = '<span class="spinner"></span> Guardando...';
+        btn.disabled = true;
+
+        const proveedorData = {
+            id: editingProveedorId,
+            codigo: document.getElementById('proveedorCodigo').value.trim(),
+            nombre: document.getElementById('proveedorNombre').value.trim(),
+            descripcion: document.getElementById('proveedorDescripcion').value.trim(),
+            contacto: document.getElementById('proveedorContacto').value.trim(),
+            telefono: document.getElementById('proveedorTelefono').value.trim(),
+            email: document.getElementById('proveedorEmail').value.trim()
+        };
+
+        const codDup = proveedores.find(p => p.codigo === proveedorData.codigo && p.id !== editingProveedorId);
+        if (codDup) {
+            Swal.fire('Código duplicado', 'Ya existe un proveedor con este código.', 'error');
+            btn.innerHTML = orig; btn.disabled = false; return;
+        }
+
+        try {
+            await saveProveedorToSupabase(proveedorData, !!editingProveedorId);
+            await loadDataFromSupabase();
+            document.getElementById('proveedorModal').style.display = 'none';
+            Swal.fire('¡Guardado!', `Proveedor "${proveedorData.nombre}" guardado.`, 'success');
+        } catch (err) {
+            Swal.fire('Error', `No se pudo guardar: ${err.message}`, 'error');
+        } finally {
+            btn.innerHTML = orig; btn.disabled = false;
+        }
+    });
+
+    // Actualización masiva
+    document.getElementById('btnProcesarActualizacion').addEventListener('click', procesarActualizacionStock);
+
+    // Importación rápida
+    document.getElementById('btnProcesarImportacion').addEventListener('click', procesarImportacionRapida);
+
+    // Actualizar items
+    document.getElementById('btnProcesarActualizarItems').addEventListener('click', actualizarItemsDesdeTexto);
+
+    // Limpiar historial
+    document.getElementById('btnLimpiarHistorial').addEventListener('click', async () => {
+        if (!checkAdmin()) return;
+        const result = await Swal.fire({ title:'¿Limpiar historial?', icon:'question', showCancelButton:true, confirmButtonText:'Sí, limpiar', cancelButtonText:'Cancelar' });
+        if (!result.isConfirmed) return;
+        try {
+            await clearHistoryFromSupabase();
+            await loadDataFromSupabase();
+            Swal.fire('Limpiado', 'El historial fue eliminado.', 'success');
+        } catch (e) {
+            Swal.fire('Error', e.message, 'error');
+        }
+    });
+
+    // Exportar proveedores
+    document.getElementById('btnExportarProveedores').addEventListener('click', exportarProveedores);
+    document.getElementById('btnExportarProveedorExcel').addEventListener('click', exportarInventarioPorProveedorExcel);
+
+    // Exportar datos
+    document.getElementById('btnExportarJSON').addEventListener('click', () => {
+        const format = document.getElementById('exportFormat').value;
+        if (format === 'excel') { exportarAExcel(); return; }
+        let data, filename, type;
+        if (format === 'json') {
+            data = JSON.stringify({ inventario: inventory, historial, proveedores, exportado: Date.now() }, null, 2);
+            filename = `inventario_${new Date().toISOString().split('T')[0]}.json`;
+            type = 'application/json';
+        } else if (format === 'formatoProveedor') {
+            data = `SKU\tProducto\tCód. Barra\tExistencia\n`;
+            inventory.forEach(p => { data += `${p.sku}\t${p.name}\t${p.barcode}\t${p.bodega+p.tienda}\n`; });
+            filename = `inventario_proveedor_${new Date().toISOString().split('T')[0]}.txt`;
+            type = 'text/plain';
+        } else {
+            data = 'SKU,Producto,Cód. Barra,Proveedor,Bodega,Tienda,Total\n';
+            inventory.forEach(p => { data += `${p.sku},${p.name},${p.barcode},${p.proveedor},${p.bodega},${p.tienda},${p.bodega+p.tienda}\n`; });
+            filename = `inventario_${new Date().toISOString().split('T')[0]}.csv`;
+            type = 'text/csv';
+        }
+        descargar(data, filename, type);
+        Swal.fire('Exportado', `Datos exportados en formato ${format.toUpperCase()}.`, 'success');
+    });
+
+    // Upload JSON
+    const fileUploadArea = document.getElementById('fileUploadArea');
+    const jsonFileInput = document.getElementById('jsonFileInput');
+    fileUploadArea.addEventListener('click', () => { if (!checkAdmin()) return; jsonFileInput.click(); });
+    fileUploadArea.addEventListener('dragover', e => { e.preventDefault(); fileUploadArea.style.borderColor = 'var(--primary-blue)'; });
+    fileUploadArea.addEventListener('dragleave', () => { fileUploadArea.style.borderColor = 'var(--border)'; });
+    fileUploadArea.addEventListener('drop', e => {
+        e.preventDefault(); fileUploadArea.style.borderColor = 'var(--border)';
+        const file = e.dataTransfer.files[0];
+        if (file) { jsonFileInput.files = e.dataTransfer.files; fileUploadArea.innerHTML = `<i class="fas fa-file-check" style="color:var(--success);"></i><p>Archivo: <strong>${file.name}</strong></p>`; }
+    });
+    jsonFileInput.addEventListener('change', function() {
+        if (this.files[0]) fileUploadArea.innerHTML = `<i class="fas fa-file-check" style="color:var(--success);"></i><p>Archivo: <strong>${this.files[0].name}</strong></p>`;
+    });
+
+    document.getElementById('btnImportarJSON').addEventListener('click', async () => {
+        if (!checkAdmin()) return;
+        if (!jsonFileInput.files.length) { Swal.fire('Sin archivo', 'Selecciona un archivo JSON primero.', 'info'); return; }
+        const proveedor = document.getElementById('importProveedor').value;
+        if (!proveedor) { Swal.fire('Proveedor requerido', '', 'warning'); return; }
+        const actualizar = document.getElementById('importarActualizarStock').checked;
+
+        let proveedorId = null;
+        const codigo = proveedor.split(' - ')[0];
+        const prov = proveedores.find(p => p.codigo === codigo);
+        if (prov) proveedorId = prov.id;
+
+        const btn = document.getElementById('btnImportarJSON');
+        const orig = btn.innerHTML;
+        btn.innerHTML = '<span class="spinner"></span> Procesando...';
+        btn.disabled = true;
+
+        try {
+            const reader = new FileReader();
+            reader.onload = async function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    let importados = 0, actualizados = 0;
+                    for (const item of (Array.isArray(data) ? data : [])) {
+                        const sku = item.sku || item.SKU || '';
+                        const nombre = item.nombre || item.name || item.Producto || '';
+                        const barcode = item.barcode || item.barcode_principal || item['Cód. Barra'] || sku;
+                        const bodega = parseInt(item.bodega || item.stock_bodega || item.Existencia || item.existencia || 0);
+                        const tienda = parseInt(item.tienda || item.stock_tienda || 0);
+                        if (!sku) continue;
+                        const existe = inventory.find(p => p.sku === sku);
+                        if (existe) {
+                            const update = actualizar ? { nombre, barcode_principal: barcode, proveedor_id: proveedorId, stock_bodega: bodega, stock_tienda: tienda } : { stock_bodega: existe.bodega + bodega };
+                            const { error } = await db.from('productos').update(update).eq('id', existe.id);
+                            if (!error) actualizados++;
+                        } else {
+                            const { error } = await db.from('productos').insert([{ sku, nombre, barcode_principal: barcode, barcodes: [barcode], proveedor_id: proveedorId, stock_bodega: bodega, stock_tienda: tienda }]);
+                            if (!error) importados++;
+                        }
+                    }
+                    if (importados > 0 || actualizados > 0) {
+                        await saveHistoryToSupabase('importacion', null, importados + actualizados, 'archivo_json', 'inventario');
+                        await loadDataFromSupabase();
+                        Swal.fire('Importación exitosa', `${importados} nuevos, ${actualizados} actualizados.`, 'success');
+                    } else {
+                        Swal.fire('Error en formato', 'No se pudieron procesar los datos. Verifica el formato.', 'error');
+                    }
+                } catch (err) {
+                    Swal.fire('Error al procesar', err.message, 'error');
+                } finally {
+                    btn.innerHTML = orig; btn.disabled = false;
+                }
+            };
+            reader.readAsText(jsonFileInput.files[0]);
+        } catch (err) {
+            Swal.fire('Error', err.message, 'error');
+            btn.innerHTML = orig; btn.disabled = false;
+        }
+    });
+
+    // Online/offline
+    window.addEventListener('online', async () => { updateConnectionStatus(true); await loadDataFromSupabase(); });
+    window.addEventListener('offline', () => updateConnectionStatus(false));
+
+    // Carga inicial
+    loadDataFromSupabase();
+});
+</script>
+</body>
+</html>
