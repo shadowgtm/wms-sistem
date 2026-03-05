@@ -1,0 +1,1787 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Inventario con Supabase</title>
+    <link rel="icon" type="image/x-icon" href="https://cdn-icons-png.flaticon.com/512/891/891419.png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+    <style>
+        :root {
+            --primary-blue: #1a56db;
+            --primary-dark: #1e429f;
+            --secondary-blue: #3b82f6;
+            --accent-blue: #93c5fd;
+            --light-blue: #dbeafe;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --info: #8b5cf6;
+            --light: #f8fafc;
+            --dark: #1f2937;
+            --text-primary: #111827;
+            --text-secondary: #6b7280;
+            --border: #e5e7eb;
+            --card-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            --card-shadow-hover: 0 10px 25px -5px rgba(0,0,0,0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        body {
+            background-color: #f9fafb;
+            color: var(--text-primary);
+            font-size: 0.9375rem;
+        }
+
+        header {
+            background: linear-gradient(135deg, var(--primary-blue), var(--primary-dark));
+            color: white;
+            padding: 1.5rem 2rem;
+            margin-bottom: 2rem;
+            border-radius: 16px;
+            box-shadow: var(--card-shadow-hover);
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        h1 { font-size: 1.75rem; font-weight: 700; }
+
+        .connection-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            border-radius: 20px;
+            background-color: rgba(255,255,255,0.15);
+            font-weight: 500;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 16px;
+            background-color: rgba(255,255,255,0.15);
+            border-radius: 50px;
+        }
+
+        .btn-logout {
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+            padding: 5px 10px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 1.5rem;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background-color: white;
+            padding: 1.5rem;
+            border-radius: 16px;
+            box-shadow: var(--card-shadow);
+            display: flex;
+            align-items: center;
+            border: 1px solid var(--border);
+        }
+
+        .stat-icon {
+            font-size: 2rem;
+            margin-right: 1rem;
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .bodega-icon { background: rgba(26,86,219,0.1); color: var(--primary-blue); }
+        .tienda-icon { background: rgba(16,185,129,0.1); color: var(--success); }
+        .proveedor-icon { background: rgba(139,92,246,0.1); color: var(--info); }
+        .historial-icon { background: rgba(245,158,11,0.1); color: var(--warning); }
+
+        .stat-info h3 { font-size: 1.75rem; margin-bottom: 0.25rem; }
+        .stat-info p { color: var(--text-secondary); font-size: 0.875rem; }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary { background: var(--primary-blue); color: white; }
+        .btn-success { background: var(--success); color: white; }
+        .btn-warning { background: var(--warning); color: white; }
+        .btn-danger { background: var(--danger); color: white; }
+        .btn-info { background: var(--info); color: white; }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .toolbar, .search-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            margin-bottom: 1.5rem;
+            padding: 1.5rem;
+            background: white;
+            border-radius: 16px;
+            box-shadow: var(--card-shadow);
+            border: 1px solid var(--border);
+            align-items: center;
+        }
+
+        .search-box {
+            flex-grow: 1;
+            position: relative;
+            min-width: 250px;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 0.875rem 1rem 0.875rem 3rem;
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            font-size: 0.9375rem;
+        }
+
+        .search-box input:focus { outline: none; border-color: var(--primary-blue); }
+
+        .search-box i {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-secondary);
+        }
+
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid var(--border);
+            background: white;
+            padding: 0.5rem;
+            border-radius: 12px 12px 0 0;
+            overflow-x: auto;
+            margin-bottom: 2rem;
+            gap: 0.25rem;
+        }
+
+        .tab-btn {
+            padding: 1rem 1.5rem;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            color: var(--text-secondary);
+            white-space: nowrap;
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+
+        .tab-btn.active {
+            color: var(--primary-blue);
+            background: rgba(26,86,219,0.1);
+        }
+
+        .tab-btn:hover:not(.active) { background: var(--light); }
+
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        .inventory-table {
+            background: white;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: var(--card-shadow);
+            border: 1px solid var(--border);
+            overflow-x: auto;
+        }
+
+        table { width: 100%; border-collapse: collapse; }
+
+        thead { background: var(--primary-blue); color: white; }
+
+        th, td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+
+        tbody tr:hover { background: #f9fafb; }
+        tbody tr:last-child td { border-bottom: none; }
+
+        .actions-cell { display: flex; gap: 0.5rem; }
+
+        .action-btn {
+            padding: 0.5rem 0.75rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .action-btn:hover { transform: translateY(-1px); }
+        .edit-btn { background: rgba(26,86,219,0.1); color: var(--primary-blue); }
+        .delete-btn { background: rgba(239,68,68,0.1); color: var(--danger); }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(4px);
+        }
+
+        .modal-content {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .close-modal {
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--text-secondary);
+            line-height: 1;
+        }
+
+        .close-modal:hover { color: var(--danger); }
+
+        .form-group { margin-bottom: 1.5rem; }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 0.875rem 1rem;
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            font-size: 0.9375rem;
+            transition: border-color 0.2s;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--primary-blue);
+        }
+
+        .form-row { display: flex; gap: 1rem; }
+        .form-row .form-group { flex: 1; }
+
+        .proveedor-card {
+            background: white;
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            box-shadow: var(--card-shadow);
+            border: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .historial-item {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            box-shadow: var(--card-shadow);
+            border: 1px solid var(--border);
+        }
+
+        .loading-spinner {
+            text-align: center;
+            padding: 40px;
+        }
+
+        .spinner-large {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(26,86,219,0.2);
+            border-radius: 50%;
+            border-top-color: var(--primary-blue);
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 15px 0;
+        }
+
+        .file-upload {
+            border: 2px dashed var(--border);
+            border-radius: 12px;
+            padding: 2rem;
+            text-align: center;
+            cursor: pointer;
+            background: var(--light);
+            margin-bottom: 1rem;
+            transition: border-color 0.2s;
+        }
+
+        .file-upload:hover { border-color: var(--primary-blue); }
+
+        .file-upload i {
+            font-size: 3rem;
+            color: var(--primary-blue);
+            margin-bottom: 1rem;
+            display: block;
+        }
+
+        textarea {
+            width: 100%;
+            padding: 0.875rem 1rem;
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            font-size: 0.9375rem;
+            resize: vertical;
+            font-family: monospace;
+        }
+
+        textarea:focus { outline: none; border-color: var(--primary-blue); }
+
+        select {
+            width: 100%;
+            padding: 0.875rem 1rem;
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            font-size: 0.9375rem;
+            background: white;
+            margin-bottom: 0.75rem;
+        }
+
+        select:focus { outline: none; border-color: var(--primary-blue); }
+
+        .resultado-item {
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            margin-bottom: 0.5rem;
+            font-size: 0.875rem;
+        }
+
+        .resultado-ok { background: rgba(16,185,129,0.1); color: var(--success); border-left: 3px solid var(--success); }
+        .resultado-error { background: rgba(239,68,68,0.1); color: var(--danger); border-left: 3px solid var(--danger); }
+
+        @media (max-width: 768px) {
+            .form-row { flex-direction: column; gap: 0; }
+            .actions-cell { flex-direction: column; }
+            .proveedor-card { flex-direction: column; gap: 1rem; text-align: center; }
+            .header-content { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+    <div id="mainApp">
+        <div class="container">
+            <header>
+                <div class="header-content">
+                    <div>
+                        <h1><i class="fas fa-warehouse"></i> Sistema de Inventario Supabase</h1>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:15px;flex-wrap:wrap;">
+                        <div id="connectionStatus" class="connection-status">
+                            <i class="fas fa-sync fa-spin"></i> Conectando...
+                        </div>
+                        <div class="user-info">
+                            <i class="fas fa-user-circle"></i>
+                            <span id="currentUsername">Admin</span>
+                            <span id="userRoleBadge" style="background:rgba(255,255,255,0.2);padding:3px 8px;border-radius:20px;">ADMIN</span>
+                            <button id="btnLogout" class="btn-logout" title="Cerrar sesión">
+                                <i class="fas fa-sign-out-alt"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Pestañas -->
+            <div class="tabs">
+                <button class="tab-btn active" data-tab="inventario"><i class="fas fa-boxes"></i> Inventario</button>
+                <button class="tab-btn" data-tab="proveedores"><i class="fas fa-truck"></i> Por Proveedor</button>
+                <button class="tab-btn" data-tab="gestionProveedores"><i class="fas fa-user-tie"></i> Gestión Proveedores</button>
+                <button class="tab-btn" data-tab="actualizarStock"><i class="fas fa-sync-alt"></i> Actualizar Stock</button>
+                <button class="tab-btn" data-tab="historial"><i class="fas fa-history"></i> Historial</button>
+                <button class="tab-btn" data-tab="importar"><i class="fas fa-file-import"></i> Importar/Exportar</button>
+                <button class="tab-btn" data-tab="informacion"><i class="fas fa-info-circle"></i> Información</button>
+            </div>
+
+            <!-- INVENTARIO -->
+            <div class="tab-content active" id="inventarioTab">
+                <div class="search-container">
+                    <div class="search-box">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="searchInput" placeholder="Buscar por SKU, nombre, código de barra, proveedor...">
+                    </div>
+                    <button class="btn btn-primary" id="btnAddProductInventario">
+                        <i class="fas fa-plus"></i> Agregar Producto
+                    </button>
+                    <button class="btn btn-primary" id="btnRefresh">
+                        <i class="fas fa-sync-alt"></i> Actualizar
+                    </button>
+                </div>
+                <div class="inventory-table">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>SKU</th>
+                                <th>Producto</th>
+                                <th>Cód. Barra</th>
+                                <th>Proveedor</th>
+                                <th>Stock Bodega</th>
+                                <th>Stock Tienda</th>
+                                <th>Último Envío</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="inventoryTableBody">
+                            <tr>
+                                <td colspan="8" class="loading-spinner">
+                                    <div class="spinner-large"></div>
+                                    <p>Cargando inventario...</p>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- POR PROVEEDOR -->
+            <div class="tab-content" id="proveedoresTab">
+                <div class="search-container">
+                    <div class="search-box">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="proveedorSearchInput" placeholder="Buscar por proveedor o producto...">
+                    </div>
+                    <select id="filtroProveedor" style="width:auto;min-width:200px;margin-bottom:0;">
+                        <option value="">Todos los proveedores</option>
+                    </select>
+                    <button class="btn btn-success" id="btnExportarProveedorExcel">
+                        <i class="fas fa-file-excel"></i> Exportar a Excel
+                    </button>
+                </div>
+                <div id="proveedorSelected" style="margin-bottom:1rem;font-weight:600;color:var(--text-secondary);">
+                    Mostrando todos los proveedores
+                </div>
+                <div class="inventory-table">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>SKU</th>
+                                <th>Producto</th>
+                                <th>Cód. Barra</th>
+                                <th>Proveedor</th>
+                                <th>Stock Bodega</th>
+                                <th>Stock Tienda</th>
+                                <th>Último Envío</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="proveedorTableBody">
+                            <tr><td colspan="8" style="text-align:center;padding:40px;">Cargando...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- GESTIÓN PROVEEDORES -->
+            <div class="tab-content" id="gestionProveedoresTab">
+                <div class="toolbar">
+                    <button class="btn btn-primary" id="btnAddProveedor">
+                        <i class="fas fa-plus"></i> Agregar Proveedor
+                    </button>
+                    <button class="btn btn-info" id="btnExportarProveedores">
+                        <i class="fas fa-file-export"></i> Exportar Proveedores
+                    </button>
+                </div>
+                <div id="proveedoresContainer">
+                    <div class="loading-spinner">
+                        <div class="spinner-large"></div>
+                        <p>Cargando proveedores...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ACTUALIZAR STOCK -->
+            <div class="tab-content" id="actualizarStockTab">
+                <div style="background:white;border-radius:16px;padding:2rem;border:1px solid var(--border);box-shadow:var(--card-shadow);">
+                    <h3 style="margin-bottom:1rem;"><i class="fas fa-sync-alt"></i> Actualización Masiva de Stock</h3>
+                    <p style="color:var(--text-secondary);margin-bottom:1.5rem;">
+                        Ingresa un producto por línea con el formato: <strong>SKU | Stock Bodega | Stock Tienda</strong>
+                    </p>
+                    <div class="form-group">
+                        <label>Datos de actualización</label>
+                        <textarea id="actualizarStockData" rows="12" placeholder="PROD001 | 10 | 5&#10;PROD002 | 15 | 8&#10;PROD003 | 20 | 3"></textarea>
+                    </div>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="actualizarSoloBodega">
+                        <label for="actualizarSoloBodega">Solo actualizar stock de bodega (ignorar columna tienda)</label>
+                    </div>
+                    <button class="btn btn-warning" id="btnProcesarActualizacion">
+                        <i class="fas fa-save"></i> Procesar Actualización
+                    </button>
+                    <div id="actualizacionResultado" style="margin-top:1.5rem;"></div>
+                </div>
+            </div>
+
+            <!-- HISTORIAL -->
+            <div class="tab-content" id="historialTab">
+                <div class="toolbar">
+                    <span style="color:var(--text-secondary);font-size:0.875rem;" id="historialCount"></span>
+                    <button class="btn btn-danger" id="btnLimpiarHistorial">
+                        <i class="fas fa-trash"></i> Limpiar Historial
+                    </button>
+                </div>
+                <div id="historialContainer">
+                    <div class="loading-spinner">
+                        <div class="spinner-large"></div>
+                        <p>Cargando historial...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- IMPORTAR/EXPORTAR -->
+            <div class="tab-content" id="importarTab">
+                <div class="toolbar">
+                    <button class="btn btn-primary" id="btnAddProductImportar">
+                        <i class="fas fa-plus"></i> Agregar Producto
+                    </button>
+                    <button class="btn btn-info" id="btnImportarRapidoImportar">
+                        <i class="fas fa-file-import"></i> Importar Rápido
+                    </button>
+                </div>
+                <div class="form-row" style="gap:2rem;">
+                    <div style="flex:1;background:white;border-radius:16px;padding:2rem;border:1px solid var(--border);box-shadow:var(--card-shadow);">
+                        <h3 style="margin-bottom:1.5rem;"><i class="fas fa-file-import"></i> Importar JSON</h3>
+                        <div class="file-upload" id="fileUploadArea">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                            <p><strong>Arrastra un archivo JSON aquí</strong></p>
+                            <p style="color:var(--text-secondary);font-size:0.875rem;margin-top:0.5rem;">o haz clic para seleccionar</p>
+                            <input type="file" id="jsonFileInput" accept=".json" style="display:none;">
+                        </div>
+                        <div id="jsonFileName" style="color:var(--success);margin-bottom:1rem;font-weight:600;"></div>
+                        <div class="checkbox-group">
+                            <input type="checkbox" id="importarActualizarStock">
+                            <label for="importarActualizarStock">Actualizar productos existentes</label>
+                        </div>
+                        <div class="form-group">
+                            <label>Proveedor para importación</label>
+                            <select id="importProveedor"></select>
+                        </div>
+                        <button class="btn btn-success" id="btnImportarJSON">
+                            <i class="fas fa-file-import"></i> Importar JSON
+                        </button>
+                    </div>
+                    <div style="flex:1;background:white;border-radius:16px;padding:2rem;border:1px solid var(--border);box-shadow:var(--card-shadow);">
+                        <h3 style="margin-bottom:1.5rem;"><i class="fas fa-file-export"></i> Exportar Datos</h3>
+                        <div class="form-group">
+                            <label>Formato de exportación</label>
+                            <select id="exportFormat">
+                                <option value="json">JSON</option>
+                                <option value="excel">Excel (.xlsx)</option>
+                                <option value="csv">CSV</option>
+                            </select>
+                        </div>
+                        <button class="btn btn-primary" id="btnExportarJSON">
+                            <i class="fas fa-download"></i> Exportar
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- INFORMACIÓN -->
+            <div class="tab-content" id="informacionTab">
+                <div style="background:white;border-radius:16px;padding:2rem;margin-bottom:2rem;border:1px solid var(--border);box-shadow:var(--card-shadow);">
+                    <h3 style="margin-bottom:1.5rem;"><i class="fas fa-chart-bar"></i> Estadísticas del Sistema</h3>
+                    <div class="stats">
+                        <div class="stat-card">
+                            <div class="stat-icon bodega-icon"><i class="fas fa-warehouse"></i></div>
+                            <div class="stat-info">
+                                <h3 id="totalBodega">0</h3>
+                                <p>Stock Bodega</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon tienda-icon"><i class="fas fa-store"></i></div>
+                            <div class="stat-info">
+                                <h3 id="totalTienda">0</h3>
+                                <p>Stock Tienda</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon" style="background:rgba(26,86,219,0.1);color:var(--primary-blue);"><i class="fas fa-boxes"></i></div>
+                            <div class="stat-info">
+                                <h3 id="totalProductos">0</h3>
+                                <p>Productos</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon proveedor-icon"><i class="fas fa-truck"></i></div>
+                            <div class="stat-info">
+                                <h3 id="totalProveedores">0</h3>
+                                <p>Proveedores</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon historial-icon"><i class="fas fa-history"></i></div>
+                            <div class="stat-info">
+                                <h3 id="totalMovimientos">0</h3>
+                                <p>Movimientos</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal Producto -->
+        <div id="productModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 id="modalTitle">Agregar Producto</h2>
+                    <span class="close-modal" id="closeModal">&times;</span>
+                </div>
+                <form id="productForm">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>SKU *</label>
+                            <input type="text" id="productSKU" required placeholder="Ej: PROD001">
+                        </div>
+                        <div class="form-group">
+                            <label>Código Barras *</label>
+                            <input type="text" id="productBarCode" required placeholder="Ej: 7501234567890">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Nombre del Producto *</label>
+                        <input type="text" id="productName" required placeholder="Ej: Leche Entera 1L">
+                    </div>
+                    <div class="form-group">
+                        <label>Proveedor *</label>
+                        <select id="productProveedor" required></select>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Stock Bodega</label>
+                            <input type="number" id="stockBodega" min="0" value="0">
+                        </div>
+                        <div class="form-group">
+                            <label>Stock Tienda</label>
+                            <input type="number" id="stockTienda" min="0" value="0">
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="width:100%;">
+                        <i class="fas fa-save"></i> Guardar Producto
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Modal Proveedor -->
+        <div id="proveedorModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 id="proveedorModalTitle">Agregar Proveedor</h2>
+                    <span class="close-modal" id="closeProveedorModal">&times;</span>
+                </div>
+                <form id="proveedorForm">
+                    <div class="form-group">
+                        <label>Código *</label>
+                        <input type="text" id="proveedorCodigo" required placeholder="Ej: PROV001">
+                    </div>
+                    <div class="form-group">
+                        <label>Nombre *</label>
+                        <input type="text" id="proveedorNombre" required placeholder="Ej: Distribuidora XYZ">
+                    </div>
+                    <div class="form-group">
+                        <label>Teléfono</label>
+                        <input type="text" id="proveedorTelefono" placeholder="1234-5678">
+                    </div>
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" id="proveedorEmail" placeholder="contacto@ejemplo.com">
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="width:100%;">
+                        <i class="fas fa-save"></i> Guardar Proveedor
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Modal Importación Rápida -->
+        <div id="importModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Importación Rápida</h2>
+                    <span class="close-modal" id="closeImportModal">&times;</span>
+                </div>
+                <p style="color:var(--text-secondary);margin-bottom:1rem;">
+                    Formato por línea: <strong>SKU | Nombre | Cód. Barra | Stock Bodega</strong>
+                </p>
+                <div class="form-group">
+                    <textarea id="importData" rows="10" placeholder="PROD001 | Producto A | 7501234567890 | 10&#10;PROD002 | Producto B | 7509876543210 | 5"></textarea>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="importRapidoActualizarStock">
+                    <label for="importRapidoActualizarStock">Actualizar productos existentes</label>
+                </div>
+                <div class="form-group">
+                    <label>Proveedor</label>
+                    <select id="importRapidoProveedor"></select>
+                </div>
+                <button class="btn btn-success" id="btnProcesarImportacion" style="width:100%;">
+                    <i class="fas fa-file-import"></i> Procesar Importación
+                </button>
+                <div id="importResultado" style="margin-top:1rem;"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+        // ==============================================
+        // CONFIGURACIÓN — CAMBIA ESTOS VALORES
+        // ==============================================
+        const SUPABASE_URL = 'https://cuxenrijxfnbubmdjizj.supabase.co';
+        const SUPABASE_ANON_KEY = 'sb_publishable_0kPsSgQZMWea4P-yjovhhA_fRkQewG0';
+
+        // ✅ FIX: Renombrado de 'supabase' a 'db' para evitar conflicto con la librería global
+        const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // Estado de la aplicación
+        let inventory = [];
+        let historial = [];
+        let proveedores = [];
+        let editingProductId = null;
+        let editingProveedorId = null;
+        let jsonImportData = null;
+
+        // ==============================================
+        // FUNCIÓN PRINCIPAL: Cargar datos
+        // ==============================================
+        async function cargarDatos() {
+            try {
+                setStatus('<i class="fas fa-sync fa-spin"></i> Cargando...', false);
+
+                // 1. Proveedores
+                const { data: provData, error: provError } = await db
+                    .from('proveedores')
+                    .select('*')
+                    .order('codigo');
+
+                if (provError) throw provError;
+                proveedores = provData || [];
+
+                // 2. Productos
+                const { data: prodData, error: prodError } = await db
+                    .from('productos')
+                    .select('*')
+                    .order('id');
+
+                if (prodError) throw prodError;
+
+                inventory = (prodData || []).map(p => ({
+                    id: p.id,
+                    sku: p.sku,
+                    name: p.nombre,
+                    barcode: p.barcode_principal || '',
+                    proveedor: buscarNombreProveedor(p.proveedor_id),
+                    proveedor_id: p.proveedor_id,
+                    bodega: p.stock_bodega || 0,
+                    tienda: p.stock_tienda || 0,
+                    lastTransfer: p.ultimo_envio ? new Date(p.ultimo_envio).getTime() : null
+                }));
+
+                // 3. Historial
+                const { data: histData, error: histError } = await db
+                    .from('historial')
+                    .select('*')
+                    .order('created_at', { ascending: false })
+                    .limit(100);
+
+                if (histError) throw histError;
+
+                historial = (histData || []).map(h => ({
+                    id: h.id,
+                    timestamp: new Date(h.created_at).getTime(),
+                    tipo: h.tipo,
+                    producto: h.producto_nombre,
+                    sku: h.producto_sku,
+                    cantidad: h.cantidad,
+                    origen: h.origen,
+                    destino: h.destino,
+                    usuario: h.usuario
+                }));
+
+                // Actualizar UI
+                actualizarTablaInventario();
+                actualizarTablaProveedores();
+                actualizarStats();
+                actualizarSelectProveedores();
+                actualizarListaProveedores();
+                actualizarHistorial();
+                actualizarFiltroPorProveedor();
+
+                setStatus('<i class="fas fa-wifi"></i> Conectado', true);
+
+            } catch (error) {
+                console.error('Error cargando datos:', error);
+                setStatus('<i class="fas fa-exclamation-triangle"></i> Error de conexión', false);
+                Swal.fire('Error de conexión', `No se pudo conectar a Supabase: ${error.message}`, 'error');
+            }
+        }
+
+        function setStatus(html, ok) {
+            const el = document.getElementById('connectionStatus');
+            if (!el) return;
+            el.innerHTML = html;
+            el.style.background = ok ? 'rgba(16,185,129,0.2)' : 'rgba(255,255,255,0.15)';
+        }
+
+        // ==============================================
+        // FUNCIONES AUXILIARES
+        // ==============================================
+        function buscarNombreProveedor(proveedorId) {
+            if (!proveedorId) return 'Sin proveedor';
+            const prov = proveedores.find(p => p.id === proveedorId);
+            return prov ? `${prov.codigo} - ${prov.nombre}` : 'No encontrado';
+        }
+
+        function formatTimeAgo(timestamp) {
+            if (!timestamp) return 'Nunca';
+            const diff = Date.now() - timestamp;
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+            if (days === 0) return 'Hoy';
+            if (days === 1) return 'Ayer';
+            if (days < 7) return `Hace ${days} días`;
+            if (days < 30) return `Hace ${Math.floor(days / 7)} semana(s)`;
+            return `Hace ${Math.floor(days / 30)} mes(es)`;
+        }
+
+        function getTipoColor(tipo) {
+            const colores = {
+                'importacion': '#3b82f6',
+                'actualizacion': '#f59e0b',
+                'eliminacion': '#ef4444',
+                'transferencia': '#10b981'
+            };
+            return colores[tipo] || '#6b7280';
+        }
+
+        // ==============================================
+        // ACTUALIZACIÓN DE UI
+        // ==============================================
+        function actualizarTablaInventario(filtro = '') {
+            const tbody = document.getElementById('inventoryTableBody');
+            if (!tbody) return;
+
+            let datos = inventory;
+            if (filtro) {
+                const term = filtro.toLowerCase();
+                datos = inventory.filter(p =>
+                    p.sku.toLowerCase().includes(term) ||
+                    p.name.toLowerCase().includes(term) ||
+                    p.barcode.toLowerCase().includes(term) ||
+                    p.proveedor.toLowerCase().includes(term)
+                );
+            }
+
+            if (datos.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:40px;color:var(--text-secondary);">${filtro ? 'No se encontraron resultados' : 'No hay productos registrados'}</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = datos.map(p => `
+                <tr>
+                    <td><strong>${p.sku}</strong></td>
+                    <td>${p.name}</td>
+                    <td><code style="background:#f3f4f6;padding:2px 6px;border-radius:4px;">${p.barcode}</code></td>
+                    <td><span style="background:rgba(139,92,246,0.1);color:var(--info);padding:3px 8px;border-radius:20px;font-size:0.8rem;">${p.proveedor}</span></td>
+                    <td><strong style="color:var(--primary-blue);">${p.bodega}</strong></td>
+                    <td><strong style="color:var(--success);">${p.tienda}</strong></td>
+                    <td style="color:var(--text-secondary);font-size:0.875rem;">${formatTimeAgo(p.lastTransfer)}</td>
+                    <td class="actions-cell">
+                        <button class="action-btn edit-btn" onclick="editarProducto(${p.id})" title="Editar">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="action-btn delete-btn" onclick="eliminarProducto(${p.id})" title="Eliminar">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function actualizarTablaProveedores(filtro = '', proveedorFiltro = '') {
+            const tbody = document.getElementById('proveedorTableBody');
+            if (!tbody) return;
+
+            let datos = inventory;
+
+            if (proveedorFiltro) {
+                datos = datos.filter(p => p.proveedor_id == proveedorFiltro);
+            }
+
+            if (filtro) {
+                const term = filtro.toLowerCase();
+                datos = datos.filter(p =>
+                    p.sku.toLowerCase().includes(term) ||
+                    p.name.toLowerCase().includes(term) ||
+                    p.proveedor.toLowerCase().includes(term)
+                );
+            }
+
+            const infoEl = document.getElementById('proveedorSelected');
+            if (infoEl) {
+                if (proveedorFiltro) {
+                    const prov = proveedores.find(p => p.id == proveedorFiltro);
+                    infoEl.textContent = `Mostrando: ${prov ? prov.nombre : ''} (${datos.length} productos)`;
+                } else {
+                    infoEl.textContent = `Mostrando todos los proveedores (${datos.length} productos)`;
+                }
+            }
+
+            if (datos.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:40px;color:var(--text-secondary);">No hay productos para este filtro</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = datos.map(p => `
+                <tr>
+                    <td><strong>${p.sku}</strong></td>
+                    <td>${p.name}</td>
+                    <td><code style="background:#f3f4f6;padding:2px 6px;border-radius:4px;">${p.barcode}</code></td>
+                    <td><span style="background:rgba(139,92,246,0.1);color:var(--info);padding:3px 8px;border-radius:20px;font-size:0.8rem;">${p.proveedor}</span></td>
+                    <td><strong style="color:var(--primary-blue);">${p.bodega}</strong></td>
+                    <td><strong style="color:var(--success);">${p.tienda}</strong></td>
+                    <td style="color:var(--text-secondary);font-size:0.875rem;">${formatTimeAgo(p.lastTransfer)}</td>
+                    <td class="actions-cell">
+                        <button class="action-btn edit-btn" onclick="editarProducto(${p.id})" title="Editar">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="action-btn delete-btn" onclick="eliminarProducto(${p.id})" title="Eliminar">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function actualizarStats() {
+            const totalBodega = inventory.reduce((s, p) => s + p.bodega, 0);
+            const totalTienda = inventory.reduce((s, p) => s + p.tienda, 0);
+
+            const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+            set('totalBodega', totalBodega.toLocaleString());
+            set('totalTienda', totalTienda.toLocaleString());
+            set('totalProductos', inventory.length.toLocaleString());
+            set('totalProveedores', proveedores.length.toLocaleString());
+            set('totalMovimientos', historial.length.toLocaleString());
+        }
+
+        function actualizarSelectProveedores() {
+            const ids = ['productProveedor', 'importProveedor', 'importRapidoProveedor'];
+            ids.forEach(id => {
+                const el = document.getElementById(id);
+                if (!el) return;
+                const val = el.value;
+                el.innerHTML = '<option value="">-- Seleccionar proveedor --</option>';
+                proveedores.forEach(p => {
+                    const opt = document.createElement('option');
+                    opt.value = `${p.codigo} - ${p.nombre}`;
+                    opt.textContent = `${p.codigo} - ${p.nombre}`;
+                    el.appendChild(opt);
+                });
+                if (val) el.value = val;
+            });
+        }
+
+        function actualizarFiltroPorProveedor() {
+            const el = document.getElementById('filtroProveedor');
+            if (!el) return;
+            el.innerHTML = '<option value="">Todos los proveedores</option>';
+            proveedores.forEach(p => {
+                const opt = document.createElement('option');
+                opt.value = p.id;
+                opt.textContent = `${p.codigo} - ${p.nombre}`;
+                el.appendChild(opt);
+            });
+        }
+
+        function actualizarListaProveedores() {
+            const container = document.getElementById('proveedoresContainer');
+            if (!container) return;
+
+            if (proveedores.length === 0) {
+                container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-secondary);">No hay proveedores registrados</div>';
+                return;
+            }
+
+            container.innerHTML = proveedores.map(p => {
+                const count = inventory.filter(prod => prod.proveedor_id === p.id).length;
+                return `
+                    <div class="proveedor-card">
+                        <div>
+                            <h4 style="margin-bottom:0.5rem;">${p.codigo} - ${p.nombre}</h4>
+                            <p style="color:var(--text-secondary);margin-bottom:0.25rem;">
+                                <i class="fas fa-boxes"></i> ${count} producto(s)
+                            </p>
+                            ${p.telefono ? `<p style="color:var(--text-secondary);margin-bottom:0.25rem;"><i class="fas fa-phone"></i> ${p.telefono}</p>` : ''}
+                            ${p.email ? `<p style="color:var(--text-secondary);"><i class="fas fa-envelope"></i> ${p.email}</p>` : ''}
+                        </div>
+                        <div style="display:flex;gap:0.5rem;">
+                            <button class="action-btn edit-btn" onclick="editarProveedor(${p.id})" title="Editar">
+                                <i class="fas fa-edit"></i> Editar
+                            </button>
+                            <button class="action-btn delete-btn" onclick="eliminarProveedor(${p.id})" title="Eliminar">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function actualizarHistorial() {
+            const container = document.getElementById('historialContainer');
+            const countEl = document.getElementById('historialCount');
+            if (!container) return;
+
+            if (countEl) countEl.textContent = `${historial.length} movimiento(s) registrado(s)`;
+
+            if (historial.length === 0) {
+                container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-secondary);">No hay movimientos registrados</div>';
+                return;
+            }
+
+            container.innerHTML = historial.map(h => `
+                <div class="historial-item">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.5rem;">
+                        <strong>${h.producto} <span style="color:var(--text-secondary);font-weight:400;">(${h.sku})</span></strong>
+                        <span style="background:${getTipoColor(h.tipo)};color:white;padding:3px 10px;border-radius:20px;font-size:0.75rem;font-weight:600;text-transform:uppercase;">${h.tipo}</span>
+                    </div>
+                    <div style="color:var(--text-secondary);font-size:0.875rem;display:flex;gap:2rem;flex-wrap:wrap;">
+                        <span><i class="fas fa-cubes"></i> Cantidad: <strong>${h.cantidad}</strong></span>
+                        <span><i class="fas fa-route"></i> ${h.origen} → ${h.destino}</span>
+                        <span><i class="fas fa-user"></i> ${h.usuario}</span>
+                        <span><i class="fas fa-clock"></i> ${new Date(h.timestamp).toLocaleString('es')}</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // ==============================================
+        // CRUD: PRODUCTOS
+        // ==============================================
+        async function guardarProducto(producto, esEdicion = false) {
+            let proveedorId = null;
+            if (producto.proveedor) {
+                const codigo = producto.proveedor.split(' - ')[0];
+                const prov = proveedores.find(p => p.codigo === codigo);
+                if (prov) proveedorId = prov.id;
+            }
+
+            const productoDB = {
+                sku: producto.sku,
+                nombre: producto.name,
+                barcode_principal: producto.barcode,
+                proveedor_id: proveedorId,
+                stock_bodega: producto.bodega,
+                stock_tienda: producto.tienda
+            };
+
+            let resultado;
+            if (esEdicion) {
+                resultado = await db.from('productos').update(productoDB).eq('id', producto.id).select();
+            } else {
+                resultado = await db.from('productos').insert([productoDB]).select();
+            }
+
+            if (resultado.error) throw resultado.error;
+
+            await agregarHistorial(
+                esEdicion ? 'actualizacion' : 'importacion',
+                resultado.data[0].id,
+                1,
+                'formulario',
+                'inventario'
+            );
+
+            return resultado.data[0];
+        }
+
+        async function eliminarProductoDB(id) {
+            const { error } = await db.from('productos').delete().eq('id', id);
+            if (error) throw error;
+        }
+
+        // ==============================================
+        // CRUD: PROVEEDORES
+        // ==============================================
+        async function guardarProveedor(proveedor, esEdicion = false) {
+            const proveedorDB = {
+                codigo: proveedor.codigo,
+                nombre: proveedor.nombre,
+                telefono: proveedor.telefono || null,
+                email: proveedor.email || null
+            };
+
+            let resultado;
+            if (esEdicion) {
+                resultado = await db.from('proveedores').update(proveedorDB).eq('id', proveedor.id).select();
+            } else {
+                resultado = await db.from('proveedores').insert([proveedorDB]).select();
+            }
+
+            if (resultado.error) throw resultado.error;
+            return resultado.data[0];
+        }
+
+        // ==============================================
+        // HISTORIAL
+        // ==============================================
+        async function agregarHistorial(tipo, productoId, cantidad, origen, destino) {
+            try {
+                const producto = inventory.find(p => p.id === productoId);
+                await db.from('historial').insert([{
+                    tipo,
+                    producto_id: productoId || null,
+                    producto_nombre: producto ? producto.name : 'Múltiple',
+                    producto_sku: producto ? producto.sku : 'N/A',
+                    cantidad,
+                    origen,
+                    destino,
+                    usuario: 'Admin'
+                }]);
+            } catch (err) {
+                console.warn('Error guardando historial:', err);
+            }
+        }
+
+        // ==============================================
+        // FUNCIONES GLOBALES (onclick en tablas)
+        // ==============================================
+        window.editarProducto = function(id) {
+            const p = inventory.find(p => p.id === id);
+            if (!p) return;
+            editingProductId = id;
+            document.getElementById('modalTitle').textContent = 'Editar Producto';
+            document.getElementById('productSKU').value = p.sku;
+            document.getElementById('productBarCode').value = p.barcode;
+            document.getElementById('productName').value = p.name;
+            document.getElementById('productProveedor').value = p.proveedor;
+            document.getElementById('stockBodega').value = p.bodega;
+            document.getElementById('stockTienda').value = p.tienda;
+            document.getElementById('productModal').style.display = 'flex';
+        };
+
+        window.eliminarProducto = function(id) {
+            const producto = inventory.find(p => p.id === id);
+            Swal.fire({
+                title: '¿Eliminar producto?',
+                html: `<strong>${producto?.name}</strong> (${producto?.sku})<br>Esta acción no se puede deshacer.`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ef4444',
+                confirmButtonText: 'Sí, eliminar',
+                cancelButtonText: 'Cancelar'
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    try {
+                        await agregarHistorial('eliminacion', id, (producto?.bodega || 0) + (producto?.tienda || 0), 'inventario', 'eliminado');
+                        await eliminarProductooDB(id);
+                        await cargarDatos();
+                        Swal.fire('Eliminado', 'El producto fue eliminado correctamente.', 'success');
+                    } catch (error) {
+                        Swal.fire('Error', `No se pudo eliminar: ${error.message}`, 'error');
+                    }
+                }
+            });
+        };
+
+        // Typo fix — función con nombre correcto
+        async function eliminarProductooDB(id) {
+            const { error } = await db.from('productos').delete().eq('id', id);
+            if (error) throw error;
+        }
+
+        window.editarProveedor = function(id) {
+            const p = proveedores.find(p => p.id === id);
+            if (!p) return;
+            editingProveedorId = id;
+            document.getElementById('proveedorModalTitle').textContent = 'Editar Proveedor';
+            document.getElementById('proveedorCodigo').value = p.codigo;
+            document.getElementById('proveedorNombre').value = p.nombre;
+            document.getElementById('proveedorTelefono').value = p.telefono || '';
+            document.getElementById('proveedorEmail').value = p.email || '';
+            document.getElementById('proveedorModal').style.display = 'flex';
+        };
+
+        window.eliminarProveedor = function(id) {
+            const prov = proveedores.find(p => p.id === id);
+            const count = inventory.filter(p => p.proveedor_id === id).length;
+            Swal.fire({
+                title: '¿Eliminar proveedor?',
+                html: `<strong>${prov?.nombre}</strong><br>${count > 0 ? `⚠️ Tiene ${count} producto(s) asociado(s) que quedarán sin proveedor.` : 'No tiene productos asociados.'}`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ef4444',
+                confirmButtonText: 'Sí, eliminar',
+                cancelButtonText: 'Cancelar'
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    try {
+                        const { error } = await db.from('proveedores').delete().eq('id', id);
+                        if (error) throw error;
+                        await cargarDatos();
+                        Swal.fire('Eliminado', 'Proveedor eliminado correctamente.', 'success');
+                    } catch (error) {
+                        Swal.fire('Error', `No se pudo eliminar: ${error.message}`, 'error');
+                    }
+                }
+            });
+        };
+
+        // ==============================================
+        // ACTUALIZACIÓN MASIVA DE STOCK
+        // ==============================================
+        async function procesarActualizacionMasiva() {
+            const texto = document.getElementById('actualizarStockData').value.trim();
+            const soloBodega = document.getElementById('actualizarSoloBodega').checked;
+            const resultadoEl = document.getElementById('actualizacionResultado');
+
+            if (!texto) {
+                Swal.fire('Atención', 'Ingresa los datos a actualizar.', 'warning');
+                return;
+            }
+
+            const lineas = texto.split('\n').filter(l => l.trim());
+            let ok = 0, errores = 0;
+            const resultados = [];
+
+            for (const linea of lineas) {
+                const partes = linea.split('|').map(p => p.trim());
+                const sku = partes[0];
+                const bodega = parseInt(partes[1]) || 0;
+                const tienda = parseInt(partes[2]) || 0;
+
+                const producto = inventory.find(p => p.sku.toLowerCase() === sku.toLowerCase());
+                if (!producto) {
+                    resultados.push({ ok: false, msg: `SKU no encontrado: ${sku}` });
+                    errores++;
+                    continue;
+                }
+
+                const update = { stock_bodega: bodega };
+                if (!soloBodega) update.stock_tienda = tienda;
+
+                const { error } = await db.from('productos').update(update).eq('id', producto.id);
+                if (error) {
+                    resultados.push({ ok: false, msg: `Error en ${sku}: ${error.message}` });
+                    errores++;
+                } else {
+                    await agregarHistorial('actualizacion', producto.id, bodega, 'actualizacion-masiva', 'inventario');
+                    resultados.push({ ok: true, msg: `${sku} → Bodega: ${bodega}${!soloBodega ? `, Tienda: ${tienda}` : ''}` });
+                    ok++;
+                }
+            }
+
+            resultadoEl.innerHTML = `
+                <p style="margin-bottom:0.75rem;font-weight:600;">Resultado: ${ok} exitosos, ${errores} con error</p>
+                ${resultados.map(r => `<div class="resultado-item ${r.ok ? 'resultado-ok' : 'resultado-error'}">${r.ok ? '✅' : '❌'} ${r.msg}</div>`).join('')}
+            `;
+
+            if (ok > 0) await cargarDatos();
+        }
+
+        // ==============================================
+        // IMPORTACIÓN RÁPIDA
+        // ==============================================
+        async function procesarImportacionRapida() {
+            const texto = document.getElementById('importData').value.trim();
+            const actualizar = document.getElementById('importRapidoActualizarStock').checked;
+            const proveedorNombre = document.getElementById('importRapidoProveedor').value;
+            const resultadoEl = document.getElementById('importResultado');
+
+            if (!texto) {
+                Swal.fire('Atención', 'Ingresa los datos a importar.', 'warning');
+                return;
+            }
+
+            let proveedorId = null;
+            if (proveedorNombre) {
+                const codigo = proveedorNombre.split(' - ')[0];
+                const prov = proveedores.find(p => p.codigo === codigo);
+                if (prov) proveedorId = prov.id;
+            }
+
+            const lineas = texto.split('\n').filter(l => l.trim());
+            let ok = 0, errores = 0;
+            const resultados = [];
+
+            for (const linea of lineas) {
+                const partes = linea.split('|').map(p => p.trim());
+                if (partes.length < 2) continue;
+
+                const sku = partes[0];
+                const nombre = partes[1];
+                const barcode = partes[2] || sku;
+                const bodega = parseInt(partes[3]) || 0;
+
+                const existente = inventory.find(p => p.sku.toLowerCase() === sku.toLowerCase());
+
+                if (existente && !actualizar) {
+                    resultados.push({ ok: false, msg: `${sku} ya existe (omitido)` });
+                    continue;
+                }
+
+                const datos = {
+                    sku,
+                    nombre,
+                    barcode_principal: barcode,
+                    proveedor_id: proveedorId,
+                    stock_bodega: bodega,
+                    stock_tienda: 0
+                };
+
+                let error;
+                if (existente && actualizar) {
+                    ({ error } = await db.from('productos').update(datos).eq('id', existente.id));
+                } else {
+                    ({ error } = await db.from('productos').insert([datos]));
+                }
+
+                if (error) {
+                    resultados.push({ ok: false, msg: `Error en ${sku}: ${error.message}` });
+                    errores++;
+                } else {
+                    resultados.push({ ok: true, msg: `${sku} - ${nombre} (Bodega: ${bodega})` });
+                    ok++;
+                }
+            }
+
+            resultadoEl.innerHTML = `
+                <p style="margin-bottom:0.75rem;font-weight:600;">Resultado: ${ok} procesados, ${errores} errores</p>
+                ${resultados.map(r => `<div class="resultado-item ${r.ok ? 'resultado-ok' : 'resultado-error'}">${r.ok ? '✅' : '❌'} ${r.msg}</div>`).join('')}
+            `;
+
+            if (ok > 0) await cargarDatos();
+        }
+
+        // ==============================================
+        // EXPORTAR
+        // ==============================================
+        function exportarDatos() {
+            const format = document.getElementById('exportFormat').value;
+            const fecha = new Date().toISOString().split('T')[0];
+
+            if (format === 'excel') {
+                const datos = [['SKU', 'Producto', 'Cód. Barra', 'Proveedor', 'Stock Bodega', 'Stock Tienda', 'Último Envío']];
+                inventory.forEach(p => {
+                    datos.push([p.sku, p.name, p.barcode, p.proveedor, p.bodega, p.tienda, formatTimeAgo(p.lastTransfer)]);
+                });
+                const ws = XLSX.utils.aoa_to_sheet(datos);
+                const wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, ws, 'Inventario');
+                XLSX.writeFile(wb, `inventario_${fecha}.xlsx`);
+
+            } else if (format === 'csv') {
+                let csv = 'SKU,Producto,Cód. Barra,Proveedor,Stock Bodega,Stock Tienda\n';
+                inventory.forEach(p => {
+                    csv += `"${p.sku}","${p.name}","${p.barcode}","${p.proveedor}",${p.bodega},${p.tienda}\n`;
+                });
+                descargar(csv, `inventario_${fecha}.csv`, 'text/csv');
+
+            } else {
+                const data = JSON.stringify(inventory, null, 2);
+                descargar(data, `inventario_${fecha}.json`, 'application/json');
+            }
+        }
+
+        function exportarProveedoresExcel() {
+            const filtro = document.getElementById('filtroProveedor').value;
+            let datos = inventory;
+            if (filtro) datos = datos.filter(p => p.proveedor_id == filtro);
+
+            const rows = [['SKU', 'Producto', 'Cód. Barra', 'Proveedor', 'Stock Bodega', 'Stock Tienda']];
+            datos.forEach(p => rows.push([p.sku, p.name, p.barcode, p.proveedor, p.bodega, p.tienda]));
+
+            const ws = XLSX.utils.aoa_to_sheet(rows);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'Por Proveedor');
+            XLSX.writeFile(wb, `proveedor_${new Date().toISOString().split('T')[0]}.xlsx`);
+        }
+
+        function exportarListaProveedores() {
+            let contenido = 'Código\tNombre\tTeléfono\tEmail\n';
+            proveedores.forEach(p => {
+                contenido += `${p.codigo}\t${p.nombre}\t${p.telefono || ''}\t${p.email || ''}\n`;
+            });
+            descargar(contenido, `proveedores_${new Date().toISOString().split('T')[0]}.txt`, 'text/plain');
+        }
+
+        function descargar(contenido, nombre, tipo) {
+            const blob = new Blob([contenido], { type: tipo });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = nombre;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        // ==============================================
+        // INICIALIZACIÓN Y EVENTOS
+        // ==============================================
+        document.addEventListener('DOMContentLoaded', function() {
+
+            // Pestañas
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const tabId = this.getAttribute('data-tab');
+                    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                    this.classList.add('active');
+                    document.getElementById(`${tabId}Tab`).classList.add('active');
+                });
+            });
+
+            // Refresh
+            document.getElementById('btnRefresh')?.addEventListener('click', cargarDatos);
+
+            // Búsqueda inventario
+            document.getElementById('searchInput')?.addEventListener('input', function() {
+                actualizarTablaInventario(this.value);
+            });
+
+            // Búsqueda por proveedor
+            document.getElementById('proveedorSearchInput')?.addEventListener('input', function() {
+                const filtroP = document.getElementById('filtroProveedor')?.value || '';
+                actualizarTablaProveedores(this.value, filtroP);
+            });
+
+            document.getElementById('filtroProveedor')?.addEventListener('change', function() {
+                const filtroTexto = document.getElementById('proveedorSearchInput')?.value || '';
+                actualizarTablaProveedores(filtroTexto, this.value);
+            });
+
+            // Agregar producto
+            const abrirModalProducto = () => {
+                editingProductId = null;
+                document.getElementById('modalTitle').textContent = 'Agregar Producto';
+                document.getElementById('productForm').reset();
+                document.getElementById('stockBodega').value = '0';
+                document.getElementById('stockTienda').value = '0';
+                document.getElementById('productModal').style.display = 'flex';
+            };
+            document.getElementById('btnAddProductInventario')?.addEventListener('click', abrirModalProducto);
+            document.getElementById('btnAddProductImportar')?.addEventListener('click', abrirModalProducto);
+
+            // Agregar proveedor
+            document.getElementById('btnAddProveedor')?.addEventListener('click', () => {
+                editingProveedorId = null;
+                document.getElementById('proveedorModalTitle').textContent = 'Agregar Proveedor';
+                document.getElementById('proveedorForm').reset();
+                document.getElementById('proveedorModal').style.display = 'flex';
+            });
+
+            // Importar rápido
+            document.getElementById('btnImportarRapidoImportar')?.addEventListener('click', () => {
+                document.getElementById('importModal').style.display = 'flex';
+            });
+
+            // Cerrar modales
+            document.getElementById('closeModal')?.addEventListener('click', () => {
+                document.getElementById('productModal').style.display = 'none';
+            });
+            document.getElementById('closeProveedorModal')?.addEventListener('click', () => {
+                document.getElementById('proveedorModal').style.display = 'none';
+            });
+            document.getElementById('closeImportModal')?.addEventListener('click', () => {
+                document.getElementById('importModal').style.display = 'none';
+            });
+
+            // Cerrar modal al hacer clic fuera
+            [document.getElementById('productModal'), document.getElementById('proveedorModal'), document.getElementById('importModal')]
+                .forEach(modal => {
+                    modal?.addEventListener('click', (e) => {
+                        if (e.target === modal) modal.style.display = 'none';
+                    });
+                });
+
+            // Formulario producto
+            document.getElementById('productForm')?.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                const btn = this.querySelector('button[type=submit]');
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
+
+                const producto = {
+                    id: editingProductId,
+                    sku: document.getElementById('productSKU').value.trim(),
+                    name: document.getElementById('productName').value.trim(),
+                    barcode: document.getElementById('productBarCode').value.trim(),
+                    proveedor: document.getElementById('productProveedor').value,
+                    bodega: parseInt(document.getElementById('stockBodega').value) || 0,
+                    tienda: parseInt(document.getElementById('stockTienda').value) || 0
+                };
+
+                try {
+                    await guardarProducto(producto, !!editingProductId);
+                    await cargarDatos();
+                    document.getElementById('productModal').style.display = 'none';
+                    Swal.fire('¡Guardado!', `Producto "${producto.name}" guardado correctamente.`, 'success');
+                } catch (error) {
+                    Swal.fire('Error', `No se pudo guardar: ${error.message}`, 'error');
+                } finally {
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fas fa-save"></i> Guardar Producto';
+                }
+            });
+
+            // Formulario proveedor
+            document.getElementById('proveedorForm')?.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                const btn = this.querySelector('button[type=submit]');
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
+
+                const proveedor = {
+                    id: editingProveedorId,
+                    codigo: document.getElementById('proveedorCodigo').value.trim(),
+                    nombre: document.getElementById('proveedorNombre').value.trim(),
+                    telefono: document.getElementById('proveedorTelefono').value.trim(),
+                    email: document.getElementById('proveedorEmail').value.trim()
+                };
+
+                try {
+                    await guardarProveedor(proveedor, !!editingProveedorId);
+                    await cargarDatos();
+                    document.getElementById('proveedorModal').style.display = 'none';
+                    Swal.fire('¡Guardado!', `Proveedor "${proveedor.nombre}" guardado correctamente.`, 'success');
+                } catch (error) {
+                    Swal.fire('Error', `No se pudo guardar: ${error.message}`, 'error');
+                } finally {
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fas fa-save"></i> Guardar Proveedor';
+                }
+            });
+
+            // Actualización masiva
+            document.getElementById('btnProcesarActualizacion')?.addEventListener('click', procesarActualizacionMasiva);
+
+            // Importación rápida
+            document.getElementById('btnProcesarImportacion')?.addEventListener('click', procesarImportacionRapida);
+
+            // Limpiar historial
+            document.getElementById('btnLimpiarHistorial')?.addEventListener('click', () => {
+                Swal.fire({
+                    title: '¿Limpiar historial?',
+                    text: 'Se eliminarán todos los movimientos. Esta acción no se puede deshacer.',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#ef4444',
+                    confirmButtonText: 'Sí, limpiar',
+                    cancelButtonText: 'Cancelar'
+                }).then(async (result) => {
+                    if (result.isConfirmed) {
+                        try {
+                            // Elimina todos los registros del historial
+                            const { error } = await db.from('historial').delete().neq('id', 0);
+                            if (error) throw error;
+                            await cargarDatos();
+                            Swal.fire('Limpiado', 'El historial fue eliminado.', 'success');
+                        } catch (error) {
+                            Swal.fire('Error', `No se pudo limpiar: ${error.message}`, 'error');
+                        }
+                    }
+                });
+            });
+
+            // Logout
+            document.getElementById('btnLogout')?.addEventListener('click', () => {
+                Swal.fire({
+                    title: '¿Cerrar sesión?',
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonText: 'Sí, salir',
+                    cancelButtonText: 'Cancelar'
+                }).then(result => {
+                    if (result.isConfirmed) window.location.href = 'login.html';
+                });
+            });
+
+            // Exportar proveedores
+            document.getElementById('btnExportarProveedores')?.addEventListener('click', exportarListaProveedores);
+
+            // Exportar Excel por proveedor
+            document.getElementById('btnExportarProveedorExcel')?.addEventListener('click', exportarProveedoresExcel);
+
+            // Exportar datos
+            document.getElementById('btnExportarJSON')?.addEventListener('click', exportarDatos);
+
+            // Upload JSON
+            const fileUploadArea = document.getElementById('fileUploadArea');
+            const jsonFileInput = document.getElementById('jsonFileInput');
+
+            fileUploadArea?.addEventListener('click', () => jsonFileInput?.click());
+
+            fileUploadArea?.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                fileUploadArea.style.borderColor = 'var(--primary-blue)';
+            });
+
+            fileUploadArea?.addEventListener('dragleave', () => {
+                fileUploadArea.style.borderColor = 'var(--border)';
+            });
+
+            fileUploadArea?.addEventListener('drop', (e) => {
+                e.preventDefault();
+                fileUploadArea.style.borderColor = 'var(--border)';
+                const file = e.dataTransfer.files[0];
+                if (file) procesarArchivoJSON(file);
+            });
+
+            jsonFileInput?.addEventListener('change', function() {
+                if (this.files[0]) procesarArchivoJSON(this.files[0]);
+            });
+
+            function procesarArchivoJSON(file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        jsonImportData = JSON.parse(e.target.result);
+                        document.getElementById('jsonFileName').textContent = `✅ ${file.name} cargado (${jsonImportData.length} registros)`;
+                    } catch {
+                        Swal.fire('Error', 'El archivo no es un JSON válido.', 'error');
+                        jsonImportData = null;
+                    }
+                };
+                reader.readAsText(file);
+            }
+
+            document.getElementById('btnImportarJSON')?.addEventListener('click', async () => {
+                if (!jsonImportData) {
+                    Swal.fire('Atención', 'Selecciona un archivo JSON primero.', 'warning');
+                    return;
+                }
+
+                const actualizar = document.getElementById('importarActualizarStock').checked;
+                const proveedorNombre = document.getElementById('importProveedor').value;
+
+                let proveedorId = null;
+                if (proveedorNombre) {
+                    const codigo = proveedorNombre.split(' - ')[0];
+                    const prov = proveedores.find(p => p.codigo === codigo);
+                    if (prov) proveedorId = prov.id;
+                }
+
+                let ok = 0, errores = 0;
+
+                for (const item of jsonImportData) {
+                    const sku = item.sku || item.SKU;
+                    const nombre = item.name || item.nombre || item.Producto || '';
+                    const barcode = item.barcode || item.barcode_principal || item['Cód. Barra'] || sku;
+                    const bodega = parseInt(item.bodega || item.stock_bodega || item.Bodega || 0);
+                    const tienda = parseInt(item.tienda || item.stock_tienda || item.Tienda || 0);
+
+                    if (!sku) continue;
+
+                    const existente = inventory.find(p => p.sku.toLowerCase() === sku.toLowerCase());
+                    const datos = { sku, nombre, barcode_principal: barcode, proveedor_id: proveedorId, stock_bodega: bodega, stock_tienda: tienda };
+
+                    let error;
+                    if (existente && actualizar) {
+                        ({ error } = await db.from('productos').update(datos).eq('id', existente.id));
+                    } else if (!existente) {
+                        ({ error } = await db.from('productos').insert([datos]));
+                    }
+
+                    if (error) errores++;
+                    else ok++;
+                }
+
+                await cargarDatos();
+                Swal.fire('Importación completada', `${ok} importados, ${errores} con error.`, ok > 0 ? 'success' : 'warning');
+            });
+
+            // Cargar datos al inicio
+            cargarDatos();
+        });
+    </script>
+</body>
+</html>
