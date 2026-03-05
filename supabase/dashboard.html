@@ -1,0 +1,845 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard | Sistema de Gestión</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%230066cc'%3E%3Cpath d='M4 6H20V8H4V6ZM4 11H20V13H4V11ZM4 16H20V18H4V16Z'/%3E%3C/svg%3E">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #0066cc;
+            --primary-dark: #004999;
+            --primary-light: #4d94ff;
+            --primary-soft: #e6f0ff;
+            --dark: #1e293b;
+            --darker: #0f172a;
+            --light: #f8fafc;
+            --gray: #64748b;
+            --light-gray: #e2e8f0;
+            --gradient: linear-gradient(135deg, #0066cc 0%, #004999 100%);
+            --shadow-sm: 0 2px 4px rgba(0,102,204,0.1);
+            --shadow-md: 0 4px 6px rgba(0,102,204,0.15);
+            --shadow-lg: 0 10px 15px rgba(0,102,204,0.2);
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            height: 100vh;
+            overflow: hidden;
+            background: var(--light);
+        }
+
+        /* Dashboard Container */
+        .dashboard {
+            display: flex;
+            height: 100vh;
+            position: relative;
+        }
+
+        /* Zona de hover */
+        .hover-zone {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 40px;
+            height: 100vh;
+            z-index: 999;
+            background: transparent;
+            cursor: pointer;
+        }
+
+        .hover-zone::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 3px;
+            height: 50px;
+            background: var(--primary);
+            border-radius: 0 4px 4px 0;
+            transition: all 0.3s ease;
+            opacity: 0.3;
+        }
+
+        .hover-zone:hover::after {
+            opacity: 1;
+            height: 80px;
+            background: var(--primary-light);
+        }
+
+        /* Tooltip */
+        .hover-tooltip {
+            position: fixed;
+            left: 50px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: white;
+            color: var(--primary);
+            padding: 10px 20px;
+            border-radius: 30px;
+            font-size: 13px;
+            font-weight: 500;
+            pointer-events: none;
+            opacity: 0;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+            box-shadow: var(--shadow-md);
+            border: 1px solid var(--primary-soft);
+            letter-spacing: 0.3px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .hover-tooltip i {
+            color: var(--primary);
+            font-size: 14px;
+        }
+
+        .hover-zone:hover ~ .hover-tooltip {
+            opacity: 1;
+            left: 60px;
+        }
+
+        /* Menú lateral */
+        .sidebar {
+            width: 280px;
+            background: white;
+            color: var(--dark);
+            height: 100vh;
+            position: fixed;
+            left: -280px;
+            top: 0;
+            transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: var(--shadow-lg);
+            z-index: 1000;
+            overflow-y: auto;
+            border-right: 1px solid var(--light-gray);
+        }
+
+        .sidebar.visible {
+            left: 0;
+        }
+
+        /* Header del menú con info de usuario */
+        .sidebar-header {
+            padding: 30px 25px;
+            background: var(--gradient);
+            color: white;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .user-avatar {
+            width: 50px;
+            height: 50px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            border: 2px solid rgba(255,255,255,0.3);
+        }
+
+        .user-details h3 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .user-details p {
+            font-size: 0.8rem;
+            opacity: 0.9;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .role-badge {
+            background: rgba(255,255,255,0.2);
+            padding: 3px 8px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        /* Opciones del menú */
+        .menu-options {
+            padding: 20px 0;
+        }
+
+        .menu-item {
+            display: flex;
+            align-items: center;
+            padding: 14px 25px;
+            color: var(--gray);
+            transition: all 0.2s ease;
+            cursor: pointer;
+            margin: 2px 10px;
+            border-radius: 8px;
+            font-weight: 500;
+        }
+
+        .menu-item:hover {
+            background: var(--primary-soft);
+            color: var(--primary);
+        }
+
+        .menu-item.active {
+            background: var(--primary);
+            color: white;
+            box-shadow: var(--shadow-md);
+        }
+
+        .menu-icon {
+            font-size: 1.2rem;
+            margin-right: 15px;
+            width: 24px;
+            text-align: center;
+        }
+
+        .menu-text {
+            font-size: 0.95rem;
+            font-weight: 500;
+        }
+
+        /* Controles de navegación */
+        .nav-controls {
+            padding: 25px;
+            border-top: 1px solid var(--light-gray);
+            margin-top: 20px;
+        }
+
+        .nav-label {
+            text-transform: uppercase;
+            font-size: 0.7rem;
+            letter-spacing: 0.5px;
+            color: var(--gray);
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .nav-arrow {
+            background: white;
+            border: 1px solid var(--light-gray);
+            color: var(--primary);
+            width: 45px;
+            height: 45px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .nav-arrow:hover:not(:disabled) {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .nav-arrow:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        /* Indicador de página */
+        .page-indicator {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .page-counter {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 12px;
+        }
+
+        .dots {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--light-gray);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .dot:hover {
+            background: var(--primary-light);
+        }
+
+        .dot.active {
+            background: var(--primary);
+            width: 24px;
+            border-radius: 4px;
+        }
+
+        /* Contenido principal */
+        .content {
+            flex: 1;
+            height: 100vh;
+            overflow: hidden;
+            width: 100%;
+            transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            background: var(--light);
+        }
+
+        .content.shifted {
+            margin-left: 280px;
+            width: calc(100% - 280px);
+        }
+
+        .page-container {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            background: white;
+        }
+
+        .page {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease;
+            background: white;
+        }
+
+        .page.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .page iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            background: white;
+        }
+
+        /* Mensaje de error */
+        .iframe-error {
+            display: none;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            color: var(--dark);
+            padding: 30px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: var(--shadow-lg);
+            border: 1px solid var(--light-gray);
+            max-width: 350px;
+        }
+
+        .iframe-error.visible {
+            display: block;
+        }
+
+        .iframe-error i {
+            font-size: 3rem;
+            color: var(--primary);
+            margin-bottom: 15px;
+        }
+
+        .iframe-error h3 {
+            font-size: 1.2rem;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--dark);
+        }
+
+        .iframe-error p {
+            color: var(--gray);
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+        }
+
+        .iframe-error button {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 10px 25px;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .iframe-error button:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        /* Botón móvil */
+        .mobile-menu-btn {
+            display: none;
+            position: fixed;
+            left: 15px;
+            top: 15px;
+            width: 45px;
+            height: 45px;
+            background: var(--primary);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+            z-index: 1001;
+            box-shadow: var(--shadow-md);
+            transition: all 0.2s ease;
+        }
+
+        .mobile-menu-btn:hover {
+            background: var(--primary-dark);
+            transform: scale(1.05);
+        }
+
+        /* Footer del menú */
+        .menu-footer {
+            padding: 20px 25px;
+            border-top: 1px solid var(--light-gray);
+            font-size: 0.8rem;
+            color: var(--gray);
+            text-align: center;
+        }
+
+        .menu-footer i {
+            color: var(--primary);
+            margin: 0 4px;
+        }
+
+        @media (max-width: 768px) {
+            .mobile-menu-btn {
+                display: block;
+            }
+
+            .hover-zone,
+            .hover-tooltip {
+                display: none;
+            }
+
+            .sidebar {
+                width: 260px;
+                left: -260px;
+            }
+
+            .content.shifted {
+                margin-left: 0;
+                width: 100%;
+            }
+        }
+
+        /* Scrollbar personalizado */
+        .sidebar::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .sidebar::-webkit-scrollbar-track {
+            background: var(--light-gray);
+        }
+
+        .sidebar::-webkit-scrollbar-thumb {
+            background: var(--primary);
+            border-radius: 2px;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard">
+        <!-- Botón móvil -->
+        <button class="mobile-menu-btn" onclick="toggleMobileMenu()">
+            <i class="fas fa-bars"></i>
+        </button>
+
+        <!-- Zona de hover -->
+        <div class="hover-zone" onmouseenter="showMenu()" onmouseleave="startMenuHideTimer()"></div>
+        <div class="hover-tooltip">
+            <i class="fas fa-arrow-right"></i>
+            <span>Menú principal</span>
+        </div>
+
+        <!-- Menú lateral -->
+        <div class="sidebar" id="sidebar" onmouseenter="cancelMenuHide()" onmouseleave="startMenuHideTimer()">
+            <div class="sidebar-header">
+                <div class="user-info">
+                    <div class="user-avatar">
+                        <i class="fas fa-user" id="userAvatar"></i>
+                    </div>
+                    <div class="user-details">
+                        <h3 id="userName">Cargando...</h3>
+                        <p>
+                            <span class="role-badge" id="userRole">-</span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="menu-options">
+                <div class="menu-item active" onclick="showPage(1)">
+                    <span class="menu-icon"><i class="fas fa-box"></i></span>
+                    <span class="menu-text">Inventario</span>
+                </div>
+                <div class="menu-item" onclick="showPage(2)">
+                    <span class="menu-icon"><i class="fas fa-truck"></i></span>
+                    <span class="menu-text">Requerimientos</span>
+                </div>
+                <div class="menu-item" onclick="logout()">
+                    <span class="menu-icon"><i class="fas fa-sign-out-alt"></i></span>
+                    <span class="menu-text">Cerrar Sesión</span>
+                </div>
+            </div>
+
+            <div class="nav-controls">
+                <div class="nav-label">Navegación rápida</div>
+                <div class="nav-buttons">
+                    <button class="nav-arrow" onclick="previousPage()" id="prevBtn">
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                    <button class="nav-arrow" onclick="nextPage()" id="nextBtn">
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>
+                
+                <div class="page-indicator">
+                    <div class="page-counter" id="pageCounter">1/2</div>
+                    <div class="dots">
+                        <span class="dot active" onclick="showPage(1)"></span>
+                        <span class="dot" onclick="showPage(2)"></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="menu-footer">
+                <i class="far fa-building"></i> Sistema de Gestión v2.0
+            </div>
+        </div>
+
+        <!-- Contenido principal -->
+        <div class="content" id="content">
+            <div class="page-container">
+                <div id="page1" class="page active">
+                    <iframe src="inventory.html" title="Inventario" id="iframe1" sandbox="allow-same-origin allow-scripts allow-popups allow-forms allow-modals"></iframe>
+                    <div class="iframe-error" id="error1">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <h3>Error de carga</h3>
+                        <p>No se pudo cargar el módulo de inventario</p>
+                        <button onclick="reloadIframe('iframe1')">
+                            <i class="fas fa-sync-alt"></i> Reintentar
+                        </button>
+                    </div>
+                </div>
+                <div id="page2" class="page">
+                    <iframe src="req-traslados.html" title="Requerimientos" id="iframe2" sandbox="allow-same-origin allow-scripts allow-popups allow-forms allow-modals"></iframe>
+                    <div class="iframe-error" id="error2">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <h3>Error de carga</h3>
+                        <p>No se pudo cargar el módulo de requerimientos</p>
+                        <button onclick="reloadIframe('iframe2')">
+                            <i class="fas fa-sync-alt"></i> Reintentar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Variables globales
+        let currentPage = 1;
+        const totalPages = 2;
+        let menuHideTimer;
+        let isMobile = window.innerWidth <= 768;
+        let mobileMenuOpen = false;
+        let currentUser = null;
+
+        // Verificar autenticación al cargar
+        function checkAuth() {
+            const session = localStorage.getItem('userSession') || sessionStorage.getItem('userSession');
+            
+            if (!session) {
+                window.location.href = 'login.html';
+                return null;
+            }
+            
+            return JSON.parse(session);
+        }
+
+        // Cargar usuario
+        function loadUser() {
+            currentUser = checkAuth();
+            if (!currentUser) return;
+
+            // Mostrar información del usuario
+            document.getElementById('userName').textContent = 
+                currentUser.username.charAt(0).toUpperCase() + currentUser.username.slice(1);
+            document.getElementById('userRole').textContent = currentUser.role.toUpperCase();
+
+            // Cambiar avatar según rol
+            const avatarIcon = document.getElementById('userAvatar');
+            if (currentUser.role === 'admin') {
+                avatarIcon.className = 'fas fa-user-cog';
+            } else {
+                avatarIcon.className = 'fas fa-user';
+            }
+
+            // Pasar el rol a los iframes
+            passUserRoleToIframes();
+        }
+
+        // Pasar el rol a los iframes
+        function passUserRoleToIframes() {
+            setTimeout(() => {
+                const iframe1 = document.getElementById('iframe1');
+                const iframe2 = document.getElementById('iframe2');
+                
+                if (iframe1 && iframe1.contentWindow) {
+                    iframe1.contentWindow.postMessage({
+                        type: 'USER_ROLE',
+                        role: currentUser.role,
+                        username: currentUser.username
+                    }, '*');
+                }
+                
+                if (iframe2 && iframe2.contentWindow) {
+                    iframe2.contentWindow.postMessage({
+                        type: 'USER_ROLE',
+                        role: currentUser.role,
+                        username: currentUser.username
+                    }, '*');
+                }
+            }, 1000); // Esperar 1 segundo a que carguen los iframes
+        }
+
+        // Función para mostrar página
+        function showPage(pageNumber) {
+            if (pageNumber < 1 || pageNumber > totalPages) return;
+
+            // Actualizar páginas
+            document.getElementById('page1').classList.remove('active');
+            document.getElementById('page2').classList.remove('active');
+            document.getElementById(`page${pageNumber}`).classList.add('active');
+
+            // Actualizar items del menú
+            document.querySelectorAll('.menu-item').forEach((item, index) => {
+                if (index === pageNumber - 1) {
+                    item.classList.add('active');
+                } else {
+                    item.classList.remove('active');
+                }
+            });
+
+            // Actualizar dots
+            document.querySelectorAll('.dot').forEach((dot, index) => {
+                if (index + 1 === pageNumber) {
+                    dot.classList.add('active');
+                } else {
+                    dot.classList.remove('active');
+                }
+            });
+
+            // Actualizar contador
+            document.getElementById('pageCounter').textContent = `${pageNumber}/${totalPages}`;
+            
+            // Actualizar botones
+            document.getElementById('prevBtn').disabled = pageNumber === 1;
+            document.getElementById('nextBtn').disabled = pageNumber === totalPages;
+
+            currentPage = pageNumber;
+
+            // Re-enviar el rol al iframe que se está mostrando
+            if (currentUser) {
+                setTimeout(() => {
+                    const activeIframe = document.getElementById(`iframe${pageNumber}`);
+                    if (activeIframe && activeIframe.contentWindow) {
+                        activeIframe.contentWindow.postMessage({
+                            type: 'USER_ROLE',
+                            role: currentUser.role,
+                            username: currentUser.username
+                        }, '*');
+                    }
+                }, 500);
+            }
+        }
+
+        // Funciones de navegación
+        function nextPage() {
+            if (currentPage < totalPages) {
+                showPage(currentPage + 1);
+            }
+        }
+
+        function previousPage() {
+            if (currentPage > 1) {
+                showPage(currentPage - 1);
+            }
+        }
+
+        // Funciones del menú
+        function showMenu() {
+            if (isMobile) return;
+            clearTimeout(menuHideTimer);
+            document.getElementById('sidebar').classList.add('visible');
+            document.getElementById('content').classList.add('shifted');
+        }
+
+        function hideMenu() {
+            if (isMobile && mobileMenuOpen) return;
+            document.getElementById('sidebar').classList.remove('visible');
+            document.getElementById('content').classList.remove('shifted');
+        }
+
+        function startMenuHideTimer() {
+            if (isMobile && mobileMenuOpen) return;
+            menuHideTimer = setTimeout(hideMenu, 500);
+        }
+
+        function cancelMenuHide() {
+            clearTimeout(menuHideTimer);
+        }
+
+        function toggleMobileMenu() {
+            const sidebar = document.getElementById('sidebar');
+            if (mobileMenuOpen) {
+                sidebar.classList.remove('visible');
+                document.getElementById('content').classList.remove('shifted');
+            } else {
+                sidebar.classList.add('visible');
+                document.getElementById('content').classList.add('shifted');
+            }
+            mobileMenuOpen = !mobileMenuOpen;
+        }
+
+        // Función de logout
+        function logout() {
+            localStorage.removeItem('userSession');
+            sessionStorage.removeItem('userSession');
+            localStorage.removeItem('userRole');
+            window.location.href = 'login.html';
+        }
+
+        // Función para recargar iframe
+        function reloadIframe(iframeId) {
+            const iframe = document.getElementById(iframeId);
+            const src = iframe.src;
+            iframe.src = 'about:blank';
+            setTimeout(() => {
+                iframe.src = src;
+            }, 100);
+        }
+
+        // Manejar errores de iframe
+        document.getElementById('iframe1').onerror = function() {
+            document.getElementById('error1').classList.add('visible');
+        };
+
+        document.getElementById('iframe2').onerror = function() {
+            document.getElementById('error2').classList.add('visible');
+        };
+
+        // Detectar cambios de tamaño
+        window.addEventListener('resize', () => {
+            isMobile = window.innerWidth <= 768;
+            if (isMobile) {
+                hideMenu();
+            }
+        });
+
+        // Navegación con teclado
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft') {
+                previousPage();
+            } else if (e.key === 'ArrowRight') {
+                nextPage();
+            }
+        });
+
+        // Escuchar mensajes de los iframes
+        window.addEventListener('message', (event) => {
+            if (event.data && event.data.type === 'REQUEST_USER_ROLE') {
+                // El iframe solicita el rol del usuario
+                if (currentUser) {
+                    event.source.postMessage({
+                        type: 'USER_ROLE',
+                        role: currentUser.role,
+                        username: currentUser.username
+                    }, '*');
+                }
+            }
+        });
+
+        // Inicializar
+        window.onload = function() {
+            loadUser();
+            showPage(1);
+        };
+
+        // Prevenir errores de extensiones
+        window.addEventListener('error', function(e) {
+            if (e.message.includes('firestore') || e.message.includes('ERR_BLOCKED_BY_CLIENT')) {
+                e.preventDefault();
+                return false;
+            }
+        }, true);
+
+        // Console personalizado
+        const originalConsoleError = console.error;
+        console.error = function(...args) {
+            if (args[0] && typeof args[0] === 'string' && 
+                (args[0].includes('firestore') || args[0].includes('ERR_BLOCKED'))) {
+                return;
+            }
+            originalConsoleError.apply(console, args);
+        };
+    </script>
+</body>
+</html>
