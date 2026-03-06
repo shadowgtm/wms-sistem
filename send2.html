@@ -1,0 +1,2199 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Escaneo Handheld - Traslados</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📱</text></svg>" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📱</text></svg>">
+    
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <!-- Font Awesome para compatibilidad -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- SweetAlert2 -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --secondary: #3498db;
+            --success: #27ae60;
+            --warning: #f39c12;
+            --danger: #e74c3c;
+            --info: #9b59b6;
+            --light: #f8f9fa;
+            --dark: #343a40;
+            --bs-primary: #2c3e50;
+            --bs-secondary: #3498db;
+            --bs-success: #27ae60;
+            --bs-warning: #f39c12;
+            --bs-danger: #e74c3c;
+            --bs-info: #9b59b6;
+        }
+        
+        body {
+            background-color: #f5f7fa;
+            -webkit-tap-highlight-color: transparent;
+            -webkit-touch-callout: none;
+            height: 100vh;
+            overflow: hidden;
+        }
+        
+        .app-container {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        /* Header modernizado */
+        .app-header {
+            background: linear-gradient(135deg, #2c3e50, #1a252f);
+            color: white;
+        }
+        
+        .header-title {
+            font-size: 1.4rem;
+            font-weight: 600;
+        }
+        
+        .header-subtitle {
+            font-size: 0.85rem;
+            opacity: 0.8;
+        }
+        
+        .header-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .header-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-1px);
+        }
+        
+        .header-btn:active {
+            transform: translateY(0);
+        }
+
+        /* ================================================
+           BOTÓN SYNC CON EFECTO DE LLENADO (FILL)
+           ================================================ */
+        #btnSync {
+            overflow: hidden;
+            position: relative;
+            z-index: 0;
+        }
+
+        /* Capa de fondo que se va llenando */
+        #btnSync::before {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 0%;          /* empieza vacío */
+            background: rgba(52, 211, 153, 0.55);   /* verde translúcido */
+            border-radius: 50%;
+            transition: height 0.35s ease;
+            z-index: -1;
+        }
+
+        /* Estado: sincronizando (spinning icon + llenado controlado por JS) */
+        #btnSync.syncing {
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+
+        #btnSync.syncing i {
+            animation: spin 1s linear infinite;
+        }
+
+        /* Estado: completado (relleno verde brillante) */
+        #btnSync.sync-done::before {
+            height: 100%;
+            background: rgba(39, 174, 96, 0.8);
+            transition: height 0.3s ease, background 0.3s ease;
+        }
+
+        /* Estado: error (relleno rojo) */
+        #btnSync.sync-error::before {
+            height: 100%;
+            background: rgba(231, 76, 60, 0.75);
+            transition: height 0.3s ease, background 0.3s ease;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to   { transform: rotate(360deg); }
+        }
+
+        /* Toast de progreso en segundo plano (esquina inferior) */
+        .bg-sync-toast {
+            position: fixed;
+            bottom: 16px;
+            left: 50%;
+            transform: translateX(-50%) translateY(80px);
+            background: rgba(28, 37, 50, 0.95);
+            color: #fff;
+            border-radius: 12px;
+            padding: 10px 16px;
+            min-width: 240px;
+            max-width: 90vw;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+            z-index: 1500;
+            transition: transform 0.4s cubic-bezier(.22,.68,0,1.2), opacity 0.3s;
+            opacity: 0;
+            pointer-events: none;
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+        }
+
+        .bg-sync-toast.visible {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+
+        .bg-sync-toast .toast-label {
+            font-size: 0.78rem;
+            opacity: 0.75;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .bg-sync-toast .toast-label i {
+            animation: spin 1s linear infinite;
+        }
+
+        .bg-sync-toast .toast-bar-track {
+            width: 100%;
+            height: 5px;
+            background: rgba(255,255,255,0.15);
+            border-radius: 99px;
+            overflow: hidden;
+        }
+
+        .bg-sync-toast .toast-bar-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #3498db, #27ae60);
+            border-radius: 99px;
+            transition: width 0.4s ease;
+        }
+
+        .bg-sync-toast .toast-status {
+            font-size: 0.82rem;
+            margin-top: 5px;
+            opacity: 0.9;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        /* ================================================ */
+        
+        .connection-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.75rem;
+            padding: 3px 8px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        .connection-status.online {
+            color: #4CAF50;
+        }
+        
+        .connection-status.offline {
+            color: #FF9800;
+        }
+        
+        /* Badge para cola pendiente */
+        .queue-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: var(--warning);
+            color: white;
+            font-size: 0.7rem;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+        
+        /* Scanner section modernizada */
+        .scanner-section {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+            margin: 10px;
+        }
+        
+        .scanner-title {
+            color: var(--primary);
+            font-size: 1.1rem;
+        }
+        
+        .scanner-input-container {
+            position: relative;
+        }
+        
+        .scanner-input {
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            background: var(--light);
+            transition: border-color 0.3s;
+            font-size: 1rem;
+        }
+        
+        .scanner-input:focus {
+            border-color: var(--secondary);
+            box-shadow: 0 0 0 0.25rem rgba(52, 152, 219, 0.25);
+        }
+        
+        .scanner-icon {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--secondary);
+            font-size: 1.1rem;
+        }
+        
+        /* Botones modernizados */
+        .scanner-btn {
+            border-radius: 10px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.3s;
+            padding: 14px;
+            border: none;
+            font-size: 1rem;
+        }
+        
+        .scanner-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        
+        .scanner-btn:active {
+            transform: translateY(0);
+        }
+        
+        .scanner-btn-success {
+            background: var(--success);
+        }
+        
+        .scanner-btn-success:hover {
+            background: #219653;
+        }
+        
+        .scanner-btn-danger {
+            background: var(--danger);
+        }
+        
+        .scanner-btn-danger:hover {
+            background: #c0392b;
+        }
+        
+        .scanner-btn-warning {
+            background: var(--warning);
+        }
+        
+        .scanner-btn-warning:hover {
+            background: #e67e22;
+        }
+        
+        /* Contenedor principal */
+        .content-area {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0 10px 10px 10px;
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        /* Modales con Bootstrap */
+        .modal-content {
+            border-radius: 12px;
+            border: none;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+        
+        .modal-header {
+            border-bottom: 1px solid #eee;
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+        }
+        
+        .modal-title {
+            color: var(--primary);
+            font-weight: 600;
+        }
+        
+        /* Loading overlay - SOLO para búsquedas puntuales, NO para carga inicial */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        .loading-content {
+            width: 90%;
+            max-width: 400px;
+            text-align: center;
+            padding: 25px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            animation: slideUp 0.4s ease;
+        }
+        
+        @keyframes slideUp {
+            from { 
+                transform: translateY(20px);
+                opacity: 0;
+            }
+            to { 
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+        
+        .progress-container {
+            width: 100%;
+            background-color: rgba(240, 240, 240, 0.8);
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 20px 0;
+            height: 12px;
+            border: 1px solid rgba(0,0,0,0.05);
+        }
+        
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, var(--secondary), var(--info));
+            width: 0%;
+            border-radius: 10px;
+            transition: width 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .progress-bar::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            right: 0;
+            background-image: linear-gradient(
+                -45deg,
+                rgba(255, 255, 255, 0.2) 25%,
+                transparent 25%,
+                transparent 50%,
+                rgba(255, 255, 255, 0.2) 50%,
+                rgba(255, 255, 255, 0.2) 75%,
+                transparent 75%,
+                transparent
+            );
+            z-index: 1;
+            background-size: 50px 50px;
+            animation: move 2s linear infinite;
+        }
+        
+        @keyframes move {
+            0% { background-position: 0 0; }
+            100% { background-position: 50px 50px; }
+        }
+        
+        .loading-steps {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-top: 15px;
+            text-align: left;
+        }
+        
+        .loading-step {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.85rem;
+            color: #666;
+            padding: 5px 0;
+        }
+        
+        .loading-step i {
+            font-size: 0.9rem;
+            width: 20px;
+            text-align: center;
+        }
+        
+        .loading-step i.bi-circle {
+            color: #ddd;
+        }
+        
+        .loading-step.active i {
+            color: var(--secondary);
+        }
+        
+        .loading-step.completed i {
+            color: var(--success);
+        }
+        
+        /* Notificaciones */
+        .notification {
+            position: fixed;
+            top: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 1000;
+            animation: slideDown 0.3s ease;
+            display: none;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            background: rgba(39, 174, 96, 0.9);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        @keyframes slideDown {
+            from { top: -50px; opacity: 0; }
+            to { top: 80px; opacity: 1; }
+        }
+        
+        .notification.error {
+            background: rgba(231, 76, 60, 0.9);
+        }
+        
+        .notification.warning {
+            background: rgba(243, 156, 18, 0.9);
+        }
+        
+        .notification.info {
+            background: rgba(155, 89, 182, 0.9);
+        }
+        
+        .notification.offline {
+            background: rgba(52, 152, 219, 0.9);
+        }
+        
+        /* Modal de traslado actualizado */
+        .traslado-modal .modal-content {
+            max-width: 95%;
+            margin: 0 auto;
+        }
+        
+        /* Modal de traslado - Header EXTRA PEQUEÑO */
+        .traslado-header {
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            border-bottom: 1px solid #eee;
+            border-radius: 10px 10px 0 0;
+            padding: 6px 10px;
+        }
+
+        .traslado-title {
+            color: var(--primary);
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 0.85rem;
+            margin: 0;
+            line-height: 1.2;
+        }
+
+        .traslado-title i {
+            font-size: 0.8rem;
+        }
+
+        .traslado-header .btn-close {
+            font-size: 0.7rem;
+            padding: 0.5rem;
+            background-size: 0.7rem;
+        }
+        
+        .product-info {
+            text-align: center;
+            padding: 12px;
+            background: white;
+            border-radius: 8px;
+            border: 1px solid #eee;
+            margin-bottom: 12px;
+        }
+        
+        .product-name {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--dark);
+            margin-bottom: 3px;
+            word-break: break-word;
+            line-height: 1.3;
+        }
+        
+        .product-sku {
+            color: #666;
+            font-size: 0.8rem;
+            margin-bottom: 6px;
+        }
+        
+        /* Sección de existencia en BODEGA */
+        .existence-section {
+            margin-bottom: 10px;
+        }
+
+        .existence-section .card {
+            border-radius: 8px;
+            border: 1px solid #dee2e6;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+        }
+
+        .existence-section .card-header {
+            padding: 6px 10px;
+            background: linear-gradient(135deg, #2c3e50, #1a252f);
+            border-radius: 7px 7px 0 0 !important;
+        }
+
+        .existence-section .card-header h6 {
+            font-size: 0.85rem;
+            margin-bottom: 0;
+        }
+
+        .existence-content {
+            padding: 8px;
+            text-align: center;
+        }
+
+        .existence-label {
+            font-size: 0.75rem;
+            color: #6c757d;
+            margin-bottom: 2px;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        .existence-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            line-height: 1;
+            margin: 3px 0;
+            color: #2c3e50;
+            transition: all 0.3s;
+            cursor: pointer;
+            border-radius: 8px;
+            padding: 5px 10px;
+            display: inline-block;
+            min-width: 80px;
+            background-color: transparent;
+            border: none;
+        }
+
+        .existence-value:hover {
+            background-color: rgba(52, 152, 219, 0.1);
+            transform: scale(1.05);
+        }
+
+        .existence-value:active {
+            transform: scale(0.98);
+        }
+
+        .existence-value.updating {
+            color: transparent;
+            position: relative;
+            pointer-events: none;
+        }
+
+        .existence-value.updating::after {
+            content: '';
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid var(--secondary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        .existence-unit {
+            font-size: 0.75rem;
+            color: #6c757d;
+            margin-top: 2px;
+        }
+
+        .existence-status {
+            margin-top: 6px;
+            padding: 4px 6px;
+            border-radius: 5px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .existence-status.available {
+            background-color: rgba(39, 174, 96, 0.1);
+            color: #27ae60;
+            border: 1px solid rgba(39, 174, 96, 0.2);
+        }
+
+        .existence-status.low {
+            background-color: rgba(243, 156, 18, 0.1);
+            color: #f39c12;
+            border: 1px solid rgba(243, 156, 18, 0.2);
+        }
+
+        .existence-status.empty {
+            background-color: rgba(231, 76, 60, 0.1);
+            color: #e74c3c;
+            border: 1px solid rgba(231, 76, 60, 0.2);
+        }
+        
+        @media (max-height: 600px) {
+            .existence-value { font-size: 1.6rem; }
+            .existence-content { padding: 6px; }
+            .traslado-header { padding: 5px 8px; }
+            .traslado-title { font-size: 0.8rem; }
+            .loading-content { padding: 20px; max-width: 350px; }
+        }
+
+        @media (max-width: 400px) {
+            .existence-value { font-size: 1.7rem; }
+            .existence-section .card-header { padding: 5px 8px; }
+            .traslado-modal .modal-content { max-width: 100%; max-height: 100vh; border-radius: 0; margin: 0; }
+            .traslado-header { padding: 4px 8px; border-radius: 0; }
+            .loading-content { padding: 15px; max-width: 90%; }
+        }
+        
+        /* Selector de cantidad */
+        .quantity-section {
+            margin: 10px 0;
+        }
+        
+        .quantity-label {
+            font-size: 0.8rem;
+            color: #666;
+            margin-bottom: 6px;
+            text-align: center;
+        }
+        
+        .quantity-input-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+        
+        .quantity-input-container {
+            flex: 1;
+            position: relative;
+        }
+        
+        .quantity-input {
+            width: 100%;
+            padding: 10px 35px 10px 30px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            text-align: center;
+            color: var(--primary);
+            background: white;
+            transition: border-color 0.3s;
+        }
+        
+        .quantity-input:focus {
+            outline: none;
+            border-color: var(--secondary);
+            box-shadow: 0 0 0 0.25rem rgba(52, 152, 219, 0.25);
+        }
+        
+        .quantity-input-icon {
+            position: absolute;
+            left: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--secondary);
+            font-size: 0.9rem;
+        }
+        
+        .clear-quantity-btn {
+            position: absolute;
+            right: 6px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: #999;
+            font-size: 0.9rem;
+            cursor: pointer;
+            padding: 3px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: color 0.3s;
+        }
+        
+        .clear-quantity-btn:hover {
+            color: var(--danger);
+        }
+        
+        .available-text {
+            text-align: center;
+            font-size: 0.85rem;
+            color: #666;
+            margin-top: 6px;
+            font-weight: 600;
+        }
+        
+        .available-text .stock-amount {
+            color: var(--primary);
+            font-size: 1rem;
+        }
+        
+        .traslado-actions {
+            display: flex;
+            gap: 6px;
+            margin-top: auto;
+            padding-top: 12px;
+            border-top: 1px solid #eee;
+        }
+        
+        .traslado-actions button {
+            flex: 1;
+            padding: 10px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            position: relative;
+        }
+        
+        .traslado-actions button:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+        
+        .btn-spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 6px;
+        }
+        
+        body.modal-open {
+            overflow: hidden;
+        }
+        
+        .quantity-input.readonly {
+            background-color: #f8f9fa;
+            cursor: pointer;
+        }
+        
+        /* Historial modernizado */
+        .historial-list {
+            max-height: 60vh;
+            overflow-y: auto;
+            margin-top: 10px;
+        }
+        
+        .historial-item {
+            padding: 10px;
+            background: white;
+            border-radius: 8px;
+            margin-bottom: 6px;
+            border-left: 4px solid var(--success);
+            border: 1px solid #dee2e6;
+            transition: all 0.3s;
+        }
+        
+        .historial-item:hover {
+            transform: translateX(2px);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        
+        .historial-item.out { border-left-color: var(--warning); }
+        .historial-item.in { border-left-color: var(--info); }
+        .historial-item.offline { border-left-color: #3498db; opacity: 0.9; }
+        
+        .historial-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 4px;
+        }
+        
+        .historial-product {
+            font-weight: 600;
+            color: var(--primary);
+            font-size: 0.9rem;
+            flex: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        
+        .historial-quantity {
+            font-weight: 700;
+            color: var(--success);
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .historial-details {
+            font-size: 0.75rem;
+            color: #666;
+            margin-bottom: 2px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .historial-time {
+            font-size: 0.7rem;
+            color: #999;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .offline-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+            background: rgba(52, 152, 219, 0.1);
+            color: #3498db;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.65rem;
+            font-weight: 600;
+        }
+        
+        .empty-historial {
+            text-align: center;
+            padding: 20px 12px;
+            color: #999;
+        }
+        
+        .empty-icon {
+            font-size: 2rem;
+            margin-bottom: 8px;
+            color: #dee2e6;
+        }
+        
+        /* Configuración items */
+        .config-item { margin-bottom: 12px; }
+        
+        .config-label {
+            display: block;
+            margin-bottom: 4px;
+            font-weight: 600;
+            color: var(--primary);
+            font-size: 0.9rem;
+        }
+        
+        .config-input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            transition: all 0.3s;
+        }
+        
+        .config-input:focus {
+            outline: none;
+            border-color: var(--secondary);
+            box-shadow: 0 0 0 0.25rem rgba(52, 152, 219, 0.25);
+        }
+        
+        @media (max-height: 600px) {
+            .app-header { padding: 6px 10px !important; }
+            .header-title { font-size: 1.1rem; }
+            .scanner-section { padding: 8px !important; margin: 6px !important; }
+            .scanner-title { font-size: 1rem; margin-bottom: 8px; }
+        }
+        
+        @media (max-width: 400px) {
+            .quantity-input { padding: 8px 30px 8px 25px; }
+        }
+        
+        @media (max-height: 500px) {
+            .product-info { margin-bottom: 8px; padding: 8px; }
+            .existence-section { margin-bottom: 6px; }
+            .quantity-section { margin: 6px 0; }
+            .traslado-actions { padding-top: 10px; }
+            .loading-content { padding: 15px; }
+        }
+        
+        button:focus-visible, input:focus-visible, select:focus-visible {
+            outline: 2px solid var(--secondary);
+            outline-offset: 2px;
+        }
+        
+        .historial-list::-webkit-scrollbar { width: 5px; }
+        .historial-list::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 2px; }
+        .historial-list::-webkit-scrollbar-thumb { background: #888; border-radius: 2px; }
+        .historial-list::-webkit-scrollbar-thumb:hover { background: #555; }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <header class="app-header px-3 py-2">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="header-title">
+                        <i class="bi bi-upc-scan me-2"></i> Bodega
+                    </div>
+                    <div class="header-subtitle">Traslados</div>
+                    <div id="connectionStatus" class="connection-status">
+                        <i class="fas fa-sync fa-spin me-1"></i> Conectando...
+                    </div>
+                </div>
+                <div class="d-flex gap-2">
+                    <button class="header-btn" id="btnSearch" title="Búsqueda avanzada">
+                        <i class="bi bi-search"></i>
+                    </button>
+                    <button class="header-btn" id="btnHistory" title="Transferencias">
+                        <i class="bi bi-arrow-left-right"></i>
+                        <span id="queueBadge" class="queue-badge" style="display: none;">0</span>
+                    </button>
+                    <!-- Botón sync: el ::before se llena según progreso vía --sync-pct -->
+                    <button class="header-btn" id="btnSync" title="Sincronizar">
+                        <i class="bi bi-cloud-arrow-up"></i>
+                    </button>
+                    <button class="header-btn" id="btnSettings" title="Configuración">
+                        <i class="bi bi-gear"></i>
+                    </button>
+                </div>
+            </div>
+        </header>
+        
+        <section class="scanner-section p-3">
+            <h2 class="scanner-title text-center mb-3">
+                <i class="bi bi-qr-code-scan me-2"></i> Escanear producto
+            </h2>
+            
+            <div class="scanner-input-container mb-3">
+                <i class="bi bi-upc-scan scanner-icon"></i>
+                <input type="text" 
+                       class="scanner-input form-control ps-5" 
+                       id="scannerInput"
+                       placeholder="Escanear con handheld..."
+                       autocomplete="off"
+                       autocorrect="off"
+                       spellcheck="false"
+                       autofocus>
+            </div>
+            
+            <div class="scanner-buttons d-flex gap-2">
+                <button class="scanner-btn btn btn-primary flex-grow-1" id="btnScan">
+                    <i class="bi bi-search me-2"></i> Buscar
+                </button>
+                <button class="scanner-btn btn btn-danger flex-grow-1" id="btnClear">
+                    <i class="bi bi-eraser me-2"></i> Limpiar
+                </button>
+            </div>
+        </section>
+        
+        <div class="content-area">
+            <!-- Contenido principal -->
+        </div>
+    </div>
+    
+    <!-- Loading overlay - SOLO para búsquedas puntuales -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-content">
+            <h5 id="loadingTitle" class="mb-3 text-primary">Buscando producto</h5>
+            
+            <div class="progress-container">
+                <div class="progress-bar" id="progressBar"></div>
+            </div>
+            
+            <div class="loading-steps" id="loadingSteps"></div>
+            
+            <div class="mt-3">
+                <small id="loadingText" class="text-muted">Iniciando...</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast de sincronización en segundo plano -->
+    <div class="bg-sync-toast" id="bgSyncToast">
+        <div class="toast-label">
+            <i class="bi bi-arrow-repeat"></i>
+            <span id="bgSyncLabel">Sincronizando en segundo plano...</span>
+        </div>
+        <div class="toast-bar-track">
+            <div class="toast-bar-fill" id="bgSyncBar"></div>
+        </div>
+        <div class="toast-status" id="bgSyncStatus">Iniciando...</div>
+    </div>
+    
+    <!-- Notification -->
+    <div class="notification" id="notification"></div>
+    
+    <!-- Modal de configuración -->
+    <div class="modal fade" id="settingsModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="bi bi-gear me-2"></i> Configuración
+                    </h5>
+                    <button type="button" class="btn-close" id="closeSettings"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="config-item">
+                        <label class="config-label">Modo vibrar al escanear</label>
+                        <select class="config-input form-select" id="vibrationMode">
+                            <option value="on">Activado</option>
+                            <option value="off">Desactivado</option>
+                        </select>
+                    </div>
+                    
+                    <div class="config-item">
+                        <label class="config-label">Sonido de confirmación</label>
+                        <select class="config-input form-select" id="soundMode">
+                            <option value="on">Activado</option>
+                            <option value="off">Desactivado</option>
+                        </select>
+                    </div>
+                    
+                    <div class="config-item">
+                        <label class="config-label">Tipo de usuario</label>
+                        <select class="config-input form-select" id="userType">
+                            <option value="user">Usuario normal</option>
+                            <option value="admin">Administrador</option>
+                        </select>
+                    </div>
+                    
+                    <button class="btn btn-success w-100 mt-3" id="btnSaveSettings">
+                        <i class="bi bi-save me-2"></i> Guardar configuración
+                    </button>
+                    
+                    <button class="btn btn-warning w-100 mt-2" id="btnSyncNow">
+                        <i class="bi bi-cloud-arrow-up me-2"></i> Sincronizar ahora
+                    </button>
+                    
+                    <button class="btn btn-danger w-100 mt-2" id="btnClearLocal">
+                        <i class="bi bi-trash me-2"></i> Limpiar datos locales
+                    </button>
+                    
+                    <div class="mt-4 pt-3 border-top">
+                        <h5 class="mb-3 text-primary">Información de conexión</h5>
+                        <div class="small text-muted">
+                            <div class="mb-1"><strong>Estado:</strong> <span id="firebaseStatus">Desconectado</span></div>
+                            <div class="mb-1"><strong>Productos cargados:</strong> <span id="productCount">0</span></div>
+                            <div class="mb-1"><strong>Transferencias hoy:</strong> <span id="trasladosToday">0</span></div>
+                            <div class="mb-1"><strong>Última sincronización:</strong> <span id="lastSync">Nunca</span></div>
+                            <div class="mb-1"><strong>Tipo de usuario:</strong> <span id="userTypeDisplay">Usuario normal</span></div>
+                            <div class="mb-1"><strong>Traslados pendientes:</strong> <span id="pendientesCount">0</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal de transferencias -->
+    <div class="modal fade" id="historialModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="bi bi-arrow-left-right me-2"></i> Transferencias de Hoy
+                    </h5>
+                    <button type="button" class="btn-close" id="closeHistorial"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div class="small text-muted">
+                            <span id="historialCount">0</span> transferencias registradas
+                        </div>
+                        <div>
+                            <span id="pendientesBadge" class="badge bg-warning" style="display: none;">0 pendientes</span>
+                            <button class="btn btn-primary btn-sm ms-2" id="btnRefreshHistorial">
+                                <i class="bi bi-arrow-clockwise me-1"></i> Actualizar
+                            </button>
+                        </div>
+                    </div>
+                    <div id="historialList" class="historial-list"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal de traslado -->
+    <div class="modal fade" id="trasladoModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header traslado-header">
+                    <h5 class="modal-title traslado-title">
+                        <i class="bi bi-arrow-left-right me-2"></i> Trasladar Producto
+                    </h5>
+                    <button type="button" class="btn-close" id="closeTraslado"></button>
+                </div>
+                
+                <div class="modal-body">
+                    <div class="product-info">
+                        <div class="product-name" id="modalProductName">Nombre del producto</div>
+                        <div class="product-sku" id="modalProductSku">SKU: 000000</div>
+                    </div>
+                    
+                    <div class="existence-section mb-4">
+                        <div class="card">
+                            <div class="card-header text-white py-2">
+                                <h6 class="mb-0"><i class="bi bi-box-seam me-2"></i> Existencia en Bodega</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="existence-content">
+                                    <div class="existence-label">Unidades Disponibles</div>
+                                    <button class="existence-value" id="stockBodega">0</button>
+                                    <div class="existence-unit">unidades</div>
+                                    <div id="existenceStatus" class="existence-status available mt-3">
+                                        <i class="bi bi-check-circle me-2"></i> Producto disponible
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="quantity-section">
+                        <div class="quantity-label">Cantidad a trasladar a Tienda</div>
+                        
+                        <div class="quantity-input-group">
+                            <div class="quantity-input-container">
+                                <i class="bi bi-hash quantity-input-icon"></i>
+                                <input type="number" 
+                                       class="quantity-input readonly form-control" 
+                                       id="quantityInput"
+                                       value="1" 
+                                       min="1" 
+                                       max="1000"
+                                       step="1"
+                                       readonly>
+                                <button class="clear-quantity-btn" id="clearQuantityBtn" title="Borrar cantidad">
+                                    <i class="bi bi-x-lg"></i>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="available-text">
+                            Disponible en bodega: <span id="modalAvailableStock" class="stock-amount">0</span> unidades
+                        </div>
+                    </div>
+                    
+                    <div class="traslado-actions">
+                        <button class="btn btn-danger flex-grow-1" id="btnCancelTraslado">
+                            <i class="bi bi-x-lg me-2"></i> Cancelar
+                        </button>
+                        <button class="btn btn-success flex-grow-1" id="btnConfirmTraslado">
+                            <i class="bi bi-check-lg me-2"></i> Trasladar a Tienda
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+    <script>
+        // =========================================================
+        //  CONFIGURACIÓN FIREBASE
+        // =========================================================
+        const firebaseConfig = {
+            apiKey: "AIzaSyC5PwQQrY02yhICT4hl6nzZTEvA-CLgC2g",
+            authDomain: "thogar-de74d.firebaseapp.com",
+            projectId: "thogar-de74d",
+            storageBucket: "thogar-de74d.firebasestorage.app",
+            messagingSenderId: "605168322064",
+            appId: "1:605168322064:web:e0d9a16c5e5bc230d9ac95"
+        };
+
+        let app, db;
+        try {
+            app = firebase.initializeApp(firebaseConfig);
+            db = firebase.firestore();
+        } catch (e) { console.error("Firebase init error:", e); }
+
+        // =========================================================
+        //  VARIABLES GLOBALES
+        // =========================================================
+        let productos = [], historial = [], config = { vibrationMode:"on", soundMode:"on", userType:"user" };
+        let isOnline = navigator.onLine;
+        let currentProduct = null;
+        let syncInProgress = false;
+        let currentDirection = "bodegaToTienda";
+        let modalOpen = false;
+        let isProcessing = false;
+        let isAdmin = false;
+        let datosCargados = false, datosProductosCargados = false, datosHistorialCargados = false;
+        const VERSION_DATOS = '1.0.0';
+        let colaSincronizacion = [];
+        const MAX_INTENTOS_SINCRONIZACION = 3;
+
+        // =========================================================
+        //  ELEMENTOS DOM
+        // =========================================================
+        const scannerInput      = document.getElementById('scannerInput');
+        const btnScan           = document.getElementById('btnScan');
+        const btnClear          = document.getElementById('btnClear');
+        const btnSync           = document.getElementById('btnSync');
+        const btnHistory        = document.getElementById('btnHistory');
+        const btnSettings       = document.getElementById('btnSettings');
+        const btnSearch         = document.getElementById('btnSearch');
+        const settingsModalEl   = document.getElementById('settingsModal');
+        const historialModalEl  = document.getElementById('historialModal');
+        const trasladoModalEl   = document.getElementById('trasladoModal');
+        const closeSettings     = document.getElementById('closeSettings');
+        const closeHistorial    = document.getElementById('closeHistorial');
+        const closeTraslado     = document.getElementById('closeTraslado');
+        const vibrationMode     = document.getElementById('vibrationMode');
+        const soundMode         = document.getElementById('soundMode');
+        const userTypeSelect    = document.getElementById('userType');
+        const btnSaveSettings   = document.getElementById('btnSaveSettings');
+        const btnSyncNow        = document.getElementById('btnSyncNow');
+        const btnClearLocal     = document.getElementById('btnClearLocal');
+        const connectionStatus  = document.getElementById('connectionStatus');
+        const loadingOverlay    = document.getElementById('loadingOverlay');
+        const loadingTitle      = document.getElementById('loadingTitle');
+        const loadingText       = document.getElementById('loadingText');
+        const progressBar       = document.getElementById('progressBar');
+        const loadingSteps      = document.getElementById('loadingSteps');
+        const notification      = document.getElementById('notification');
+        const firebaseStatus    = document.getElementById('firebaseStatus');
+        const productCount      = document.getElementById('productCount');
+        const trasladosToday    = document.getElementById('trasladosToday');
+        const lastSync          = document.getElementById('lastSync');
+        const userTypeDisplay   = document.getElementById('userTypeDisplay');
+        const historialList     = document.getElementById('historialList');
+        const historialCount    = document.getElementById('historialCount');
+        const btnRefreshHistorial = document.getElementById('btnRefreshHistorial');
+        const pendientesCount   = document.getElementById('pendientesCount');
+        const pendientesBadge   = document.getElementById('pendientesBadge');
+        const queueBadge        = document.getElementById('queueBadge');
+        const btnCancelTraslado = document.getElementById('btnCancelTraslado');
+        const btnConfirmTraslado= document.getElementById('btnConfirmTraslado');
+        const modalProductName  = document.getElementById('modalProductName');
+        const modalProductSku   = document.getElementById('modalProductSku');
+        const quantityInput     = document.getElementById('quantityInput');
+        const clearQuantityBtn  = document.getElementById('clearQuantityBtn');
+        const modalAvailableStock = document.getElementById('modalAvailableStock');
+        const stockBodega       = document.getElementById('stockBodega');
+        const existenceStatus   = document.getElementById('existenceStatus');
+        // Toast de segundo plano
+        const bgSyncToast       = document.getElementById('bgSyncToast');
+        const bgSyncLabel       = document.getElementById('bgSyncLabel');
+        const bgSyncBar         = document.getElementById('bgSyncBar');
+        const bgSyncStatus      = document.getElementById('bgSyncStatus');
+
+        let settingsModal, historialModal, trasladoModal;
+
+        // =========================================================
+        //  TOAST DE PROGRESO EN SEGUNDO PLANO
+        //  Controla: toast inferior + botón sync fill
+        // =========================================================
+        let toastTimer = null;
+
+        /**
+         * Actualiza el toast y el botón sync simultáneamente.
+         * @param {number} pct  0-100
+         * @param {string} status  Texto de estado
+         * @param {boolean} show  Mostrar/ocultar toast
+         */
+        function setBgSyncProgress(pct, status = '', show = true) {
+            // --- Toast ---
+            if (show) {
+                bgSyncToast.classList.add('visible');
+            }
+            bgSyncBar.style.width = pct + '%';
+            if (status) bgSyncStatus.textContent = status;
+
+            // --- Botón: fill animado vía pseudo-element height ---
+            // Usamos un atributo data para CSS + JS directo en el elemento
+            setSyncBtnFill(pct);
+        }
+
+        function hideBgSyncToast(delay = 1800) {
+            clearTimeout(toastTimer);
+            toastTimer = setTimeout(() => {
+                bgSyncToast.classList.remove('visible');
+            }, delay);
+        }
+
+        /**
+         * Anima el relleno del botón sync (::before) usando clip-path
+         * ya que no podemos animar pseudo-elements directamente desde JS.
+         * Solución: usamos un <span> overlay dentro del botón.
+         */
+        function setSyncBtnFill(pct) {
+            // Creamos o actualizamos el span de fill dentro del botón
+            let fill = btnSync.querySelector('.sync-fill');
+            if (!fill) {
+                fill = document.createElement('span');
+                fill.className = 'sync-fill';
+                fill.style.cssText = `
+                    position:absolute; bottom:0; left:0; width:100%;
+                    border-radius:50%; pointer-events:none; z-index:0;
+                    transition: height 0.35s ease, background 0.4s ease;
+                    height:0%;
+                `;
+                btnSync.appendChild(fill);
+                // Ícono sobre el fill
+                btnSync.querySelector('i').style.position = 'relative';
+                btnSync.querySelector('i').style.zIndex = '1';
+            }
+            fill.style.height = pct + '%';
+            // Color según progreso
+            if (pct < 50) {
+                fill.style.background = 'rgba(52, 152, 219, 0.55)';
+            } else if (pct < 100) {
+                fill.style.background = 'rgba(39, 187, 126, 0.6)';
+            } else {
+                fill.style.background = 'rgba(39, 174, 96, 0.8)';
+            }
+        }
+
+        function resetSyncBtn(ok = true) {
+            const fill = btnSync.querySelector('.sync-fill');
+            if (fill) {
+                fill.style.height = '100%';
+                fill.style.background = ok
+                    ? 'rgba(39, 174, 96, 0.8)'
+                    : 'rgba(231, 76, 60, 0.75)';
+
+                setTimeout(() => {
+                    if (fill) fill.style.height = '0%';
+                    btnSync.classList.remove('syncing');
+                    btnSync.style.pointerEvents = '';
+                    btnSync.style.cursor = '';
+                }, 1200);
+            }
+        }
+
+        function startSyncBtnSpinner() {
+            btnSync.classList.add('syncing');
+            btnSync.style.pointerEvents = 'none';
+            btnSync.style.cursor = 'not-allowed';
+            setSyncBtnFill(0);
+        }
+
+        // =========================================================
+        //  UTILIDADES
+        // =========================================================
+        function getCurrentTimestamp() { return Date.now(); }
+
+        function formatTimeAgo(timestamp) {
+            if (!timestamp) return "Nunca";
+            const diff = Date.now() - timestamp;
+            const seconds = Math.floor(diff / 1000);
+            const minutes = Math.floor(seconds / 60);
+            const hours   = Math.floor(minutes / 60);
+            const days    = Math.floor(hours / 24);
+            const weeks   = Math.floor(days / 7);
+            const months  = Math.floor(days / 30);
+            const years   = Math.floor(days / 365);
+            if (seconds < 60)  return "hace un momento";
+            if (minutes < 60)  return minutes === 1 ? "hace 1 minuto"  : `hace ${minutes} minutos`;
+            if (hours   < 24)  return hours   === 1 ? "hace 1 hora"    : `hace ${hours} horas`;
+            if (days    < 7)   return days    === 1 ? "hace 1 día"     : `hace ${days} días`;
+            if (weeks   < 4)   return weeks   === 1 ? "hace 1 semana"  : `hace ${weeks} semanas`;
+            if (months  < 12)  return months  === 1 ? "hace 1 mes"     : `hace ${months} meses`;
+            return years === 1 ? "hace 1 año" : `hace ${years} años`;
+        }
+
+        // =========================================================
+        //  INICIO
+        // =========================================================
+        document.addEventListener('DOMContentLoaded', async function() {
+            settingsModal  = new bootstrap.Modal(settingsModalEl);
+            historialModal = new bootstrap.Modal(historialModalEl);
+            trasladoModal  = new bootstrap.Modal(trasladoModalEl);
+
+            cargarConfiguracion();
+            cargarColaSincronizacion();
+            configurarEventos();
+
+            // ① Cargar datos locales INMEDIATAMENTE (sin bloquear UI)
+            await cargarDatosLocalesUnaVez();
+
+            // ② Actualizar UI con datos locales
+            actualizarEstadoConexion();
+            actualizarEstadoConexionUI();
+            actualizarContadorTraslados();
+            actualizarInfoConfiguracion();
+            verificarAdminStatus();
+            scannerInput.focus();
+            setupHandheldScanner();
+
+            // ③ Sincronizar Firebase EN SEGUNDO PLANO (no bloquea)
+            sincronizarEnSegundoPlano();
+        });
+
+        // =========================================================
+        //  SINCRONIZACIÓN EN SEGUNDO PLANO (nueva función principal)
+        // =========================================================
+        async function sincronizarEnSegundoPlano() {
+            if (syncInProgress || !db) return;
+            syncInProgress = true;
+
+            startSyncBtnSpinner();
+            bgSyncLabel.textContent = 'Sincronizando en segundo plano...';
+            setBgSyncProgress(5, 'Conectando con Firebase...', true);
+
+            try {
+                // — PASO 1: productos (0→70%)
+                setBgSyncProgress(10, 'Descargando productos...');
+                const snapshot = await db.collection('products').get();
+                productos = [];
+                let i = 0;
+                const total = snapshot.size;
+
+                snapshot.forEach(doc => {
+                    const d = doc.data();
+                    productos.push({
+                        id: d.id || doc.id,
+                        sku: d.sku,
+                        name: d.name,
+                        barcode: d.barcode,
+                        barcodes: d.barcodes,
+                        proveedor: d.proveedor,
+                        bodega: d.bodega || 0,
+                        tienda: d.tienda || 0,
+                        lastTransfer: d.lastTransfer || null
+                    });
+                    i++;
+                    if (i % 20 === 0 || i === total) {
+                        const pct = 10 + Math.floor((i / total) * 55);
+                        setBgSyncProgress(pct, `Productos: ${i}/${total}`);
+                    }
+                });
+
+                localStorage.setItem('handheldProductos', JSON.stringify(productos));
+                datosProductosCargados = true;
+                actualizarInfoConfiguracion();
+
+                // — PASO 2: historial (70→95%)
+                setBgSyncProgress(70, 'Descargando historial...');
+                try {
+                    const hoy = new Date(); hoy.setHours(0,0,0,0);
+                    const hSnap = await db.collection('historial')
+                        .where('timestamp', '>=', hoy.getTime())
+                        .where('tipo', '==', 'transferencia')
+                        .orderBy('timestamp', 'desc')
+                        .limit(100)
+                        .get();
+
+                    const nuevas = [];
+                    let j = 0;
+                    hSnap.forEach(doc => {
+                        const d = doc.data();
+                        if (d.tipo !== 'transferencia') return;
+                        nuevas.push({ ...d, sincronizado: true });
+                        j++;
+                        if (j % 5 === 0) {
+                            const pct = 70 + Math.floor((j / (hSnap.size || 1)) * 20);
+                            setBgSyncProgress(pct, `Historial: ${j} registros`);
+                        }
+                    });
+
+                    const hoyTs = hoy.getTime();
+                    historial = historial.filter(t => t.tipo !== 'transferencia' || t.timestamp < hoyTs);
+                    nuevas.forEach(n => { if (!historial.some(t => t.id === n.id)) historial.unshift(n); });
+                    historial.sort((a,b) => (b.timestamp||0) - (a.timestamp||0));
+                    localStorage.setItem('handheldHistorial', JSON.stringify(historial));
+                    datosHistorialCargados = true;
+                } catch(he) { console.warn('Historial sync warning:', he); }
+
+                // — PASO 3: sincronizar cola pendiente si hay
+                if (colaSincronizacion.filter(x => x.estado === 'pendiente').length > 0) {
+                    setBgSyncProgress(90, 'Sincronizando traslados pendientes...');
+                    await _procesarColaPendiente(true);
+                }
+
+                // — COMPLETADO (100%)
+                setBgSyncProgress(100, '✓ Sincronización completada');
+                const ahora = new Date();
+                lastSync.textContent = ahora.toLocaleTimeString('es-ES');
+                localStorage.setItem('lastSync', ahora.toISOString());
+                actualizarContadorTraslados();
+                actualizarInfoConfiguracion();
+                datosCargados = true;
+                sessionStorage.setItem('handheldDatosCargados', 'true');
+
+                resetSyncBtn(true);
+                hideBgSyncToast(2000);
+
+                // Actualizar historial si está abierto
+                if (historialModal._isShown) mostrarHistorial();
+
+            } catch (error) {
+                console.error('Error sync background:', error);
+                setBgSyncProgress(100, '✗ Error al sincronizar');
+                bgSyncBar.style.background = 'linear-gradient(90deg, #e74c3c, #c0392b)';
+                resetSyncBtn(false);
+                hideBgSyncToast(3000);
+            } finally {
+                syncInProgress = false;
+            }
+        }
+
+        // =========================================================
+        //  COLA DE SINCRONIZACIÓN
+        // =========================================================
+        function cargarColaSincronizacion() {
+            const g = localStorage.getItem('handheldColaSincronizacion');
+            if (g) { try { colaSincronizacion = JSON.parse(g); } catch(e) { colaSincronizacion = []; } }
+            actualizarBadgeCola();
+        }
+
+        function guardarColaSincronizacion() {
+            localStorage.setItem('handheldColaSincronizacion', JSON.stringify(colaSincronizacion));
+            actualizarBadgeCola();
+            actualizarInfoConfiguracion();
+        }
+
+        function agregarALaCola(accion, datos) {
+            const id = 'cola_' + Date.now() + '_' + Math.random().toString(36).substr(2,9);
+            colaSincronizacion.push({ id, timestamp: Date.now(), accion, datos, intentos: 0, estado: 'pendiente', ultimoIntento: null, error: null });
+            guardarColaSincronizacion();
+            if (accion === 'actualizarProducto') mostrarNotificacion('Traslado guardado localmente. Se sincronizará cuando haya conexión','offline');
+            return id;
+        }
+
+        function actualizarBadgeCola() {
+            const pendientes = colaSincronizacion.filter(x => x.estado === 'pendiente').length;
+            if (pendientes > 0) {
+                queueBadge.textContent = pendientes; queueBadge.style.display = 'flex';
+                pendientesBadge.textContent = `${pendientes} pendientes`; pendientesBadge.style.display = 'inline-block';
+            } else {
+                queueBadge.style.display = 'none'; pendientesBadge.style.display = 'none';
+            }
+            pendientesCount.textContent = pendientes;
+        }
+
+        // Procesador interno de cola (sin UI propia, usado por segundo plano)
+        async function _procesarColaPendiente(silencioso = false) {
+            const pendientes = colaSincronizacion.filter(x => x.estado === 'pendiente');
+            if (!pendientes.length) return;
+            let exitosos = 0, fallidos = 0;
+            for (const item of pendientes) {
+                try {
+                    item.estado = 'procesando'; item.ultimoIntento = Date.now(); item.intentos++;
+                    if (item.accion === 'actualizarProducto') {
+                        await db.collection('products').doc(item.datos.productoId.toString()).update({
+                            bodega: item.datos.bodega, tienda: item.datos.tienda, lastTransfer: item.datos.lastTransfer
+                        });
+                    } else if (item.accion === 'agregarHistorial') {
+                        await db.collection('historial').doc(item.datos.id.toString()).set(item.datos);
+                    }
+                    item.estado = 'completado'; item.error = null; exitosos++;
+                } catch(err) {
+                    item.estado = item.intentos >= MAX_INTENTOS_SINCRONIZACION ? 'fallido' : 'pendiente';
+                    item.error = err.message; fallidos++;
+                }
+            }
+            historial.forEach(r => {
+                if (!r.sincronizado) {
+                    const ok = colaSincronizacion.find(x => x.accion==='agregarHistorial' && x.datos.id===r.id && x.estado==='completado');
+                    if (ok) r.sincronizado = true;
+                }
+            });
+            localStorage.setItem('handheldHistorial', JSON.stringify(historial));
+            colaSincronizacion = colaSincronizacion.filter(x => x.estado !== 'completado');
+            guardarColaSincronizacion();
+            if (!silencioso && exitosos > 0) mostrarNotificacion(`${exitosos} traslado(s) sincronizado(s)`, 'success');
+        }
+
+        // =========================================================
+        //  SINCRONIZACIÓN MANUAL (botón sync / modal)
+        // =========================================================
+        async function sincronizarConFirebase() {
+            if (syncInProgress) return;
+            // Reusar segundo plano
+            await sincronizarEnSegundoPlano();
+        }
+
+        async function sincronizarColaPendiente() {
+            if (syncInProgress || !db) return;
+            const pendientes = colaSincronizacion.filter(x => x.estado === 'pendiente');
+            if (!pendientes.length) { mostrarNotificacion('No hay traslados pendientes','info'); return; }
+            syncInProgress = true;
+            startSyncBtnSpinner();
+            setBgSyncProgress(10, `Sincronizando ${pendientes.length} pendientes...`, true);
+            try {
+                await _procesarColaPendiente(false);
+                setBgSyncProgress(100, '✓ Traslados sincronizados');
+                resetSyncBtn(true);
+                hideBgSyncToast(2000);
+            } catch(e) {
+                setBgSyncProgress(100, '✗ Error'); resetSyncBtn(false); hideBgSyncToast(3000);
+            } finally { syncInProgress = false; }
+        }
+
+        // =========================================================
+        //  DATOS LOCALES
+        // =========================================================
+        function verificarVersionDatos() {
+            const v = localStorage.getItem('handheldVersion');
+            if (v !== VERSION_DATOS) { resetearEstadoCarga(); localStorage.setItem('handheldVersion', VERSION_DATOS); return false; }
+            return true;
+        }
+
+        function resetearEstadoCarga() { datosCargados = datosProductosCargados = datosHistorialCargados = false; }
+
+        async function cargarDatosLocalesUnaVez() {
+            if (datosProductosCargados && datosHistorialCargados) return;
+            if (!datosProductosCargados) {
+                const s = localStorage.getItem('handheldProductos');
+                if (s) { try { productos = JSON.parse(s); datosProductosCargados = true; } catch(e) { productos = []; } }
+            }
+            if (!datosHistorialCargados) {
+                const s = localStorage.getItem('handheldHistorial');
+                if (s) { try { historial = JSON.parse(s); datosHistorialCargados = true; } catch(e) { historial = []; } }
+            }
+        }
+
+        // =========================================================
+        //  CONFIGURACIÓN
+        // =========================================================
+        function cargarConfiguracion() {
+            const s = localStorage.getItem('handheldConfig');
+            if (s) {
+                config = JSON.parse(s);
+                vibrationMode.value  = config.vibrationMode;
+                soundMode.value      = config.soundMode;
+                userTypeSelect.value = config.userType || "user";
+                isAdmin = config.userType === "admin";
+            }
+        }
+
+        function guardarConfiguracion() {
+            config.vibrationMode = vibrationMode.value;
+            config.soundMode     = soundMode.value;
+            config.userType      = userTypeSelect.value;
+            localStorage.setItem('handheldConfig', JSON.stringify(config));
+            isAdmin = config.userType === "admin";
+            mostrarNotificacion('Configuración guardada','success');
+            actualizarInfoConfiguracion();
+            settingsModal.hide();
+        }
+
+        function verificarAdminStatus() { isAdmin = config.userType === "admin"; }
+
+        // =========================================================
+        //  NOTIFICACIONES / LOADING
+        // =========================================================
+        function mostrarNotificacion(mensaje, tipo = 'success') {
+            notification.textContent = mensaje;
+            notification.className = `notification ${tipo}`;
+            notification.style.display = 'block';
+            setTimeout(() => { notification.style.display = 'none'; }, 3000);
+        }
+
+        function mostrarLoading(mostrar, titulo='', texto='', progreso=0) {
+            if (mostrar) {
+                if (titulo) loadingTitle.textContent = titulo;
+                if (texto)  loadingText.textContent  = texto;
+                progressBar.style.width = progreso + '%';
+                loadingOverlay.style.display = 'flex';
+                loadingOverlay.style.animation = 'fadeIn 0.3s ease';
+            } else {
+                loadingOverlay.style.opacity = '0';
+                loadingOverlay.style.transition = 'opacity 0.3s ease';
+                setTimeout(() => { loadingOverlay.style.display = 'none'; loadingOverlay.style.opacity = '1'; progressBar.style.width = '0%'; }, 300);
+            }
+        }
+
+        function actualizarPasosCarga(pasos, pasoActual) {
+            loadingSteps.innerHTML = '';
+            pasos.forEach((paso, idx) => {
+                const el = document.createElement('div');
+                el.className = 'loading-step' + (idx < pasoActual ? ' completed' : idx === pasoActual ? ' active' : '');
+                const ico = idx < pasoActual ? 'bi-check-circle-fill' : idx === pasoActual ? 'bi-arrow-right-circle-fill' : 'bi-circle';
+                el.innerHTML = `<i class="bi ${ico}"></i><span>${paso}</span>`;
+                loadingSteps.appendChild(el);
+            });
+        }
+
+        // =========================================================
+        //  CONEXIÓN
+        // =========================================================
+        function actualizarEstadoConexion() {
+            if (isOnline) {
+                connectionStatus.innerHTML = '<i class="bi bi-wifi"></i> Conectado';
+                connectionStatus.classList.add('online'); connectionStatus.classList.remove('offline');
+            } else {
+                connectionStatus.innerHTML = '<i class="bi bi-wifi-off"></i> Sin conexión';
+                connectionStatus.classList.add('offline'); connectionStatus.classList.remove('online');
+            }
+        }
+
+        function actualizarEstadoConexionUI() { actualizarEstadoConexion(); }
+
+        // =========================================================
+        //  EVENTOS
+        // =========================================================
+        function configurarEventos() {
+            btnSearch.addEventListener('click', () => window.location.href = 'busqueda.html');
+            btnScan.addEventListener('click', buscarProducto);
+            scannerInput.addEventListener('keypress', e => { if (e.key==='Enter') { e.preventDefault(); buscarProducto(); } });
+            btnClear.addEventListener('click', () => { scannerInput.value = ''; scannerInput.focus(); });
+
+            btnSync.addEventListener('click', async function() {
+                if (syncInProgress) return;
+                const pendientes = colaSincronizacion.filter(x => x.estado==='pendiente').length;
+                if (pendientes > 0) {
+                    Swal.fire({
+                        title: 'Sincronizar pendientes',
+                        text: `Hay ${pendientes} traslados pendientes. ¿Sincronizar?`,
+                        icon: 'question',
+                        showCancelButton: true,
+                        confirmButtonText: 'Sí, sincronizar',
+                        cancelButtonText: 'Solo datos actuales',
+                        confirmButtonColor: '#3498db', cancelButtonColor: '#6c757d'
+                    }).then(async r => {
+                        if (r.isConfirmed) await sincronizarColaPendiente();
+                        else await sincronizarConFirebase();
+                    });
+                } else {
+                    await sincronizarConFirebase();
+                }
+            });
+
+            btnHistory.addEventListener('click', () => { mostrarHistorial(); historialModal.show(); });
+            closeHistorial.addEventListener('click', () => historialModal.hide());
+            btnRefreshHistorial.addEventListener('click', mostrarHistorial);
+
+            btnSettings.addEventListener('click', () => { actualizarInfoConfiguracion(); settingsModal.show(); });
+            closeSettings.addEventListener('click', () => settingsModal.hide());
+            btnSaveSettings.addEventListener('click', guardarConfiguracion);
+
+            btnSyncNow.addEventListener('click', async function() {
+                settingsModal.hide();
+                if (colaSincronizacion.length > 0) await sincronizarColaPendiente();
+                else await sincronizarConFirebase();
+            });
+
+            btnClearLocal.addEventListener('click', function() {
+                Swal.fire({
+                    title: '¿Limpiar datos locales?',
+                    html: `Esta acción eliminará:<br><ul class="text-start"><li>Productos almacenados localmente</li><li>Historial de transferencias</li><li>Traslados pendientes de sincronizar</li></ul><strong>Los datos del servidor NO se eliminarán</strong>`,
+                    icon: 'warning', showCancelButton: true,
+                    confirmButtonText: 'Sí, limpiar todo', cancelButtonText: 'Cancelar',
+                    confirmButtonColor: '#dc3545', cancelButtonColor: '#6c757d'
+                }).then(r => {
+                    if (r.isConfirmed) {
+                        productos = []; historial = []; colaSincronizacion = [];
+                        datosProductosCargados = datosHistorialCargados = false;
+                        localStorage.removeItem('handheldProductos');
+                        localStorage.removeItem('handheldHistorial');
+                        localStorage.removeItem('handheldColaSincronizacion');
+                        sessionStorage.removeItem('handheldDatosCargados');
+                        actualizarContadorTraslados(); actualizarBadgeCola();
+                        mostrarNotificacion('Datos locales limpiados','success');
+                        setTimeout(() => sincronizarEnSegundoPlano(), 1000);
+                    }
+                });
+            });
+
+            quantityInput.addEventListener('click', function() {
+                if (isProcessing) return;
+                if (this.classList.contains('readonly')) {
+                    this.classList.remove('readonly'); this.removeAttribute('readonly');
+                    this.focus(); this.select();
+                }
+            });
+            quantityInput.addEventListener('blur', () => { if (!isProcessing) validarCantidadInput(); });
+            quantityInput.addEventListener('input', () => { if (!isProcessing) setTimeout(validarCantidadInput,50); });
+            clearQuantityBtn.addEventListener('click', function() {
+                if (isProcessing) return;
+                quantityInput.value = '';
+                quantityInput.classList.remove('readonly'); quantityInput.removeAttribute('readonly');
+                quantityInput.focus();
+            });
+
+            stockBodega.addEventListener('click', async function() {
+                if (isProcessing || !currentProduct) return;
+                await actualizarExistenciaDelProducto();
+            });
+
+            btnCancelTraslado.addEventListener('click', () => { if (!isProcessing) cerrarModalTraslado(); });
+            closeTraslado.addEventListener('click', () => { if (!isProcessing) cerrarModalTraslado(); });
+            btnConfirmTraslado.addEventListener('click', async () => { if (!isProcessing) await ejecutarTrasladoConfirmado(); });
+
+            document.addEventListener('keydown', e => {
+                if (modalOpen && e.key==='Escape' && !isProcessing) cerrarModalTraslado();
+            });
+
+            window.addEventListener('online', async () => {
+                isOnline = true; actualizarEstadoConexion(); actualizarEstadoConexionUI();
+                await new Promise(r => setTimeout(r,1000));
+                await sincronizarEnSegundoPlano();
+                mostrarNotificacion('Conexión restablecida','success');
+            });
+            window.addEventListener('offline', () => {
+                isOnline = false; actualizarEstadoConexion(); actualizarEstadoConexionUI();
+                mostrarNotificacion('Sin conexión - Modo offline activado','warning');
+            });
+        }
+
+        // =========================================================
+        //  EXISTENCIA DEL PRODUCTO
+        // =========================================================
+        async function actualizarExistenciaDelProducto() {
+            if (!currentProduct || isProcessing) return;
+            isProcessing = true;
+            stockBodega.classList.add('updating'); stockBodega.disabled = true;
+            try {
+                if (db && isOnline) {
+                    const doc = await db.collection('products').doc(currentProduct.id.toString()).get();
+                    if (doc.exists) {
+                        const d = doc.data();
+                        const idx = productos.findIndex(p => p.id === currentProduct.id);
+                        if (idx !== -1) {
+                            productos[idx].bodega = d.bodega || 0;
+                            productos[idx].tienda = d.tienda || 0;
+                            localStorage.setItem('handheldProductos', JSON.stringify(productos));
+                            currentProduct.bodega = d.bodega || 0;
+                            currentProduct.tienda = d.tienda || 0;
+                            actualizarExistenciaEnModal();
+                            mostrarNotificacion('Existencia actualizada','success');
+                            vibrar('success'); reproducirSonido('success');
+                        }
+                    }
+                } else { mostrarNotificacion('Sin conexión a Firebase','warning'); }
+            } catch(e) { mostrarNotificacion('Error al actualizar existencia','error'); }
+            finally {
+                setTimeout(() => { stockBodega.classList.remove('updating'); stockBodega.disabled = false; isProcessing = false; }, 300);
+            }
+        }
+
+        function validarCantidadInput() {
+            let c = parseInt(quantityInput.value) || 0;
+            const max = parseInt(modalAvailableStock.textContent) || 0;
+            if (quantityInput.value === '') return 0;
+            if (c < 1) { c = 1; quantityInput.value = 1; }
+            if (c > max && max > 0) { c = max; quantityInput.value = max; }
+            if (c > 1000) { c = 1000; quantityInput.value = 1000; }
+            return c;
+        }
+
+        function mostrarSpinnerConfirmar(mostrar) {
+            if (mostrar) {
+                btnConfirmTraslado.innerHTML = '<span class="btn-spinner"></span> Procesando...';
+                btnConfirmTraslado.disabled = btnCancelTraslado.disabled = true;
+                isProcessing = true;
+            } else {
+                btnConfirmTraslado.innerHTML = '<i class="bi bi-check-lg me-2"></i> Trasladar a Tienda';
+                btnConfirmTraslado.disabled = btnCancelTraslado.disabled = false;
+                isProcessing = false;
+            }
+        }
+
+        function cerrarModalTraslado() {
+            trasladoModal.hide();
+            scannerInput.value = ''; scannerInput.focus();
+            delete window.pendingTraslado;
+            modalOpen = false; document.body.classList.remove('modal-open');
+            quantityInput.classList.add('readonly'); quantityInput.setAttribute('readonly', true); quantityInput.value = "1";
+            mostrarSpinnerConfirmar(false);
+            stockBodega.classList.remove('updating'); stockBodega.disabled = false;
+        }
+
+        function actualizarExistenciaEnModal() {
+            if (!currentProduct) return;
+            const bodega = currentProduct.bodega || 0;
+            stockBodega.textContent = bodega;
+            modalAvailableStock.textContent = bodega; modalAvailableStock.style.color = '#2c3e50';
+            quantityInput.max = bodega;
+            actualizarEstadoExistencia(bodega);
+            validarCantidadInput();
+        }
+
+        function actualizarEstadoExistencia(cantidad) {
+            if (!existenceStatus) return;
+            existenceStatus.classList.remove('available','low','empty');
+            if (cantidad === 0) {
+                existenceStatus.className = 'existence-status empty mt-3';
+                existenceStatus.innerHTML = '<i class="bi bi-x-circle me-2"></i> Sin existencia en bodega';
+                btnConfirmTraslado.disabled = true;
+                btnConfirmTraslado.innerHTML = '<i class="bi bi-ban me-2"></i> Sin existencia';
+            } else if (cantidad <= 5) {
+                existenceStatus.className = 'existence-status low mt-3';
+                existenceStatus.innerHTML = '<i class="bi bi-exclamation-triangle me-2"></i> Existencia baja';
+                btnConfirmTraslado.disabled = false;
+                btnConfirmTraslado.innerHTML = '<i class="bi bi-check-lg me-2"></i> Trasladar a Tienda';
+            } else {
+                existenceStatus.className = 'existence-status available mt-3';
+                existenceStatus.innerHTML = '<i class="bi bi-check-circle me-2"></i> Producto disponible';
+                btnConfirmTraslado.disabled = false;
+                btnConfirmTraslado.innerHTML = '<i class="bi bi-check-lg me-2"></i> Trasladar a Tienda';
+            }
+        }
+
+        function mostrarModalTraslado(producto) {
+            currentProduct = producto;
+            modalProductName.textContent = producto.name;
+            modalProductSku.textContent  = `SKU: ${producto.sku}`;
+            quantityInput.value = "1"; quantityInput.classList.add('readonly'); quantityInput.setAttribute('readonly', true);
+            currentDirection = "bodegaToTienda";
+            mostrarSpinnerConfirmar(false);
+            stockBodega.classList.remove('updating'); stockBodega.disabled = false;
+            actualizarExistenciaEnModal();
+            trasladoModal.show(); modalOpen = true; document.body.classList.add('modal-open');
+            scannerInput.value = '';
+        }
+
+        async function ejecutarTrasladoConfirmado() {
+            if (isProcessing || !currentProduct) return;
+            const productoId   = currentProduct.id;
+            const cantidad     = validarCantidadInput();
+            const bodegaActual = currentProduct.bodega || 0;
+            if (cantidad === 0 || quantityInput.value === '') { mostrarNotificacion('Ingrese una cantidad válida','error'); vibrar('error'); quantityInput.focus(); return; }
+            if (bodegaActual === 0) {
+                Swal.fire({ title:"¡Sin existencia!", text:"No hay unidades disponibles en bodega.", icon:"error", confirmButtonText:"Entendido", confirmButtonColor:"#dc3545" });
+                vibrar('error'); reproducirSonido('error'); return;
+            }
+            if (cantidad > bodegaActual) { mostrarNotificacion(`Solo hay ${bodegaActual} unidades en bodega`,'error'); vibrar('error'); return; }
+            mostrarSpinnerConfirmar(true);
+            try { await realizarTraslado(productoId, cantidad, "bodega", "tienda", "Bodega", "Tienda"); }
+            catch(e) { mostrarNotificacion('Error al realizar el traslado','error'); mostrarSpinnerConfirmar(false); }
+        }
+
+        async function realizarTraslado(productoId, cantidad, origen, destino, origenNombre, destinoNombre) {
+            const idx = productos.findIndex(p => p.id === productoId);
+            if (idx === -1) { mostrarNotificacion('Producto no encontrado','error'); mostrarSpinnerConfirmar(false); return; }
+            const producto = productos[idx];
+            if (origen === "bodega") { producto.bodega -= cantidad; producto.tienda += cantidad; }
+            else { producto.tienda -= cantidad; producto.bodega += cantidad; }
+            producto.lastTransfer = getCurrentTimestamp();
+            localStorage.setItem('handheldProductos', JSON.stringify(productos));
+
+            const nuevoRegistro = { id:'handheld_'+Date.now(), timestamp:getCurrentTimestamp(), tipo:'transferencia', producto:producto.name, sku:producto.sku, cantidad, origen, destino, usuario:isAdmin?'admin':'handheld', sincronizado:isOnline };
+            historial.unshift(nuevoRegistro);
+            localStorage.setItem('handheldHistorial', JSON.stringify(historial));
+            actualizarContadorTraslados();
+
+            if (db && isOnline) {
+                try {
+                    await sincronizarTrasladoFirebase(producto, nuevoRegistro);
+                    nuevoRegistro.sincronizado = true;
+                    localStorage.setItem('handheldHistorial', JSON.stringify(historial));
+                    vibrar('transfer'); reproducirSonido('success');
+                } catch(e) {
+                    agregarALaCola('actualizarProducto', { productoId:producto.id, bodega:producto.bodega, tienda:producto.tienda, lastTransfer:producto.lastTransfer });
+                    agregarALaCola('agregarHistorial', nuevoRegistro);
+                }
+            } else {
+                agregarALaCola('actualizarProducto', { productoId:producto.id, bodega:producto.bodega, tienda:producto.tienda, lastTransfer:producto.lastTransfer });
+                agregarALaCola('agregarHistorial', nuevoRegistro);
+                vibrar('transfer'); reproducirSonido('success');
+            }
+
+            mostrarSpinnerConfirmar(false);
+            cerrarModalTraslado();
+
+            if (isOnline) {
+                Swal.fire({ title:'✅ Traslado exitoso', html:`<strong>${cantidad} ${cantidad===1?'unidad':'unidades'}</strong><br><small>${producto.name}</small><br><small>${origenNombre} → ${destinoNombre}</small>`, icon:'success', showConfirmButton:false, timer:1500 }).then(()=>scannerInput.focus());
+            } else {
+                Swal.fire({ title:'📱 Traslado guardado', html:`<strong>${cantidad} ${cantidad===1?'unidad':'unidades'}</strong><br><small>${producto.name}</small><br><small>${origenNombre} → ${destinoNombre}</small><br><small class="text-warning"><i class="bi bi-wifi-off"></i> Guardado localmente</small>`, icon:'info', confirmButtonText:'OK', showConfirmButton:true, confirmButtonColor:'#3498db' }).then(()=>scannerInput.focus());
+            }
+        }
+
+        async function sincronizarTrasladoFirebase(producto, historialItem) {
+            try {
+                await db.collection('products').doc(producto.id.toString()).update({ bodega:producto.bodega, tienda:producto.tienda, lastTransfer:producto.lastTransfer });
+                await db.collection('historial').doc(historialItem.id.toString()).set({ ...historialItem, sincronizado:true });
+                return true;
+            } catch(e) { return false; }
+        }
+
+        // =========================================================
+        //  BÚSQUEDA DE PRODUCTO
+        // =========================================================
+        async function buscarProducto() {
+            if (isProcessing) return;
+            const codigo = scannerInput.value.trim();
+            if (!codigo) { mostrarNotificacion('Escanee con el handheld','warning'); vibrar('error'); reproducirSonido('error'); return; }
+            if (!datosProductosCargados) await cargarDatosLocalesUnaVez();
+
+            const codigoLower = codigo.toLowerCase();
+            let producto = productos.find(p => {
+                if ((p.sku||'').toString().toLowerCase() === codigoLower) return true;
+                if ((p.barcode||'').toString().toLowerCase() === codigoLower) return true;
+                if (p.barcodes && Array.isArray(p.barcodes)) return p.barcodes.some(bc => bc.toString().toLowerCase() === codigoLower);
+                return false;
+            });
+
+            if (!producto && db) {
+                try {
+                    mostrarLoading(true, "Buscando producto...", "Buscando en la base de datos...", 30);
+                    const snap = await db.collection('products').get();
+                    snap.forEach(doc => {
+                        if (producto) return;
+                        const d = doc.data();
+                        const skuL = (d.sku||'').toString().toLowerCase();
+                        const bcL  = (d.barcode||'').toString().toLowerCase();
+                        if (skuL===codigoLower || bcL===codigoLower || (d.barcodes&&Array.isArray(d.barcodes)&&d.barcodes.some(bc=>bc.toString().toLowerCase()===codigoLower))) {
+                            producto = { id:d.id||doc.id, sku:d.sku, name:d.name, barcode:d.barcode, barcodes:d.barcodes, proveedor:d.proveedor, bodega:d.bodega||0, tienda:d.tienda||0, lastTransfer:d.lastTransfer||null };
+                        }
+                    });
+                    if (producto) { const ex = productos.find(p=>p.id===producto.id); if(!ex){productos.push(producto);localStorage.setItem('handheldProductos',JSON.stringify(productos));datosProductosCargados=true;} }
+                } catch(e) { console.error(e); }
+                finally { mostrarLoading(false); }
+            }
+
+            if (producto) { mostrarModalTraslado(producto); vibrar('success'); reproducirSonido('success'); }
+            else {
+                Swal.fire({ title:"¡Producto no encontrado!", text:`No se encontró ningún producto con el código: ${codigo}`, icon:"error", confirmButtonText:"OK", confirmButtonColor:"#dc3545" });
+                vibrar('error'); reproducirSonido('error'); scannerInput.value=''; scannerInput.focus();
+            }
+        }
+
+        // =========================================================
+        //  HISTORIAL
+        // =========================================================
+        function mostrarHistorial() {
+            historialList.innerHTML = '';
+            const transferencias = historial.filter(t => t.tipo==='transferencia');
+            if (!transferencias.length) {
+                historialList.innerHTML = `<div class="empty-historial"><div class="empty-icon"><i class="bi bi-arrow-left-right"></i></div><p>No hay transferencias registradas</p></div>`;
+                historialCount.textContent = "0"; return;
+            }
+            historialCount.textContent = transferencias.length + " transferencias";
+            transferencias.forEach(t => {
+                const tiempoRelativo = formatTimeAgo(t.timestamp);
+                const tipoClase = t.origen==='bodega'?'out':'in';
+                const icono     = t.origen==='bodega'?'bi-arrow-right':'bi-arrow-left';
+                const origen    = t.origen==='bodega'?'Bodega':'Tienda';
+                const destino   = t.destino==='bodega'?'Bodega':'Tienda';
+                const offlineBadge = !t.sincronizado ? '<span class="offline-badge"><i class="bi bi-wifi-off"></i> Pendiente</span>' : '';
+                const el = document.createElement('div');
+                el.className = `historial-item ${tipoClase} ${t.sincronizado?'':'offline'}`;
+                el.innerHTML = `
+                    <div class="historial-header">
+                        <div class="historial-product" title="${t.producto}">${t.producto}</div>
+                        <div class="historial-quantity">${t.cantidad} uds ${offlineBadge}</div>
+                    </div>
+                    <div class="historial-details"><i class="bi ${icono}"></i> ${origen} → ${destino}</div>
+                    <div class="historial-details"><i class="bi bi-upc-scan"></i> SKU: ${t.sku}</div>
+                    <div class="historial-time"><i class="bi bi-clock"></i> ${tiempoRelativo}</div>`;
+                historialList.appendChild(el);
+            });
+        }
+
+        // =========================================================
+        //  INFO CONFIGURACIÓN
+        // =========================================================
+        function actualizarInfoConfiguracion() {
+            firebaseStatus.textContent = db&&isOnline?'Conectado':'Desconectado';
+            firebaseStatus.style.color = db&&isOnline?'var(--success)':'var(--danger)';
+            productCount.textContent = productos.length;
+            actualizarContadorTraslados();
+            const ls = localStorage.getItem('lastSync');
+            if (ls) lastSync.textContent = new Date(ls).toLocaleTimeString('es-ES');
+            userTypeDisplay.textContent = config.userType==='admin'?'Administrador':'Usuario normal';
+            userTypeDisplay.style.color = config.userType==='admin'?'var(--warning)':'var(--secondary)';
+            pendientesCount.textContent = colaSincronizacion.filter(x=>x.estado==='pendiente').length;
+        }
+
+        function actualizarContadorTraslados() {
+            trasladosToday.textContent = historial.filter(t=>t.tipo==='transferencia').length;
+        }
+
+        // =========================================================
+        //  VIBRACIÓN / SONIDO
+        // =========================================================
+        function vibrar(tipo) {
+            if (!navigator.vibrate || config.vibrationMode!=='on') return;
+            if (tipo==='success')  navigator.vibrate([100,50,100]);
+            else if(tipo==='error')    navigator.vibrate([200,100,200]);
+            else if(tipo==='transfer') navigator.vibrate([100,50,100,50,100]);
+        }
+
+        function reproducirSonido(tipo) {
+            if (config.soundMode!=='on') return;
+            try {
+                const ctx = new (window.AudioContext||window.webkitAudioContext)();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.connect(gain); gain.connect(ctx.destination);
+                if (tipo==='success') { osc.frequency.setValueAtTime(800,ctx.currentTime); osc.frequency.setValueAtTime(1200,ctx.currentTime+0.1); }
+                else { osc.frequency.setValueAtTime(200,ctx.currentTime); osc.frequency.setValueAtTime(150,ctx.currentTime+0.1); osc.frequency.setValueAtTime(100,ctx.currentTime+0.2); }
+                gain.gain.setValueAtTime(0.3,ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01,ctx.currentTime+0.3);
+                osc.start(ctx.currentTime); osc.stop(ctx.currentTime+0.3);
+            } catch(e) {}
+        }
+
+        // =========================================================
+        //  HANDHELD SCANNER
+        // =========================================================
+        function setupHandheldScanner() {
+            document.addEventListener('click', e => { if (e.target!==scannerInput && !scannerInput.contains(e.target) && !modalOpen) scannerInput.focus(); });
+            let t;
+            scannerInput.addEventListener('input', () => {
+                clearTimeout(t);
+                t = setTimeout(() => { if (scannerInput.value && !currentProduct && !modalOpen) scannerInput.value=''; }, 30000);
+            });
+        }
+    </script>
+</body>
+</html>
