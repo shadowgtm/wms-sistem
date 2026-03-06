@@ -7,11 +7,7 @@
     <link rel="icon" type="image/x-icon" href="https://cdn-icons-png.flaticon.com/512/891/891419.png">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
-
-    <!-- ✅ Supabase JS (reemplaza Firebase) -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-    <!-- SheetJS para exportar a Excel -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
     <style>
@@ -367,11 +363,8 @@
             <div class="form-group">
                 <h3><i class="fas fa-sync-alt"></i> Actualización Masiva de Stock</h3>
                 <p>Formato: <strong>SKU | Existencia Bodega | Existencia Tienda</strong></p>
-                <p>Ejemplo: <code>DPI001 | 10 | 5</code></p>
-                <p style="color:var(--info);font-size:0.9rem;margin-top:5px;">
-                    <i class="fas fa-info-circle"></i> SKU duplicados en múltiples líneas se sumarán automáticamente.
-                </p>
-                <textarea id="actualizarStockData" rows="15" placeholder="DPI001 | 10 | 5&#10;DPI001 | 5 | 2&#10;DPI002 | 15 | 8" style="width:100%;padding:0.875rem 1rem;border:2px solid var(--border);border-radius:10px;font-size:0.9375rem;margin-top:1rem;"></textarea>
+                <p>Ejemplo: <code>ACM558 | 10 | 5</code></p>
+                <textarea id="actualizarStockData" rows="15" placeholder="ACM558 | 10 | 5&#10;ACM559 | 15 | 8" style="width:100%;padding:0.875rem 1rem;border:2px solid var(--border);border-radius:10px;font-size:0.9375rem;margin-top:1rem;"></textarea>
             </div>
             <div class="checkbox-group">
                 <input type="checkbox" id="actualizarSoloBodega">
@@ -408,7 +401,6 @@
                         <i class="fas fa-cloud-upload-alt"></i>
                         <p>Arrastra y suelta tu archivo JSON aquí o haz clic para seleccionar</p>
                         <input type="file" id="jsonFileInput" accept=".json" style="display:none;">
-                        <p style="font-size:0.85rem;color:#999;margin-top:10px;">Formato: SKU | Producto | Cód. Barra | Existencia</p>
                     </div>
                     <div class="checkbox-group">
                         <input type="checkbox" id="importarActualizarStock">
@@ -449,29 +441,6 @@
                     <div class="stat-card"><div class="stat-icon tienda-icon"><i class="fas fa-store"></i></div><div class="stat-info"><h3 id="totalTienda">0</h3><p>Productos en tienda</p></div></div>
                     <div class="stat-card"><div class="stat-icon proveedor-icon"><i class="fas fa-truck"></i></div><div class="stat-info"><h3 id="totalProveedores">0</h3><p>Proveedores</p></div></div>
                     <div class="stat-card"><div class="stat-icon historial-icon"><i class="fas fa-history"></i></div><div class="stat-info"><h3 id="totalMovimientos">0</h3><p>Movimientos</p></div></div>
-                </div>
-                <div class="info-grid">
-                    <div class="info-card">
-                        <h4><i class="fas fa-cogs"></i> Características del Sistema</h4>
-                        <ul>
-                            <li><strong>Inventario:</strong> Gestión completa de productos</li>
-                            <li><strong>Proveedores:</strong> Administración y filtrado</li>
-                            <li><strong>Actualización:</strong> Stock masivo y rápido</li>
-                            <li><strong>Historial:</strong> Registro de movimientos</li>
-                            <li><strong>Importación:</strong> Carga desde archivos</li>
-                            <li><strong>Exportación:</strong> Descarga en múltiples formatos</li>
-                            <li><strong>Actualizar Items:</strong> Sincroniza nombres/códigos sin afectar stock</li>
-                        </ul>
-                    </div>
-                    <div class="info-card">
-                        <h4><i class="fas fa-shield-alt"></i> Seguridad y Acceso</h4>
-                        <ul>
-                            <li><strong>Backend:</strong> Supabase (PostgreSQL)</li>
-                            <li><strong>Controles:</strong> Permisos según roles</li>
-                            <li><strong>Backup:</strong> Datos sincronizados en la nube</li>
-                            <li><strong>Confidencialidad:</strong> Protección de información</li>
-                        </ul>
-                    </div>
                 </div>
             </div>
         </div>
@@ -514,7 +483,7 @@
             </div>
             <div class="form-group">
                 <p>Formato: <strong>SKU | Producto | Cód. Barra | Existencia</strong></p>
-                <textarea id="importData" rows="10" placeholder="DPI001 | BACINICA PARA NIÑOS | DPI001 | 10" style="width:100%;padding:0.875rem 1rem;border:2px solid var(--border);border-radius:10px;font-size:0.9375rem;margin-top:0.5rem;"></textarea>
+                <textarea id="importData" rows="10" placeholder="ACM558 | BATERIA D/COCINA LAZIO PICCA 10PZ REC | 380297513705 | 10" style="width:100%;padding:0.875rem 1rem;border:2px solid var(--border);border-radius:10px;font-size:0.9375rem;margin-top:0.5rem;"></textarea>
             </div>
             <div class="checkbox-group">
                 <input type="checkbox" id="importRapidoActualizarStock">
@@ -538,7 +507,7 @@
             <div class="form-group">
                 <p>Formato: <strong>SKU | Producto | Cód. Barra</strong></p>
                 <p>Este proceso <strong style="color:var(--warning);">NO MODIFICARÁ</strong> las existencias actuales.</p>
-                <textarea id="actualizarItemsData" rows="10" placeholder="DPI001 | BACINICA PARA NIÑOS | 123456789" style="width:100%;padding:0.875rem 1rem;border:2px solid var(--border);border-radius:10px;font-size:0.9375rem;margin-top:0.5rem;"></textarea>
+                <textarea id="actualizarItemsData" rows="10" placeholder="ACM558 | BATERIA D/COCINA LAZIO PICCA 10PZ REC | 380297513705" style="width:100%;padding:0.875rem 1rem;border:2px solid var(--border);border-radius:10px;font-size:0.9375rem;margin-top:0.5rem;"></textarea>
             </div>
             <div class="form-group">
                 <label for="actualizarItemsProveedor">Proveedor</label>
@@ -578,8 +547,14 @@
 const SUPABASE_URL = 'https://cuxenrijxfnbubmdjizj.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_0kPsSgQZMWea4P-yjovhhA_fRkQewG0';
 
-// ✅ Usamos 'db' para evitar conflicto con window.supabase
-const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+// ✅ Cliente Supabase
+const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    auth: {
+        persistSession: false,
+        autoRefreshToken: false,
+        detectSessionInUrl: false
+    }
+});
 
 // ==============================================
 // ESTADO DE LA APLICACIÓN
@@ -611,125 +586,235 @@ const barcodesContainer = document.getElementById('barcodesContainer');
 const tableHeaders = document.querySelectorAll('#inventarioTab th[data-sort]');
 
 // ==============================================
-// CARGA DE DATOS DESDE SUPABASE
+// FUNCIÓN PARA DECODIFICAR JSONB DE SUPABASE
+// ==============================================
+function parseBarcodes(barcodesData) {
+    if (!barcodesData) return [];
+    
+    // Si ya es un array, devolverlo
+    if (Array.isArray(barcodesData)) {
+        return barcodesData;
+    }
+    
+    // Si es un string, intentar parsearlo como JSON
+    if (typeof barcodesData === 'string') {
+        try {
+            const parsed = JSON.parse(barcodesData);
+            return Array.isArray(parsed) ? parsed : [barcodesData];
+        } catch {
+            // Si no es JSON válido, tratarlo como un código de barras simple
+            return [barcodesData];
+        }
+    }
+    
+    // Si es un objeto (posiblemente de PostgreSQL), intentar convertirlo
+    if (typeof barcodesData === 'object') {
+        try {
+            // PostgreSQL a veces devuelve arrays como objetos con índices
+            return Object.values(barcodesData).filter(v => v !== null);
+        } catch {
+            return [];
+        }
+    }
+    
+    return [];
+}
+
+// ==============================================
+// CARGA DE DATOS DESDE SUPABASE (CORREGIDA)
 // ==============================================
 async function loadDataFromSupabase() {
     try {
         updateConnectionStatus(false, true);
+        console.log('Cargando datos desde Supabase...');
 
-        // 1. Proveedores
+        // 1. Cargar proveedores
         const { data: provData, error: provError } = await db
             .from('proveedores')
             .select('*')
             .order('codigo');
-        if (provError) throw provError;
+            
+        if (provError) {
+            console.error('Error cargando proveedores:', provError);
+            throw provError;
+        }
+        
         proveedores = (provData || []).map(p => ({
             id: p.id,
-            codigo: p.codigo,
-            nombre: p.nombre,
+            codigo: p.codigo || '',
+            nombre: p.nombre || '',
             descripcion: p.descripcion || '',
             contacto: p.contacto || '',
             telefono: p.telefono || '',
             email: p.email || ''
         }));
+        
+        console.log(`Cargados ${proveedores.length} proveedores`);
 
-        // 2. Productos
+        // 2. Cargar productos (SIN columns en la URL)
         const { data: prodData, error: prodError } = await db
             .from('productos')
-            .select('*')
+            .select(`
+                id,
+                sku,
+                nombre,
+                barcode_principal,
+                barcodes,
+                proveedor_id,
+                stock_bodega,
+                stock_tienda,
+                ultimo_envio
+            `)
             .order('id');
-        if (prodError) throw prodError;
+            
+        if (prodError) {
+            console.error('Error cargando productos:', prodError);
+            throw prodError;
+        }
+        
+        console.log('Productos recibidos:', prodData);
+        
         inventory = (prodData || []).map(p => {
+            // Buscar proveedor
             const prov = proveedores.find(pr => pr.id === p.proveedor_id);
-            const provNombre = prov ? `${prov.codigo} - ${prov.nombre}` : (p.proveedor || 'Sin proveedor');
+            const provNombre = prov ? `${prov.codigo} - ${prov.nombre}` : 'Sin proveedor';
+            
+            // Procesar barcodes
+            const barcodesArray = parseBarcodes(p.barcodes);
+            const barcodePrincipal = p.barcode_principal || (barcodesArray.length > 0 ? barcodesArray[0] : '');
+            
             return {
                 id: p.id,
-                sku: p.sku,
-                name: p.nombre,
-                barcode: p.barcode_principal || '',
-                barcodes: p.barcodes || [p.barcode_principal || ''],
+                sku: p.sku || '',
+                name: p.nombre || '',
+                barcode: barcodePrincipal,
+                barcodes: barcodesArray,
                 proveedor: provNombre,
                 proveedor_id: p.proveedor_id,
-                bodega: p.stock_bodega || 0,
-                tienda: p.stock_tienda || 0,
+                bodega: Number(p.stock_bodega) || 0,
+                tienda: Number(p.stock_tienda) || 0,
                 lastTransfer: p.ultimo_envio ? new Date(p.ultimo_envio).getTime() : null
             };
         });
+        
+        console.log(`Cargados ${inventory.length} productos`);
 
-        // 3. Historial
+        // 3. Cargar historial
         const { data: histData, error: histError } = await db
             .from('historial')
             .select('*')
             .order('created_at', { ascending: false })
             .limit(100);
-        if (histError) throw histError;
+            
+        if (histError) {
+            console.error('Error cargando historial:', histError);
+            throw histError;
+        }
+        
         historial = (histData || []).map(h => ({
             id: h.id,
-            timestamp: new Date(h.created_at).getTime(),
-            tipo: h.tipo,
-            producto: h.producto_nombre,
-            sku: h.producto_sku,
-            cantidad: h.cantidad,
-            origen: h.origen,
-            destino: h.destino,
-            usuario: h.usuario
+            timestamp: h.created_at ? new Date(h.created_at).getTime() : Date.now(),
+            tipo: h.tipo || 'sistema',
+            producto: h.producto_nombre || 'Desconocido',
+            sku: h.producto_sku || 'N/A',
+            cantidad: h.cantidad || 0,
+            origen: h.origen || '',
+            destino: h.destino || '',
+            usuario: h.usuario || 'Sistema'
         }));
 
         updateConnectionStatus(true, false);
         refreshAllUI();
         return true;
+        
     } catch (error) {
-        console.error('Error cargando datos:', error);
+        console.error('Error detallado cargando datos:', error);
         updateConnectionStatus(false, false);
-        Swal.fire('Error de conexión', `No se pudo conectar a Supabase: ${error.message}`, 'error');
+        
+        let errorMessage = 'No se pudo conectar a Supabase';
+        if (error.message) errorMessage += ': ' + error.message;
+        if (error.details) errorMessage += '\nDetalles: ' + error.details;
+        if (error.hint) errorMessage += '\nSugerencia: ' + error.hint;
+        
+        Swal.fire({
+            icon: 'error',
+            title: 'Error de conexión',
+            text: errorMessage,
+            footer: 'Verifica la consola para más detalles (F12)'
+        });
         return false;
     }
 }
 
 function refreshAllUI() {
-    updateInventoryTable(searchInput.value);
+    updateInventoryTable(searchInput ? searchInput.value : '');
     updateProveedorTable();
     updateStats();
     updateHistorial();
     updateProveedorSelects();
     updateProveedoresList();
-    setupTableActions();
 }
 
 // ==============================================
-// GUARDAR EN SUPABASE
+// GUARDAR EN SUPABASE (CORREGIDA)
 // ==============================================
 async function saveProductToSupabase(productData, isUpdate = false) {
-    let proveedorId = null;
-    if (productData.proveedor) {
-        const codigo = productData.proveedor.split(' - ')[0];
-        const prov = proveedores.find(p => p.codigo === codigo);
-        if (prov) proveedorId = prov.id;
+    try {
+        // Obtener proveedor_id
+        let proveedorId = null;
+        if (productData.proveedor) {
+            const codigo = productData.proveedor.split(' - ')[0];
+            const prov = proveedores.find(p => p.codigo === codigo);
+            if (prov) proveedorId = prov.id;
+        }
+
+        // Preparar datos
+        const row = {
+            sku: productData.sku,
+            nombre: productData.name,
+            barcode_principal: productData.barcode,
+            barcodes: productData.barcodes || [productData.barcode],
+            proveedor_id: proveedorId,
+            stock_bodega: Number(productData.bodega) || 0,
+            stock_tienda: Number(productData.tienda) || 0
+        };
+
+        console.log('Guardando producto:', row);
+        
+        let result;
+        if (isUpdate) {
+            // UPDATE sin columns en la URL
+            result = await db
+                .from('productos')
+                .update(row)
+                .eq('id', productData.id)
+                .select();
+        } else {
+            // INSERT sin columns en la URL
+            result = await db
+                .from('productos')
+                .insert([row])
+                .select();
+        }
+
+        if (result.error) {
+            console.error('Error en saveProductToSupabase:', result.error);
+            throw result.error;
+        }
+        
+        return result.data ? result.data[0] : null;
+        
+    } catch (error) {
+        console.error('Error en saveProductToSupabase:', error);
+        throw error;
     }
-
-    const row = {
-        sku: productData.sku,
-        nombre: productData.name,
-        barcode_principal: productData.barcode,
-        barcodes: productData.barcodes || [productData.barcode],
-        proveedor_id: proveedorId,
-        stock_bodega: productData.bodega,
-        stock_tienda: productData.tienda
-    };
-
-    let result;
-    if (isUpdate) {
-        result = await db.from('productos').update(row).eq('id', productData.id).select();
-    } else {
-        result = await db.from('productos').insert([row]).select();
-    }
-
-    if (result.error) throw result.error;
-    return result.data[0];
 }
 
 async function deleteProductFromSupabase(id) {
-    const { error } = await db.from('productos').delete().eq('id', id);
+    const { error } = await db
+        .from('productos')
+        .delete()
+        .eq('id', id);
     if (error) throw error;
 }
 
@@ -745,9 +830,16 @@ async function saveProveedorToSupabase(proveedorData, isUpdate = false) {
 
     let result;
     if (isUpdate) {
-        result = await db.from('proveedores').update(row).eq('id', proveedorData.id).select();
+        result = await db
+            .from('proveedores')
+            .update(row)
+            .eq('id', proveedorData.id)
+            .select();
     } else {
-        result = await db.from('proveedores').insert([row]).select();
+        result = await db
+            .from('proveedores')
+            .insert([row])
+            .select();
     }
 
     if (result.error) throw result.error;
@@ -755,28 +847,43 @@ async function saveProveedorToSupabase(proveedorData, isUpdate = false) {
 }
 
 async function deleteProveedorFromSupabase(id) {
-    const { error } = await db.from('proveedores').delete().eq('id', id);
+    const { error } = await db
+        .from('proveedores')
+        .delete()
+        .eq('id', id);
     if (error) throw error;
 }
 
 async function saveHistoryToSupabase(tipo, productoId, cantidad, origen, destino) {
-    const producto = inventory.find(p => p.id === productoId);
-    const row = {
-        tipo,
-        producto_id: productoId || null,
-        producto_nombre: producto ? producto.name : 'Importación múltiple',
-        producto_sku: producto ? producto.sku : 'N/A',
-        cantidad,
-        origen,
-        destino,
-        usuario: currentUser ? currentUser.username : 'Admin'
-    };
-    const { error } = await db.from('historial').insert([row]);
-    if (error) console.warn('Error guardando historial:', error.message);
+    try {
+        const producto = inventory.find(p => p.id === productoId);
+        const row = {
+            tipo,
+            producto_id: productoId || null,
+            producto_nombre: producto ? producto.name : 'Importación múltiple',
+            producto_sku: producto ? producto.sku : 'N/A',
+            cantidad: cantidad || 0,
+            origen: origen || 'sistema',
+            destino: destino || 'inventario',
+            usuario: currentUser ? currentUser.username : 'Admin'
+        };
+        
+        const { error } = await db
+            .from('historial')
+            .insert([row]);
+            
+        if (error) console.warn('Error guardando historial:', error.message);
+        
+    } catch (error) {
+        console.warn('Error en saveHistoryToSupabase:', error);
+    }
 }
 
 async function clearHistoryFromSupabase() {
-    const { error } = await db.from('historial').delete().neq('id', 0);
+    const { error } = await db
+        .from('historial')
+        .delete()
+        .neq('id', 0);
     if (error) throw error;
 }
 
@@ -797,8 +904,6 @@ function updateConnectionStatus(online, loading = false) {
     }
 }
 
-function getCurrentTimestamp() { return Date.now(); }
-
 function formatTimeAgo(timestamp) {
     if (!timestamp) return "Nunca";
     const diff = Date.now() - timestamp;
@@ -809,6 +914,7 @@ function formatTimeAgo(timestamp) {
     const w = Math.floor(d / 7);
     const mo = Math.floor(d / 30);
     const y = Math.floor(d / 365);
+    
     if (s < 60) return "hace un momento";
     if (m < 60) return m === 1 ? "hace 1 minuto" : `hace ${m} minutos`;
     if (h < 24) return h === 1 ? "hace 1 hora" : `hace ${h} horas`;
@@ -816,11 +922,6 @@ function formatTimeAgo(timestamp) {
     if (w < 4) return w === 1 ? "hace 1 semana" : `hace ${w} semanas`;
     if (mo < 12) return mo === 1 ? "hace 1 mes" : `hace ${mo} meses`;
     return y === 1 ? "hace 1 año" : `hace ${y} años`;
-}
-
-function formatFullDate(timestamp) {
-    if (!timestamp) return "Fecha no disponible";
-    return new Date(timestamp).toLocaleString('es-GT', { year:'numeric', month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit', second:'2-digit' });
 }
 
 function getTimeAgoClass(timestamp) {
@@ -838,8 +939,8 @@ function getStockLevelClass(stock) {
 }
 
 function getProveedoresUnicos() {
-    const fromProducts = inventory.map(p => p.proveedor);
-    const fromList = proveedores.map(p => `${p.codigo} - ${p.nombre}`);
+    const fromProducts = inventory.map(p => p.proveedor).filter(Boolean);
+    const fromList = proveedores.map(p => `${p.codigo} - ${p.nombre}`).filter(Boolean);
     return [...new Set([...fromProducts, ...fromList])].sort();
 }
 
@@ -862,19 +963,21 @@ function sortByField(field) {
 }
 
 function sortProducts(products) {
-    if (!currentSortField) return products;
+    if (!currentSortField || !products) return products || [];
     return [...products].sort((a, b) => {
         let av, bv;
         switch(currentSortField) {
-            case 'sku': av = a.sku; bv = b.sku; break;
-            case 'name': av = a.name; bv = b.name; break;
-            case 'barcode': av = a.barcode; bv = b.barcode; break;
-            case 'proveedor': av = a.proveedor; bv = b.proveedor; break;
-            case 'stock': av = a.bodega; bv = b.bodega; break;
+            case 'sku': av = a.sku || ''; bv = b.sku || ''; break;
+            case 'name': av = a.name || ''; bv = b.name || ''; break;
+            case 'barcode': av = a.barcode || ''; bv = b.barcode || ''; break;
+            case 'proveedor': av = a.proveedor || ''; bv = b.proveedor || ''; break;
+            case 'stock': av = a.bodega || 0; bv = b.bodega || 0; break;
             case 'envio': av = a.lastTransfer || 0; bv = b.lastTransfer || 0; break;
             default: return 0;
         }
-        if (typeof av === 'string') return currentSortDirection === 'asc' ? av.localeCompare(bv) : bv.localeCompare(av);
+        if (typeof av === 'string') {
+            return currentSortDirection === 'asc' ? av.localeCompare(bv) : bv.localeCompare(av);
+        }
         return currentSortDirection === 'asc' ? av - bv : bv - av;
     });
 }
@@ -896,47 +999,48 @@ function configurePermissionsByRole() {
     });
 }
 
-function setupTableActions() {}
-
 // ==============================================
 // ACTUALIZAR TABLAS
 // ==============================================
 function updateInventoryTable(searchTerm = '') {
     inventoryTableBody.innerHTML = '';
-    if (inventory.length === 0) {
-        inventoryTableBody.innerHTML = '<tr><td colspan="7" class="loading-spinner"><div class="spinner-large" style="margin:0 auto;"></div></td></tr>';
+    
+    if (!inventory || inventory.length === 0) {
+        inventoryTableBody.innerHTML = '<tr><td colspan="7" class="loading-spinner"><div class="spinner-large"></div><p>Cargando productos...</p></td></tr>';
         return;
     }
 
     let filtered = inventory.filter(p => {
         if (!searchTerm) return true;
         const t = searchTerm.toLowerCase();
-        return p.sku.toLowerCase().includes(t) || p.name.toLowerCase().includes(t) ||
-               p.barcode.toLowerCase().includes(t) || p.proveedor.toLowerCase().includes(t) ||
-               (p.barcodes && p.barcodes.some(bc => bc.toLowerCase().includes(t)));
+        return (p.sku && p.sku.toLowerCase().includes(t)) || 
+               (p.name && p.name.toLowerCase().includes(t)) ||
+               (p.barcode && p.barcode.toLowerCase().includes(t)) || 
+               (p.proveedor && p.proveedor.toLowerCase().includes(t)) ||
+               (p.barcodes && p.barcodes.some(bc => bc && bc.toLowerCase().includes(t)));
     });
 
     const sorted = sortProducts(filtered);
     const isAdmin = currentUser && currentUser.role === 'admin';
 
     if (sorted.length === 0) {
-        inventoryTableBody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:40px;color:#666;"><i class="fas fa-box-open" style="font-size:2rem;display:block;margin-bottom:10px;color:#ccc;"></i>${inventory.length === 0 ? 'No hay productos. Agrega tu primer producto.' : 'No se encontraron productos.'}</td></tr>`;
+        inventoryTableBody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:40px;color:#666;"><i class="fas fa-box-open" style="font-size:2rem;display:block;margin-bottom:10px;color:#ccc;"></i>No se encontraron productos.</td></tr>`;
         return;
     }
 
     sorted.forEach(p => {
         const row = document.createElement('tr');
         row.innerHTML = `
-            <td><strong>${p.sku}</strong></td>
-            <td>${p.name}</td>
-            <td>${p.barcode}</td>
-            <td>${p.proveedor}</td>
+            <td><strong>${p.sku || ''}</strong></td>
+            <td>${p.name || ''}</td>
+            <td>${p.barcode || ''}</td>
+            <td>${p.proveedor || 'Sin proveedor'}</td>
             <td class="stock-cell ${getStockLevelClass(p.bodega)}">${p.bodega}</td>
             <td><span class="ultimo-envio ${getTimeAgoClass(p.lastTransfer)}">${formatTimeAgo(p.lastTransfer)}</span></td>
             <td class="actions-cell">
                 ${isAdmin ? `
-                <button class="action-btn edit-btn" onclick="editProduct(${p.id})"><i class="fas fa-edit"></i></button>
-                <button class="action-btn delete-btn" onclick="deleteProduct(${p.id})"><i class="fas fa-trash"></i></button>
+                <button class="action-btn edit-btn" onclick="editProduct(${p.id})"><i class="fas fa-edit"></i> Editar</button>
+                <button class="action-btn delete-btn" onclick="deleteProduct(${p.id})"><i class="fas fa-trash"></i> Eliminar</button>
                 ` : '<span style="color:#999;">Solo lectura</span>'}
             </td>
         `;
@@ -946,13 +1050,21 @@ function updateInventoryTable(searchTerm = '') {
 
 function updateProveedorTable() {
     proveedorTableBody.innerHTML = '';
+    
+    if (!inventory || inventory.length === 0) {
+        proveedorTableBody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:40px;">No hay productos disponibles</td></tr>';
+        return;
+    }
+    
     let filtered = currentProveedorFilter ? inventory.filter(p => p.proveedor === currentProveedorFilter) : [...inventory];
 
     const term = document.getElementById('proveedorProductSearch')?.value.toLowerCase().trim();
     if (term) {
         filtered = filtered.filter(p =>
-            p.sku.toLowerCase().includes(term) || p.name.toLowerCase().includes(term) ||
-            p.barcode.toLowerCase().includes(term) || p.proveedor.toLowerCase().includes(term)
+            (p.sku && p.sku.toLowerCase().includes(term)) || 
+            (p.name && p.name.toLowerCase().includes(term)) ||
+            (p.barcode && p.barcode.toLowerCase().includes(term)) || 
+            (p.proveedor && p.proveedor.toLowerCase().includes(term))
         );
     }
 
@@ -971,16 +1083,16 @@ function updateProveedorTable() {
     filtered.forEach(p => {
         const row = document.createElement('tr');
         row.innerHTML = `
-            <td><strong>${p.sku}</strong></td>
-            <td>${p.name}</td>
-            <td>${p.barcode}</td>
-            <td>${p.proveedor}</td>
+            <td><strong>${p.sku || ''}</strong></td>
+            <td>${p.name || ''}</td>
+            <td>${p.barcode || ''}</td>
+            <td>${p.proveedor || 'Sin proveedor'}</td>
             <td class="stock-cell ${getStockLevelClass(p.bodega)}">${p.bodega}</td>
             <td><span class="ultimo-envio ${getTimeAgoClass(p.lastTransfer)}">${formatTimeAgo(p.lastTransfer)}</span></td>
             <td class="actions-cell">
                 ${isAdmin ? `
-                <button class="action-btn edit-btn" onclick="editProduct(${p.id})"><i class="fas fa-edit"></i></button>
-                <button class="action-btn delete-btn" onclick="deleteProduct(${p.id})"><i class="fas fa-trash"></i></button>
+                <button class="action-btn edit-btn" onclick="editProduct(${p.id})"><i class="fas fa-edit"></i> Editar</button>
+                <button class="action-btn delete-btn" onclick="deleteProduct(${p.id})"><i class="fas fa-trash"></i> Eliminar</button>
                 ` : '<span style="color:#999;">Solo lectura</span>'}
             </td>
         `;
@@ -989,8 +1101,8 @@ function updateProveedorTable() {
 }
 
 function updateStats() {
-    document.getElementById('totalBodega').textContent = inventory.reduce((s, p) => s + p.bodega, 0);
-    document.getElementById('totalTienda').textContent = inventory.reduce((s, p) => s + p.tienda, 0);
+    document.getElementById('totalBodega').textContent = inventory.reduce((s, p) => s + (p.bodega || 0), 0);
+    document.getElementById('totalTienda').textContent = inventory.reduce((s, p) => s + (p.tienda || 0), 0);
     document.getElementById('totalProveedores').textContent = proveedores.length;
     document.getElementById('totalMovimientos').textContent = historial.length;
 }
@@ -1035,8 +1147,8 @@ function updateProveedoresList() {
             </div>
             ${isAdmin ? `
             <div style="display:flex;gap:0.5rem;">
-                <button class="action-btn edit-btn" onclick="editProveedor(${p.id})"><i class="fas fa-edit"></i></button>
-                <button class="action-btn delete-btn" onclick="deleteProveedor(${p.id})"><i class="fas fa-trash"></i></button>
+                <button class="action-btn edit-btn" onclick="editProveedor(${p.id})"><i class="fas fa-edit"></i> Editar</button>
+                <button class="action-btn delete-btn" onclick="deleteProveedor(${p.id})"><i class="fas fa-trash"></i> Eliminar</button>
             </div>` : ''}
         `;
         proveedoresContainer.appendChild(card);
@@ -1088,16 +1200,20 @@ function editProduct(id) {
     if (!p) return;
     editingProductId = id;
     document.getElementById('modalTitle').textContent = 'Editar Producto';
-    document.getElementById('productSKU').value = p.sku;
-    document.getElementById('productBarCode').value = p.barcode;
-    document.getElementById('productName').value = p.name;
-    document.getElementById('productProveedor').value = p.proveedor;
-    document.getElementById('stockBodega').value = p.bodega;
-    document.getElementById('stockTienda').value = p.tienda;
+    document.getElementById('productSKU').value = p.sku || '';
+    document.getElementById('productBarCode').value = p.barcode || '';
+    document.getElementById('productName').value = p.name || '';
+    document.getElementById('productProveedor').value = p.proveedor || '';
+    document.getElementById('stockBodega').value = p.bodega || 0;
+    document.getElementById('stockTienda').value = p.tienda || 0;
+    
     barcodesContainer.innerHTML = '';
     if (p.barcodes && Array.isArray(p.barcodes)) {
-        p.barcodes.forEach((bc, i) => { if (i > 0 || bc !== p.barcode) addBarcodeField(bc); });
+        p.barcodes.forEach((bc, i) => { 
+            if (i > 0 || bc !== p.barcode) addBarcodeField(bc || ''); 
+        });
     }
+    
     document.getElementById('productModal').style.display = 'flex';
 }
 
@@ -1106,16 +1222,19 @@ async function deleteProduct(id) {
     const p = inventory.find(pr => pr.id === id);
     const result = await Swal.fire({
         title: '¿Eliminar producto?',
-        html: `<strong>${p?.name}</strong> (${p?.sku})<br>Esta acción no se puede deshacer.`,
-        icon: 'warning', showCancelButton: true,
-        confirmButtonText: 'Sí, eliminar', cancelButtonText: 'Cancelar'
+        html: `<strong>${p?.name || ''}</strong> (${p?.sku || ''})<br>Esta acción no se puede deshacer.`,
+        icon: 'warning', 
+        showCancelButton: true,
+        confirmButtonText: 'Sí, eliminar', 
+        cancelButtonText: 'Cancelar'
     });
     if (!result.isConfirmed) return;
+    
     try {
-        await saveHistoryToSupabase('eliminacion', id, (p?.bodega||0)+(p?.tienda||0), 'inventario', 'eliminado');
+        await saveHistoryToSupabase('eliminacion', id, ((p?.bodega||0)+(p?.tienda||0)), 'inventario', 'eliminado');
         await deleteProductFromSupabase(id);
         await loadDataFromSupabase();
-        Swal.fire('Eliminado', `${p?.name} fue eliminado.`, 'success');
+        Swal.fire('Eliminado', `${p?.name || 'Producto'} fue eliminado.`, 'success');
     } catch (e) {
         Swal.fire('Error', `No se pudo eliminar: ${e.message}`, 'error');
     }
@@ -1127,8 +1246,8 @@ function editProveedor(id) {
     if (!p) return;
     editingProveedorId = id;
     document.getElementById('proveedorModalTitle').textContent = 'Editar Proveedor';
-    document.getElementById('proveedorCodigo').value = p.codigo;
-    document.getElementById('proveedorNombre').value = p.nombre;
+    document.getElementById('proveedorCodigo').value = p.codigo || '';
+    document.getElementById('proveedorNombre').value = p.nombre || '';
     document.getElementById('proveedorDescripcion').value = p.descripcion || '';
     document.getElementById('proveedorContacto').value = p.contacto || '';
     document.getElementById('proveedorTelefono').value = p.telefono || '';
@@ -1142,15 +1261,18 @@ async function deleteProveedor(id) {
     const count = inventory.filter(prod => prod.proveedor_id === id).length;
     const result = await Swal.fire({
         title: '¿Eliminar proveedor?',
-        html: `<strong>${p?.nombre}</strong><br>${count > 0 ? `⚠️ Tiene ${count} producto(s) asociado(s).` : ''}`,
-        icon: 'warning', showCancelButton: true,
-        confirmButtonText: 'Sí, eliminar', cancelButtonText: 'Cancelar'
+        html: `<strong>${p?.nombre || ''}</strong><br>${count > 0 ? `⚠️ Tiene ${count} producto(s) asociado(s).` : ''}`,
+        icon: 'warning', 
+        showCancelButton: true,
+        confirmButtonText: 'Sí, eliminar', 
+        cancelButtonText: 'Cancelar'
     });
     if (!result.isConfirmed) return;
+    
     try {
         await deleteProveedorFromSupabase(id);
         await loadDataFromSupabase();
-        Swal.fire('Eliminado', `${p?.nombre} fue eliminado.`, 'success');
+        Swal.fire('Eliminado', `${p?.nombre || 'Proveedor'} fue eliminado.`, 'success');
     } catch (e) {
         Swal.fire('Error', `No se pudo eliminar: ${e.message}`, 'error');
     }
@@ -1170,13 +1292,18 @@ function checkAdmin() {
 }
 
 // ==============================================
-// ACTUALIZACIÓN MASIVA DE STOCK
+// ACTUALIZACIÓN MASIVA DE STOCK (CORREGIDA)
 // ==============================================
 async function procesarActualizacionStock() {
     if (!checkAdmin()) return;
+    
     const datos = document.getElementById('actualizarStockData').value.trim();
     const soloBodega = document.getElementById('actualizarSoloBodega').checked;
-    if (!datos) { Swal.fire('Datos vacíos', 'Ingresa datos para actualizar.', 'info'); return; }
+    
+    if (!datos) { 
+        Swal.fire('Datos vacíos', 'Ingresa datos para actualizar.', 'info'); 
+        return; 
+    }
 
     const btn = document.getElementById('btnProcesarActualizacion');
     const orig = btn.innerHTML;
@@ -1186,26 +1313,62 @@ async function procesarActualizacionStock() {
     try {
         const lineas = datos.split('\n');
         const acumulados = {};
+        
         for (const linea of lineas) {
-            const t = linea.trim(); if (!t) continue;
-            const partes = t.split(/[|\t]/).map(p => p.trim());
+            const t = linea.trim(); 
+            if (!t || t.startsWith('SKU')) continue;
+            
+            const partes = t.split('|').map(p => p.trim());
             if (partes.length >= 2) {
-                const [sku, bodega, tienda] = partes;
-                if (!acumulados[sku]) acumulados[sku] = { bodega: 0, tienda: 0 };
+                const [sku, bodega, tienda = '0'] = partes;
+                if (!acumulados[sku]) {
+                    acumulados[sku] = { bodega: 0, tienda: 0 };
+                }
                 acumulados[sku].bodega += parseInt(bodega) || 0;
                 acumulados[sku].tienda += parseInt(tienda) || 0;
             }
         }
 
-        let actualizados = 0, noEncontrados = 0, resultados = [];
+        let actualizados = 0;
+        let noEncontrados = 0;
+        const resultados = [];
+
         for (const [sku, vals] of Object.entries(acumulados)) {
             const p = inventory.find(pr => pr.sku === sku);
-            if (!p) { noEncontrados++; resultados.push({ sku, error: 'No encontrado' }); continue; }
-            const update = { stock_bodega: vals.bodega };
-            if (!soloBodega) update.stock_tienda = vals.tienda;
-            const { error } = await db.from('productos').update(update).eq('id', p.id);
-            if (error) { resultados.push({ sku, error: error.message }); continue; }
-            resultados.push({ sku, nombre: p.name, viejoBodega: p.bodega, nuevoBodega: vals.bodega, viejoTienda: p.tienda, nuevoTienda: vals.tienda });
+            
+            if (!p) { 
+                noEncontrados++; 
+                resultados.push({ sku, error: 'No encontrado' }); 
+                continue; 
+            }
+            
+            const updates = {};
+            if (!soloBodega) {
+                updates.stock_bodega = vals.bodega;
+                updates.stock_tienda = vals.tienda;
+            } else {
+                updates.stock_bodega = vals.bodega;
+            }
+            
+            // UPDATE sin columns en la URL
+            const { error } = await db
+                .from('productos')
+                .update(updates)
+                .eq('id', p.id);
+                
+            if (error) { 
+                resultados.push({ sku, error: error.message }); 
+                continue; 
+            }
+            
+            resultados.push({ 
+                sku, 
+                nombre: p.name, 
+                viejoBodega: p.bodega, 
+                nuevoBodega: vals.bodega,
+                viejoTienda: p.tienda,
+                nuevoTienda: vals.tienda
+            });
             actualizados++;
         }
 
@@ -1217,7 +1380,9 @@ async function procesarActualizacionStock() {
         } else {
             Swal.fire('Sin cambios', `No se encontraron ${noEncontrados} productos.`, 'warning');
         }
+        
     } catch (e) {
+        console.error('Error en actualización:', e);
         Swal.fire('Error', e.message, 'error');
     } finally {
         btn.innerHTML = orig;
@@ -1227,17 +1392,23 @@ async function procesarActualizacionStock() {
 
 function mostrarResultadosActualizacion(resultados, actualizados, noEncontrados) {
     const el = document.getElementById('actualizacionResultado');
+    if (!el) return;
+    
     el.style.display = 'block';
     let html = `<div style="background:white;padding:20px;border-radius:8px;box-shadow:0 2px 4px rgba(0,0,0,0.1);">
         <h4 style="margin-bottom:15px;color:var(--primary-blue);"><i class="fas fa-clipboard-check"></i> Resultados</h4>
         <div style="display:flex;gap:20px;margin-bottom:20px;">
             <div style="flex:1;text-align:center;padding:10px;background:#e8f5e9;border-radius:6px;">
-                <div style="font-size:1.5rem;font-weight:bold;color:var(--success);">${actualizados}</div><div style="font-size:0.9rem;color:#666;">Actualizados</div>
+                <div style="font-size:1.5rem;font-weight:bold;color:var(--success);">${actualizados}</div>
+                <div style="font-size:0.9rem;color:#666;">Actualizados</div>
             </div>
             <div style="flex:1;text-align:center;padding:10px;background:#fff3e0;border-radius:6px;">
-                <div style="font-size:1.5rem;font-weight:bold;color:var(--warning);">${noEncontrados}</div><div style="font-size:0.9rem;color:#666;">No encontrados</div>
+                <div style="font-size:1.5rem;font-weight:bold;color:var(--warning);">${noEncontrados}</div>
+                <div style="font-size:0.9rem;color:#666;">No encontrados</div>
             </div>
-        </div><div style="max-height:300px;overflow-y:auto;">`;
+        </div>
+        <div style="max-height:300px;overflow-y:auto;">`;
+        
     resultados.forEach(r => {
         if (r.error) {
             html += `<div style="padding:10px;margin-bottom:8px;background:#ffebee;border-left:4px solid var(--danger);border-radius:0 4px 4px 0;">
@@ -1246,58 +1417,99 @@ function mostrarResultadosActualizacion(resultados, actualizados, noEncontrados)
             html += `<div style="padding:10px;margin-bottom:8px;background:#f9f9f9;border-left:4px solid var(--success);border-radius:0 4px 4px 0;">
                 <strong style="color:var(--primary-blue);">${r.sku} - ${r.nombre}</strong>
                 <div style="font-size:0.875rem;margin-top:4px;">
-                    Bodega: <strong>${r.viejoBodega} → ${r.nuevoBodega}</strong> &nbsp;|&nbsp; Tienda: <strong>${r.viejoTienda} → ${r.nuevoTienda}</strong>
-                </div></div>`;
+                    Bodega: <strong>${r.viejoBodega} → ${r.nuevoBodega}</strong> &nbsp;|&nbsp; 
+                    Tienda: <strong>${r.viejoTienda} → ${r.nuevoTienda}</strong>
+                </div>
+            </div>`;
         }
     });
+    
     html += `</div></div>`;
     el.innerHTML = html;
 }
 
 // ==============================================
-// IMPORTACIÓN RÁPIDA
+// IMPORTACIÓN RÁPIDA (CORREGIDA)
 // ==============================================
 async function procesarImportacionRapida() {
     if (!checkAdmin()) return;
+    
     const datos = document.getElementById('importData').value.trim();
     const proveedor = document.getElementById('importRapidoProveedor').value;
     const actualizar = document.getElementById('importRapidoActualizarStock').checked;
 
-    if (!datos) { Swal.fire('Datos vacíos', 'Ingresa datos para importar.', 'info'); return; }
-    if (!proveedor) { Swal.fire('Proveedor requerido', 'Selecciona un proveedor.', 'warning'); return; }
+    if (!datos) { 
+        Swal.fire('Datos vacíos', 'Ingresa datos para importar.', 'info'); 
+        return; 
+    }
+    
+    if (!proveedor) { 
+        Swal.fire('Proveedor requerido', 'Selecciona un proveedor.', 'warning'); 
+        return; 
+    }
 
     const btn = document.getElementById('btnProcesarImportacion');
     const orig = btn.innerHTML;
     btn.innerHTML = '<span class="spinner"></span> Procesando...';
     btn.disabled = true;
 
-    let proveedorId = null;
-    const codigo = proveedor.split(' - ')[0];
-    const prov = proveedores.find(p => p.codigo === codigo);
-    if (prov) proveedorId = prov.id;
-
     try {
-        let importados = 0, actualizados = 0;
-        for (const linea of datos.split('\n')) {
-            const t = linea.trim(); if (!t) continue;
-            const partes = t.split(/[|\t]/).map(p => p.trim());
+        let proveedorId = null;
+        const codigo = proveedor.split(' - ')[0];
+        const prov = proveedores.find(p => p.codigo === codigo);
+        if (prov) proveedorId = prov.id;
+
+        let importados = 0;
+        let actualizados = 0;
+        
+        const lineas = datos.split('\n');
+        for (const linea of lineas) {
+            const t = linea.trim(); 
+            if (!t || t.startsWith('SKU')) continue;
+            
+            const partes = t.split('|').map(p => p.trim());
             if (partes.length < 4) continue;
+            
             const [sku, nombre, barcode, existencia] = partes;
             const existe = inventory.find(p => p.sku === sku);
+            
             if (existe) {
-                const update = actualizar
-                    ? { nombre, barcode_principal: barcode, proveedor_id: proveedorId, stock_bodega: parseInt(existencia)||0 }
-                    : { stock_bodega: (existe.bodega + (parseInt(existencia)||0)) };
-                const { error } = await db.from('productos').update(update).eq('id', existe.id);
-                if (!error) actualizados++;
+                if (actualizar) {
+                    const { error } = await db
+                        .from('productos')
+                        .update({ 
+                            nombre, 
+                            barcode_principal: barcode,
+                            barcodes: [barcode],
+                            proveedor_id: proveedorId 
+                        })
+                        .eq('id', existe.id);
+                    if (!error) actualizados++;
+                } else {
+                    const { error } = await db
+                        .from('productos')
+                        .update({ 
+                            stock_bodega: (existe.bodega + (parseInt(existencia)||0)) 
+                        })
+                        .eq('id', existe.id);
+                    if (!error) actualizados++;
+                }
             } else {
-                const { error } = await db.from('productos').insert([{
-                    sku, nombre, barcode_principal: barcode, barcodes: [barcode],
-                    proveedor_id: proveedorId, stock_bodega: parseInt(existencia)||0, stock_tienda: 0
-                }]);
+                const { error } = await db
+                    .from('productos')
+                    .insert([{
+                        sku,
+                        nombre,
+                        barcode_principal: barcode,
+                        barcodes: [barcode],
+                        proveedor_id: proveedorId,
+                        stock_bodega: parseInt(existencia) || 0,
+                        stock_tienda: 0
+                    }]);
                 if (!error) importados++;
             }
         }
+        
         if (importados > 0 || actualizados > 0) {
             await saveHistoryToSupabase('importacion', null, importados + actualizados, 'importacion_rapida', 'inventario');
             await loadDataFromSupabase();
@@ -1306,23 +1518,34 @@ async function procesarImportacionRapida() {
         } else {
             Swal.fire('Error en formato', 'Verifica el formato de los datos.', 'error');
         }
+        
     } catch (e) {
+        console.error('Error en importación:', e);
         Swal.fire('Error', e.message, 'error');
     } finally {
-        btn.innerHTML = orig; btn.disabled = false;
+        btn.innerHTML = orig;
+        btn.disabled = false;
     }
 }
 
 // ==============================================
-// ACTUALIZAR ITEMS (sin modificar stock)
+// ACTUALIZAR ITEMS (CORREGIDA)
 // ==============================================
 async function actualizarItemsDesdeTexto() {
     if (!checkAdmin()) return;
+    
     const datos = document.getElementById('actualizarItemsData').value.trim();
     const proveedor = document.getElementById('actualizarItemsProveedor').value;
 
-    if (!datos) { Swal.fire('Datos vacíos', 'Ingresa datos para actualizar.', 'info'); return; }
-    if (!proveedor) { Swal.fire('Proveedor requerido', 'Selecciona un proveedor.', 'warning'); return; }
+    if (!datos) { 
+        Swal.fire('Datos vacíos', 'Ingresa datos para actualizar.', 'info'); 
+        return; 
+    }
+    
+    if (!proveedor) { 
+        Swal.fire('Proveedor requerido', 'Selecciona un proveedor.', 'warning'); 
+        return; 
+    }
 
     let proveedorId = null;
     const codigo = proveedor.split(' - ')[0];
@@ -1335,11 +1558,18 @@ async function actualizarItemsDesdeTexto() {
     btn.disabled = true;
 
     try {
-        let nuevos = 0, actualizados = 0, sinCambios = 0;
-        for (const linea of datos.split('\n')) {
-            const t = linea.trim(); if (!t) continue;
-            const partes = t.split(/[|\t]/).map(p => p.trim());
+        let nuevos = 0;
+        let actualizados = 0;
+        let sinCambios = 0;
+        
+        const lineas = datos.split('\n');
+        for (const linea of lineas) {
+            const t = linea.trim(); 
+            if (!t || t.startsWith('SKU')) continue;
+            
+            const partes = t.split('|').map(p => p.trim());
             if (partes.length < 3) continue;
+            
             const [sku, nombre, barcode] = partes;
             const existe = inventory.find(p => p.sku === sku);
 
@@ -1354,16 +1584,26 @@ async function actualizarItemsDesdeTexto() {
                 if (proveedorId && existe.proveedor_id !== proveedorId) cambios.proveedor_id = proveedorId;
 
                 if (Object.keys(cambios).length > 0) {
-                    const { error } = await db.from('productos').update(cambios).eq('id', existe.id);
+                    const { error } = await db
+                        .from('productos')
+                        .update(cambios)
+                        .eq('id', existe.id);
                     if (!error) actualizados++;
                 } else {
                     sinCambios++;
                 }
             } else {
-                const { error } = await db.from('productos').insert([{
-                    sku, nombre, barcode_principal: barcode, barcodes: [barcode],
-                    proveedor_id: proveedorId, stock_bodega: 0, stock_tienda: 0
-                }]);
+                const { error } = await db
+                    .from('productos')
+                    .insert([{
+                        sku,
+                        nombre,
+                        barcode_principal: barcode,
+                        barcodes: [barcode],
+                        proveedor_id: proveedorId,
+                        stock_bodega: 0,
+                        stock_tienda: 0
+                    }]);
                 if (!error) nuevos++;
             }
         }
@@ -1376,10 +1616,13 @@ async function actualizarItemsDesdeTexto() {
         } else {
             Swal.fire('Sin cambios', `No se encontraron productos para actualizar. ${sinCambios} sin cambios.`, 'info');
         }
+        
     } catch (e) {
+        console.error('Error en actualización de items:', e);
         Swal.fire('Error', e.message, 'error');
     } finally {
-        btn.innerHTML = orig; btn.disabled = false;
+        btn.innerHTML = orig;
+        btn.disabled = false;
     }
 }
 
@@ -1389,18 +1632,41 @@ async function actualizarItemsDesdeTexto() {
 function exportarProveedores() {
     let contenido = 'Código\tNombre\tDescripción\tContacto\tTeléfono\tEmail\n';
     proveedores.forEach(p => {
-        contenido += `${p.codigo}\t${p.nombre}\t${p.descripcion||''}\t${p.contacto||''}\t${p.telefono||''}\t${p.email||''}\n`;
+        contenido += `${p.codigo || ''}\t${p.nombre || ''}\t${p.descripcion||''}\t${p.contacto||''}\t${p.telefono||''}\t${p.email||''}\n`;
     });
     descargar(contenido, `proveedores_${new Date().toISOString().split('T')[0]}.txt`, 'text/plain');
     Swal.fire('Exportado', 'Lista de proveedores exportada.', 'success');
 }
 
 function exportarInventarioPorProveedorExcel() {
-    if (!currentProveedorFilter) { Swal.fire('Selecciona un proveedor', '', 'info'); return; }
+    if (!currentProveedorFilter) { 
+        Swal.fire('Selecciona un proveedor', '', 'info'); 
+        return; 
+    }
+    
     const productos = inventory.filter(p => p.proveedor === currentProveedorFilter);
-    if (productos.length === 0) { Swal.fire('Sin productos', `${currentProveedorFilter} no tiene productos.`, 'warning'); return; }
-    const datos = [['PROVEEDOR:', currentProveedorFilter], ['FECHA:', new Date().toISOString().split('T')[0]], [], ['SKU','PRODUCTO','CÓD. BARRA','STOCK BODEGA','STOCK TIENDA','TOTAL','ÚLTIMO ENVÍO']];
-    productos.forEach(p => datos.push([p.sku, p.name, p.barcode, p.bodega, p.tienda, p.bodega+p.tienda, formatTimeAgo(p.lastTransfer)]));
+    if (productos.length === 0) { 
+        Swal.fire('Sin productos', `${currentProveedorFilter} no tiene productos.`, 'warning'); 
+        return; 
+    }
+    
+    const datos = [
+        ['PROVEEDOR:', currentProveedorFilter], 
+        ['FECHA:', new Date().toISOString().split('T')[0]], 
+        [], 
+        ['SKU','PRODUCTO','CÓD. BARRA','STOCK BODEGA','STOCK TIENDA','TOTAL','ÚLTIMO ENVÍO']
+    ];
+    
+    productos.forEach(p => datos.push([
+        p.sku || '', 
+        p.name || '', 
+        p.barcode || '', 
+        p.bodega || 0, 
+        p.tienda || 0, 
+        (p.bodega || 0) + (p.tienda || 0), 
+        formatTimeAgo(p.lastTransfer)
+    ]));
+    
     const ws = XLSX.utils.aoa_to_sheet(datos);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Inventario');
@@ -1408,8 +1674,24 @@ function exportarInventarioPorProveedorExcel() {
 }
 
 function exportarAExcel() {
-    const datos = [['INVENTARIO COMPLETO'], ['FECHA:', new Date().toISOString().split('T')[0]], [], ['SKU','PRODUCTO','CÓD. BARRA','PROVEEDOR','STOCK BODEGA','STOCK TIENDA','TOTAL','ÚLTIMO ENVÍO']];
-    inventory.forEach(p => datos.push([p.sku, p.name, p.barcode, p.proveedor, p.bodega, p.tienda, p.bodega+p.tienda, formatTimeAgo(p.lastTransfer)]));
+    const datos = [
+        ['INVENTARIO COMPLETO'], 
+        ['FECHA:', new Date().toISOString().split('T')[0]], 
+        [], 
+        ['SKU','PRODUCTO','CÓD. BARRA','PROVEEDOR','STOCK BODEGA','STOCK TIENDA','TOTAL','ÚLTIMO ENVÍO']
+    ];
+    
+    inventory.forEach(p => datos.push([
+        p.sku || '', 
+        p.name || '', 
+        p.barcode || '', 
+        p.proveedor || 'Sin proveedor', 
+        p.bodega || 0, 
+        p.tienda || 0, 
+        (p.bodega || 0) + (p.tienda || 0), 
+        formatTimeAgo(p.lastTransfer)
+    ]));
+    
     const ws = XLSX.utils.aoa_to_sheet(datos);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Inventario');
@@ -1421,16 +1703,19 @@ function descargar(contenido, nombre, tipo) {
     const blob = new Blob([contenido], { type: tipo });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
-    a.href = url; a.download = nombre;
-    document.body.appendChild(a); a.click();
-    document.body.removeChild(a); URL.revokeObjectURL(url);
+    a.href = url; 
+    a.download = nombre;
+    document.body.appendChild(a); 
+    a.click();
+    document.body.removeChild(a); 
+    URL.revokeObjectURL(url);
 }
 
 function addBarcodeField(value = '') {
     const item = document.createElement('div');
     item.className = 'barcode-item';
     item.innerHTML = `
-        <input type="text" class="additional-barcode" placeholder="Código de barras adicional" value="${value}">
+        <input type="text" class="additional-barcode" placeholder="Código de barras adicional" value="${value.replace(/"/g, '&quot;')}">
         <div class="barcode-actions">
             <button type="button" class="btn btn-small btn-danger remove-barcode"><i class="fas fa-trash"></i></button>
         </div>
@@ -1443,8 +1728,9 @@ function addBarcodeField(value = '') {
 // INICIALIZACIÓN
 // ==============================================
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('Inicializando aplicación...');
 
-    // Autenticación: acepta sesión local O modo directo (sin login)
+    // Autenticación
     const session = localStorage.getItem('userSession') || sessionStorage.getItem('userSession');
     if (session) {
         try {
@@ -1453,14 +1739,13 @@ document.addEventListener('DOMContentLoaded', function() {
             currentUser = { username: 'Admin', role: 'admin' };
         }
     } else {
-        // Modo standalone: si no hay sesión, funciona como admin
         currentUser = { username: 'Admin', role: 'admin' };
     }
 
-    document.getElementById('currentUsername').textContent = currentUser.username;
+    document.getElementById('currentUsername').textContent = currentUser.username || 'Usuario';
     document.getElementById('userRoleBadge').textContent = (currentUser.role || 'admin').toUpperCase();
 
-    // Escuchar rol del dashboard padre (iFrame)
+    // Escuchar rol del dashboard padre
     window.addEventListener('message', (event) => {
         if (event.data && event.data.type === 'USER_ROLE') {
             currentUser = { username: event.data.username, role: event.data.role };
@@ -1480,7 +1765,9 @@ document.addEventListener('DOMContentLoaded', function() {
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
             document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
             this.classList.add('active');
-            document.getElementById(`${tabId}Tab`).classList.add('active');
+            const tabElement = document.getElementById(`${tabId}Tab`);
+            if (tabElement) tabElement.classList.add('active');
+            
             if (tabId === 'proveedores') updateProveedorTable();
             else if (tabId === 'gestionProveedores') updateProveedoresList();
             else if (tabId === 'historial') updateHistorial();
@@ -1492,317 +1779,520 @@ document.addEventListener('DOMContentLoaded', function() {
     tableHeaders.forEach(h => h.addEventListener('click', () => sortByField(h.getAttribute('data-sort'))));
 
     // Búsqueda
-    searchInput.addEventListener('input', () => updateInventoryTable(searchInput.value));
-    document.getElementById('proveedorProductSearch').addEventListener('input', updateProveedorTable);
+    if (searchInput) {
+        searchInput.addEventListener('input', () => updateInventoryTable(searchInput.value));
+    }
+    
+    const proveedorProductSearch = document.getElementById('proveedorProductSearch');
+    if (proveedorProductSearch) {
+        proveedorProductSearch.addEventListener('input', updateProveedorTable);
+    }
 
     // Búsqueda por proveedor con sugerencias
     let searchTimeout;
-    proveedorSearchInput.addEventListener('input', function() {
-        clearTimeout(searchTimeout);
-        searchTimeout = setTimeout(() => {
-            const term = this.value.toLowerCase().trim();
-            proveedorSuggestions.innerHTML = '';
-            proveedorSuggestions.style.display = 'none';
-            if (!term) {
-                currentProveedorFilter = null;
-                proveedorSelected.textContent = 'Mostrando todos los proveedores';
-                updateProveedorTable(); return;
-            }
-            const lista = getProveedoresUnicos().filter(p => p.toLowerCase().includes(term));
-            if (lista.length > 0) {
-                lista.forEach(prov => {
-                    const count = inventory.filter(p => p.proveedor === prov).length;
-                    const sug = document.createElement('div');
-                    sug.className = 'proveedor-suggestion';
-                    sug.innerHTML = `<span>${prov}</span><span class="proveedor-count">${count} productos</span>`;
-                    sug.addEventListener('click', () => {
-                        proveedorSearchInput.value = prov;
-                        proveedorSuggestions.style.display = 'none';
-                        currentProveedorFilter = prov;
-                        updateProveedorTable();
+    if (proveedorSearchInput) {
+        proveedorSearchInput.addEventListener('input', function() {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                const term = this.value.toLowerCase().trim();
+                if (proveedorSuggestions) {
+                    proveedorSuggestions.innerHTML = '';
+                    proveedorSuggestions.style.display = 'none';
+                }
+                
+                if (!term) {
+                    currentProveedorFilter = null;
+                    if (proveedorSelected) proveedorSelected.textContent = 'Mostrando todos los proveedores';
+                    updateProveedorTable(); 
+                    return;
+                }
+                
+                const lista = getProveedoresUnicos().filter(p => p.toLowerCase().includes(term));
+                if (lista.length > 0 && proveedorSuggestions) {
+                    lista.forEach(prov => {
+                        const count = inventory.filter(p => p.proveedor === prov).length;
+                        const sug = document.createElement('div');
+                        sug.className = 'proveedor-suggestion';
+                        sug.innerHTML = `<span>${prov}</span><span class="proveedor-count">${count} productos</span>`;
+                        sug.addEventListener('click', () => {
+                            proveedorSearchInput.value = prov;
+                            proveedorSuggestions.style.display = 'none';
+                            currentProveedorFilter = prov;
+                            updateProveedorTable();
+                        });
+                        proveedorSuggestions.appendChild(sug);
                     });
-                    proveedorSuggestions.appendChild(sug);
-                });
-                proveedorSuggestions.style.display = 'block';
-            }
-            if (lista.length === 1 && term.length > 2) { currentProveedorFilter = lista[0]; updateProveedorTable(); }
-        }, 300);
-    });
+                    proveedorSuggestions.style.display = 'block';
+                }
+                
+                if (lista.length === 1 && term.length > 2) { 
+                    currentProveedorFilter = lista[0]; 
+                    updateProveedorTable(); 
+                }
+            }, 300);
+        });
+    }
+
     document.addEventListener('click', e => {
-        if (!proveedorSearchInput.contains(e.target) && !proveedorSuggestions.contains(e.target))
+        if (proveedorSearchInput && proveedorSuggestions && 
+            !proveedorSearchInput.contains(e.target) && 
+            !proveedorSuggestions.contains(e.target)) {
             proveedorSuggestions.style.display = 'none';
+        }
     });
 
-    // Refresh
-    ['btnRefresh','btnRefreshProveedores','btnRefreshGestionProveedores','btnRefreshActualizarStock',
-     'btnRefreshHistorial','btnRefreshImportar','btnRefreshInformacion'].forEach(id => {
-        document.getElementById(id)?.addEventListener('click', loadDataFromSupabase);
+    // Refresh buttons
+    const refreshButtons = [
+        'btnRefresh','btnRefreshProveedores','btnRefreshGestionProveedores',
+        'btnRefreshActualizarStock','btnRefreshHistorial','btnRefreshImportar','btnRefreshInformacion'
+    ];
+    
+    refreshButtons.forEach(id => {
+        const btn = document.getElementById(id);
+        if (btn) btn.addEventListener('click', loadDataFromSupabase);
     });
 
     // Logout
-    document.getElementById('btnLogout').addEventListener('click', () => {
-        Swal.fire({ title:'¿Cerrar sesión?', icon:'question', showCancelButton:true, confirmButtonText:'Sí', cancelButtonText:'Cancelar' })
-            .then(r => { if (r.isConfirmed) { localStorage.removeItem('userSession'); sessionStorage.removeItem('userSession'); window.location.href = 'login.html'; } });
-    });
+    const btnLogout = document.getElementById('btnLogout');
+    if (btnLogout) {
+        btnLogout.addEventListener('click', () => {
+            Swal.fire({ 
+                title:'¿Cerrar sesión?', 
+                icon:'question', 
+                showCancelButton:true, 
+                confirmButtonText:'Sí', 
+                cancelButtonText:'Cancelar'
+            }).then(r => { 
+                if (r.isConfirmed) { 
+                    localStorage.removeItem('userSession'); 
+                    sessionStorage.removeItem('userSession'); 
+                    window.location.href = 'login.html'; 
+                } 
+            });
+        });
+    }
 
     // Abrir modales Agregar Producto
-    ['btnAddProductInventario','btnAddProductImportar'].forEach(id => {
-        document.getElementById(id)?.addEventListener('click', () => {
-            if (!checkAdmin()) return;
-            editingProductId = null;
-            document.getElementById('modalTitle').textContent = 'Agregar Producto';
-            document.getElementById('productForm').reset();
-            document.getElementById('stockBodega').value = '0';
-            document.getElementById('stockTienda').value = '0';
-            barcodesContainer.innerHTML = '';
-            document.getElementById('productModal').style.display = 'flex';
-        });
+    const addProductButtons = ['btnAddProductInventario','btnAddProductImportar'];
+    addProductButtons.forEach(id => {
+        const btn = document.getElementById(id);
+        if (btn) {
+            btn.addEventListener('click', () => {
+                if (!checkAdmin()) return;
+                editingProductId = null;
+                document.getElementById('modalTitle').textContent = 'Agregar Producto';
+                document.getElementById('productForm').reset();
+                document.getElementById('stockBodega').value = '0';
+                document.getElementById('stockTienda').value = '0';
+                if (barcodesContainer) barcodesContainer.innerHTML = '';
+                document.getElementById('productModal').style.display = 'flex';
+            });
+        }
     });
 
     // Agregar proveedor
-    document.getElementById('btnAddProveedor').addEventListener('click', () => {
-        if (!checkAdmin()) return;
-        editingProveedorId = null;
-        document.getElementById('proveedorModalTitle').textContent = 'Agregar Proveedor';
-        document.getElementById('proveedorForm').reset();
-        document.getElementById('proveedorModal').style.display = 'flex';
-    });
+    const btnAddProveedor = document.getElementById('btnAddProveedor');
+    if (btnAddProveedor) {
+        btnAddProveedor.addEventListener('click', () => {
+            if (!checkAdmin()) return;
+            editingProveedorId = null;
+            document.getElementById('proveedorModalTitle').textContent = 'Agregar Proveedor';
+            document.getElementById('proveedorForm').reset();
+            document.getElementById('proveedorModal').style.display = 'flex';
+        });
+    }
 
     // Importar rápido
-    document.getElementById('btnImportarRapidoImportar')?.addEventListener('click', () => {
-        if (!checkAdmin()) return;
-        document.getElementById('importModal').style.display = 'flex';
-    });
+    const btnImportarRapido = document.getElementById('btnImportarRapidoImportar');
+    if (btnImportarRapido) {
+        btnImportarRapido.addEventListener('click', () => {
+            if (!checkAdmin()) return;
+            document.getElementById('importModal').style.display = 'flex';
+        });
+    }
 
     // Actualizar Items
-    document.getElementById('btnActualizarItems')?.addEventListener('click', () => {
-        if (!checkAdmin()) return;
-        document.getElementById('actualizarItemsData').value = '';
-        document.getElementById('actualizarItemsModal').style.display = 'flex';
-    });
+    const btnActualizarItems = document.getElementById('btnActualizarItems');
+    if (btnActualizarItems) {
+        btnActualizarItems.addEventListener('click', () => {
+            if (!checkAdmin()) return;
+            document.getElementById('actualizarItemsData').value = '';
+            document.getElementById('actualizarItemsModal').style.display = 'flex';
+        });
+    }
 
     // Cerrar modales
-    [['closeModal','productModal'],['closeImportModal','importModal'],
-     ['closeProveedorModal','proveedorModal'],['closeActualizarItemsModal','actualizarItemsModal']].forEach(([closeId, modalId]) => {
-        document.getElementById(closeId)?.addEventListener('click', () => {
-            document.getElementById(modalId).style.display = 'none';
-        });
+    const closeButtons = [
+        ['closeModal','productModal'],
+        ['closeImportModal','importModal'],
+        ['closeProveedorModal','proveedorModal'],
+        ['closeActualizarItemsModal','actualizarItemsModal']
+    ];
+    
+    closeButtons.forEach(([closeId, modalId]) => {
+        const closeBtn = document.getElementById(closeId);
+        if (closeBtn) {
+            closeBtn.addEventListener('click', () => {
+                document.getElementById(modalId).style.display = 'none';
+            });
+        }
     });
 
     // Cerrar modal al clic fuera
     document.querySelectorAll('.modal').forEach(modal => {
-        modal.addEventListener('click', e => { if (e.target === modal) modal.style.display = 'none'; });
+        modal.addEventListener('click', e => { 
+            if (e.target === modal) modal.style.display = 'none'; 
+        });
     });
 
     // Código de barras adicional
-    document.getElementById('btnAddBarcode').addEventListener('click', () => addBarcodeField());
+    const btnAddBarcode = document.getElementById('btnAddBarcode');
+    if (btnAddBarcode) {
+        btnAddBarcode.addEventListener('click', () => addBarcodeField());
+    }
 
     // Formulario Producto
-    document.getElementById('productForm').addEventListener('submit', async function(e) {
-        e.preventDefault();
-        const btn = document.getElementById('btnSubmitProduct');
-        const orig = btn.innerHTML;
-        btn.innerHTML = '<span class="spinner"></span> Guardando...';
-        btn.disabled = true;
+    const productForm = document.getElementById('productForm');
+    if (productForm) {
+        productForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const btn = document.getElementById('btnSubmitProduct');
+            const orig = btn.innerHTML;
+            btn.innerHTML = '<span class="spinner"></span> Guardando...';
+            btn.disabled = true;
 
-        const barcodes = [];
-        barcodesContainer.querySelectorAll('input').forEach(i => { if (i.value.trim()) barcodes.push(i.value.trim()); });
+            const barcodes = [];
+            if (barcodesContainer) {
+                barcodesContainer.querySelectorAll('input').forEach(i => { 
+                    if (i.value.trim()) barcodes.push(i.value.trim()); 
+                });
+            }
 
-        const productData = {
-            id: editingProductId,
-            sku: document.getElementById('productSKU').value.trim(),
-            name: document.getElementById('productName').value.trim(),
-            barcode: document.getElementById('productBarCode').value.trim(),
-            barcodes: barcodes.length > 0 ? barcodes : [document.getElementById('productBarCode').value.trim()],
-            proveedor: document.getElementById('productProveedor').value,
-            bodega: parseInt(document.getElementById('stockBodega').value) || 0,
-            tienda: parseInt(document.getElementById('stockTienda').value) || 0
-        };
+            const productData = {
+                id: editingProductId,
+                sku: document.getElementById('productSKU').value.trim(),
+                name: document.getElementById('productName').value.trim(),
+                barcode: document.getElementById('productBarCode').value.trim(),
+                barcodes: barcodes.length > 0 ? barcodes : [document.getElementById('productBarCode').value.trim()],
+                proveedor: document.getElementById('productProveedor').value,
+                bodega: parseInt(document.getElementById('stockBodega').value) || 0,
+                tienda: parseInt(document.getElementById('stockTienda').value) || 0
+            };
 
-        const skuDup = inventory.find(p => p.sku === productData.sku && p.id !== editingProductId);
-        if (skuDup) {
-            Swal.fire('SKU duplicado', 'Ya existe un producto con este SKU.', 'error');
-            btn.innerHTML = orig; btn.disabled = false; return;
-        }
+            const skuDup = inventory.find(p => p.sku === productData.sku && p.id !== editingProductId);
+            if (skuDup) {
+                Swal.fire('SKU duplicado', 'Ya existe un producto con este SKU.', 'error');
+                btn.innerHTML = orig; 
+                btn.disabled = false; 
+                return;
+            }
 
-        try {
-            const isUpdate = !!editingProductId;
-            const saved = await saveProductToSupabase(productData, isUpdate);
-            if (!isUpdate) await saveHistoryToSupabase('importacion', saved.id, productData.bodega + productData.tienda, 'sistema', 'inventario');
-            await loadDataFromSupabase();
-            document.getElementById('productModal').style.display = 'none';
-            Swal.fire('¡Guardado!', `Producto "${productData.name}" ${isUpdate ? 'actualizado' : 'agregado'}.`, 'success');
-        } catch (err) {
-            Swal.fire('Error', `No se pudo guardar: ${err.message}`, 'error');
-        } finally {
-            btn.innerHTML = orig; btn.disabled = false;
-        }
-    });
+            try {
+                const isUpdate = !!editingProductId;
+                const saved = await saveProductToSupabase(productData, isUpdate);
+                if (!isUpdate && saved) {
+                    await saveHistoryToSupabase('importacion', saved.id, productData.bodega + productData.tienda, 'sistema', 'inventario');
+                }
+                await loadDataFromSupabase();
+                document.getElementById('productModal').style.display = 'none';
+                Swal.fire('¡Guardado!', `Producto "${productData.name}" ${isUpdate ? 'actualizado' : 'agregado'}.`, 'success');
+            } catch (err) {
+                console.error('Error guardando producto:', err);
+                Swal.fire('Error', `No se pudo guardar: ${err.message}`, 'error');
+            } finally {
+                btn.innerHTML = orig; 
+                btn.disabled = false;
+            }
+        });
+    }
 
     // Formulario Proveedor
-    document.getElementById('proveedorForm').addEventListener('submit', async function(e) {
-        e.preventDefault();
-        const btn = document.getElementById('btnSubmitProveedor');
-        const orig = btn.innerHTML;
-        btn.innerHTML = '<span class="spinner"></span> Guardando...';
-        btn.disabled = true;
+    const proveedorForm = document.getElementById('proveedorForm');
+    if (proveedorForm) {
+        proveedorForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const btn = document.getElementById('btnSubmitProveedor');
+            const orig = btn.innerHTML;
+            btn.innerHTML = '<span class="spinner"></span> Guardando...';
+            btn.disabled = true;
 
-        const proveedorData = {
-            id: editingProveedorId,
-            codigo: document.getElementById('proveedorCodigo').value.trim(),
-            nombre: document.getElementById('proveedorNombre').value.trim(),
-            descripcion: document.getElementById('proveedorDescripcion').value.trim(),
-            contacto: document.getElementById('proveedorContacto').value.trim(),
-            telefono: document.getElementById('proveedorTelefono').value.trim(),
-            email: document.getElementById('proveedorEmail').value.trim()
-        };
+            const proveedorData = {
+                id: editingProveedorId,
+                codigo: document.getElementById('proveedorCodigo').value.trim(),
+                nombre: document.getElementById('proveedorNombre').value.trim(),
+                descripcion: document.getElementById('proveedorDescripcion').value.trim(),
+                contacto: document.getElementById('proveedorContacto').value.trim(),
+                telefono: document.getElementById('proveedorTelefono').value.trim(),
+                email: document.getElementById('proveedorEmail').value.trim()
+            };
 
-        const codDup = proveedores.find(p => p.codigo === proveedorData.codigo && p.id !== editingProveedorId);
-        if (codDup) {
-            Swal.fire('Código duplicado', 'Ya existe un proveedor con este código.', 'error');
-            btn.innerHTML = orig; btn.disabled = false; return;
-        }
+            const codDup = proveedores.find(p => p.codigo === proveedorData.codigo && p.id !== editingProveedorId);
+            if (codDup) {
+                Swal.fire('Código duplicado', 'Ya existe un proveedor con este código.', 'error');
+                btn.innerHTML = orig; 
+                btn.disabled = false; 
+                return;
+            }
 
-        try {
-            await saveProveedorToSupabase(proveedorData, !!editingProveedorId);
-            await loadDataFromSupabase();
-            document.getElementById('proveedorModal').style.display = 'none';
-            Swal.fire('¡Guardado!', `Proveedor "${proveedorData.nombre}" guardado.`, 'success');
-        } catch (err) {
-            Swal.fire('Error', `No se pudo guardar: ${err.message}`, 'error');
-        } finally {
-            btn.innerHTML = orig; btn.disabled = false;
-        }
-    });
+            try {
+                await saveProveedorToSupabase(proveedorData, !!editingProveedorId);
+                await loadDataFromSupabase();
+                document.getElementById('proveedorModal').style.display = 'none';
+                Swal.fire('¡Guardado!', `Proveedor "${proveedorData.nombre}" guardado.`, 'success');
+            } catch (err) {
+                console.error('Error guardando proveedor:', err);
+                Swal.fire('Error', `No se pudo guardar: ${err.message}`, 'error');
+            } finally {
+                btn.innerHTML = orig; 
+                btn.disabled = false;
+            }
+        });
+    }
 
     // Actualización masiva
-    document.getElementById('btnProcesarActualizacion').addEventListener('click', procesarActualizacionStock);
+    const btnProcesarActualizacion = document.getElementById('btnProcesarActualizacion');
+    if (btnProcesarActualizacion) {
+        btnProcesarActualizacion.addEventListener('click', procesarActualizacionStock);
+    }
 
     // Importación rápida
-    document.getElementById('btnProcesarImportacion').addEventListener('click', procesarImportacionRapida);
+    const btnProcesarImportacion = document.getElementById('btnProcesarImportacion');
+    if (btnProcesarImportacion) {
+        btnProcesarImportacion.addEventListener('click', procesarImportacionRapida);
+    }
 
     // Actualizar items
-    document.getElementById('btnProcesarActualizarItems').addEventListener('click', actualizarItemsDesdeTexto);
+    const btnProcesarActualizarItems = document.getElementById('btnProcesarActualizarItems');
+    if (btnProcesarActualizarItems) {
+        btnProcesarActualizarItems.addEventListener('click', actualizarItemsDesdeTexto);
+    }
 
     // Limpiar historial
-    document.getElementById('btnLimpiarHistorial').addEventListener('click', async () => {
-        if (!checkAdmin()) return;
-        const result = await Swal.fire({ title:'¿Limpiar historial?', icon:'question', showCancelButton:true, confirmButtonText:'Sí, limpiar', cancelButtonText:'Cancelar' });
-        if (!result.isConfirmed) return;
-        try {
-            await clearHistoryFromSupabase();
-            await loadDataFromSupabase();
-            Swal.fire('Limpiado', 'El historial fue eliminado.', 'success');
-        } catch (e) {
-            Swal.fire('Error', e.message, 'error');
-        }
-    });
+    const btnLimpiarHistorial = document.getElementById('btnLimpiarHistorial');
+    if (btnLimpiarHistorial) {
+        btnLimpiarHistorial.addEventListener('click', async () => {
+            if (!checkAdmin()) return;
+            const result = await Swal.fire({ 
+                title:'¿Limpiar historial?', 
+                icon:'question', 
+                showCancelButton:true, 
+                confirmButtonText:'Sí, limpiar', 
+                cancelButtonText:'Cancelar' 
+            });
+            if (!result.isConfirmed) return;
+            try {
+                await clearHistoryFromSupabase();
+                await loadDataFromSupabase();
+                Swal.fire('Limpiado', 'El historial fue eliminado.', 'success');
+            } catch (e) {
+                Swal.fire('Error', e.message, 'error');
+            }
+        });
+    }
 
     // Exportar proveedores
-    document.getElementById('btnExportarProveedores').addEventListener('click', exportarProveedores);
-    document.getElementById('btnExportarProveedorExcel').addEventListener('click', exportarInventarioPorProveedorExcel);
+    const btnExportarProveedores = document.getElementById('btnExportarProveedores');
+    if (btnExportarProveedores) {
+        btnExportarProveedores.addEventListener('click', exportarProveedores);
+    }
+    
+    const btnExportarProveedorExcel = document.getElementById('btnExportarProveedorExcel');
+    if (btnExportarProveedorExcel) {
+        btnExportarProveedorExcel.addEventListener('click', exportarInventarioPorProveedorExcel);
+    }
 
     // Exportar datos
-    document.getElementById('btnExportarJSON').addEventListener('click', () => {
-        const format = document.getElementById('exportFormat').value;
-        if (format === 'excel') { exportarAExcel(); return; }
-        let data, filename, type;
-        if (format === 'json') {
-            data = JSON.stringify({ inventario: inventory, historial, proveedores, exportado: Date.now() }, null, 2);
-            filename = `inventario_${new Date().toISOString().split('T')[0]}.json`;
-            type = 'application/json';
-        } else if (format === 'formatoProveedor') {
-            data = `SKU\tProducto\tCód. Barra\tExistencia\n`;
-            inventory.forEach(p => { data += `${p.sku}\t${p.name}\t${p.barcode}\t${p.bodega+p.tienda}\n`; });
-            filename = `inventario_proveedor_${new Date().toISOString().split('T')[0]}.txt`;
-            type = 'text/plain';
-        } else {
-            data = 'SKU,Producto,Cód. Barra,Proveedor,Bodega,Tienda,Total\n';
-            inventory.forEach(p => { data += `${p.sku},${p.name},${p.barcode},${p.proveedor},${p.bodega},${p.tienda},${p.bodega+p.tienda}\n`; });
-            filename = `inventario_${new Date().toISOString().split('T')[0]}.csv`;
-            type = 'text/csv';
-        }
-        descargar(data, filename, type);
-        Swal.fire('Exportado', `Datos exportados en formato ${format.toUpperCase()}.`, 'success');
-    });
+    const btnExportarJSON = document.getElementById('btnExportarJSON');
+    if (btnExportarJSON) {
+        btnExportarJSON.addEventListener('click', () => {
+            const format = document.getElementById('exportFormat').value;
+            if (format === 'excel') { 
+                exportarAExcel(); 
+                return; 
+            }
+            
+            let data, filename, type;
+            if (format === 'json') {
+                data = JSON.stringify({ 
+                    inventario: inventory, 
+                    historial, 
+                    proveedores, 
+                    exportado: Date.now() 
+                }, null, 2);
+                filename = `inventario_${new Date().toISOString().split('T')[0]}.json`;
+                type = 'application/json';
+            } else if (format === 'formatoProveedor') {
+                data = `SKU\tProducto\tCód. Barra\tExistencia\n`;
+                inventory.forEach(p => { 
+                    data += `${p.sku || ''}\t${p.name || ''}\t${p.barcode || ''}\t${(p.bodega || 0) + (p.tienda || 0)}\n`; 
+                });
+                filename = `inventario_proveedor_${new Date().toISOString().split('T')[0]}.txt`;
+                type = 'text/plain';
+            } else {
+                data = 'SKU,Producto,Cód. Barra,Proveedor,Bodega,Tienda,Total\n';
+                inventory.forEach(p => { 
+                    data += `${p.sku || ''},${p.name || ''},${p.barcode || ''},${p.proveedor || 'Sin proveedor'},${p.bodega || 0},${p.tienda || 0},${(p.bodega || 0) + (p.tienda || 0)}\n`; 
+                });
+                filename = `inventario_${new Date().toISOString().split('T')[0]}.csv`;
+                type = 'text/csv';
+            }
+            descargar(data, filename, type);
+            Swal.fire('Exportado', `Datos exportados en formato ${format.toUpperCase()}.`, 'success');
+        });
+    }
 
     // Upload JSON
     const fileUploadArea = document.getElementById('fileUploadArea');
     const jsonFileInput = document.getElementById('jsonFileInput');
-    fileUploadArea.addEventListener('click', () => { if (!checkAdmin()) return; jsonFileInput.click(); });
-    fileUploadArea.addEventListener('dragover', e => { e.preventDefault(); fileUploadArea.style.borderColor = 'var(--primary-blue)'; });
-    fileUploadArea.addEventListener('dragleave', () => { fileUploadArea.style.borderColor = 'var(--border)'; });
-    fileUploadArea.addEventListener('drop', e => {
-        e.preventDefault(); fileUploadArea.style.borderColor = 'var(--border)';
-        const file = e.dataTransfer.files[0];
-        if (file) { jsonFileInput.files = e.dataTransfer.files; fileUploadArea.innerHTML = `<i class="fas fa-file-check" style="color:var(--success);"></i><p>Archivo: <strong>${file.name}</strong></p>`; }
-    });
-    jsonFileInput.addEventListener('change', function() {
-        if (this.files[0]) fileUploadArea.innerHTML = `<i class="fas fa-file-check" style="color:var(--success);"></i><p>Archivo: <strong>${this.files[0].name}</strong></p>`;
-    });
+    
+    if (fileUploadArea && jsonFileInput) {
+        fileUploadArea.addEventListener('click', () => { 
+            if (!checkAdmin()) return; 
+            jsonFileInput.click(); 
+        });
+        
+        fileUploadArea.addEventListener('dragover', e => { 
+            e.preventDefault(); 
+            fileUploadArea.style.borderColor = 'var(--primary-blue)'; 
+        });
+        
+        fileUploadArea.addEventListener('dragleave', () => { 
+            fileUploadArea.style.borderColor = 'var(--border)'; 
+        });
+        
+        fileUploadArea.addEventListener('drop', e => {
+            e.preventDefault(); 
+            fileUploadArea.style.borderColor = 'var(--border)';
+            const file = e.dataTransfer.files[0];
+            if (file) { 
+                jsonFileInput.files = e.dataTransfer.files; 
+                fileUploadArea.innerHTML = `<i class="fas fa-file-check" style="color:var(--success);"></i><p>Archivo: <strong>${file.name}</strong></p>`; 
+            }
+        });
+        
+        jsonFileInput.addEventListener('change', function() {
+            if (this.files[0]) {
+                fileUploadArea.innerHTML = `<i class="fas fa-file-check" style="color:var(--success);"></i><p>Archivo: <strong>${this.files[0].name}</strong></p>`;
+            }
+        });
+    }
 
-    document.getElementById('btnImportarJSON').addEventListener('click', async () => {
-        if (!checkAdmin()) return;
-        if (!jsonFileInput.files.length) { Swal.fire('Sin archivo', 'Selecciona un archivo JSON primero.', 'info'); return; }
-        const proveedor = document.getElementById('importProveedor').value;
-        if (!proveedor) { Swal.fire('Proveedor requerido', '', 'warning'); return; }
-        const actualizar = document.getElementById('importarActualizarStock').checked;
+    const btnImportarJSON = document.getElementById('btnImportarJSON');
+    if (btnImportarJSON) {
+        btnImportarJSON.addEventListener('click', async () => {
+            if (!checkAdmin()) return;
+            if (!jsonFileInput || !jsonFileInput.files.length) { 
+                Swal.fire('Sin archivo', 'Selecciona un archivo JSON primero.', 'info'); 
+                return; 
+            }
+            
+            const proveedor = document.getElementById('importProveedor').value;
+            if (!proveedor) { 
+                Swal.fire('Proveedor requerido', '', 'warning'); 
+                return; 
+            }
+            
+            const actualizar = document.getElementById('importarActualizarStock').checked;
 
-        let proveedorId = null;
-        const codigo = proveedor.split(' - ')[0];
-        const prov = proveedores.find(p => p.codigo === codigo);
-        if (prov) proveedorId = prov.id;
+            let proveedorId = null;
+            const codigo = proveedor.split(' - ')[0];
+            const prov = proveedores.find(p => p.codigo === codigo);
+            if (prov) proveedorId = prov.id;
 
-        const btn = document.getElementById('btnImportarJSON');
-        const orig = btn.innerHTML;
-        btn.innerHTML = '<span class="spinner"></span> Procesando...';
-        btn.disabled = true;
+            const btn = document.getElementById('btnImportarJSON');
+            const orig = btn.innerHTML;
+            btn.innerHTML = '<span class="spinner"></span> Procesando...';
+            btn.disabled = true;
 
-        try {
-            const reader = new FileReader();
-            reader.onload = async function(e) {
-                try {
-                    const data = JSON.parse(e.target.result);
-                    let importados = 0, actualizados = 0;
-                    for (const item of (Array.isArray(data) ? data : [])) {
-                        const sku = item.sku || item.SKU || '';
-                        const nombre = item.nombre || item.name || item.Producto || '';
-                        const barcode = item.barcode || item.barcode_principal || item['Cód. Barra'] || sku;
-                        const bodega = parseInt(item.bodega || item.stock_bodega || item.Existencia || item.existencia || 0);
-                        const tienda = parseInt(item.tienda || item.stock_tienda || 0);
-                        if (!sku) continue;
-                        const existe = inventory.find(p => p.sku === sku);
-                        if (existe) {
-                            const update = actualizar ? { nombre, barcode_principal: barcode, proveedor_id: proveedorId, stock_bodega: bodega, stock_tienda: tienda } : { stock_bodega: existe.bodega + bodega };
-                            const { error } = await db.from('productos').update(update).eq('id', existe.id);
-                            if (!error) actualizados++;
-                        } else {
-                            const { error } = await db.from('productos').insert([{ sku, nombre, barcode_principal: barcode, barcodes: [barcode], proveedor_id: proveedorId, stock_bodega: bodega, stock_tienda: tienda }]);
-                            if (!error) importados++;
+            try {
+                const reader = new FileReader();
+                reader.onload = async function(e) {
+                    try {
+                        const data = JSON.parse(e.target.result);
+                        let importados = 0;
+                        let actualizados = 0;
+                        
+                        const items = Array.isArray(data) ? data : [];
+                        for (const item of items) {
+                            const sku = item.sku || item.SKU || '';
+                            const nombre = item.nombre || item.name || item.Producto || '';
+                            const barcode = item.barcode || item.barcode_principal || item['Cód. Barra'] || sku;
+                            const bodega = parseInt(item.bodega || item.stock_bodega || item.Existencia || item.existencia || 0);
+                            const tienda = parseInt(item.tienda || item.stock_tienda || 0);
+                            
+                            if (!sku) continue;
+                            
+                            const existe = inventory.find(p => p.sku === sku);
+                            if (existe) {
+                                if (actualizar) {
+                                    const { error } = await db
+                                        .from('productos')
+                                        .update({ 
+                                            nombre, 
+                                            barcode_principal: barcode,
+                                            barcodes: [barcode],
+                                            proveedor_id: proveedorId,
+                                            stock_bodega: bodega,
+                                            stock_tienda: tienda
+                                        })
+                                        .eq('id', existe.id);
+                                    if (!error) actualizados++;
+                                } else {
+                                    const { error } = await db
+                                        .from('productos')
+                                        .update({ 
+                                            stock_bodega: (existe.bodega + bodega) 
+                                        })
+                                        .eq('id', existe.id);
+                                    if (!error) actualizados++;
+                                }
+                            } else {
+                                const { error } = await db
+                                    .from('productos')
+                                    .insert([{ 
+                                        sku, 
+                                        nombre, 
+                                        barcode_principal: barcode, 
+                                        barcodes: [barcode], 
+                                        proveedor_id: proveedorId, 
+                                        stock_bodega: bodega, 
+                                        stock_tienda: tienda 
+                                    }]);
+                                if (!error) importados++;
+                            }
                         }
+                        
+                        if (importados > 0 || actualizados > 0) {
+                            await saveHistoryToSupabase('importacion', null, importados + actualizados, 'archivo_json', 'inventario');
+                            await loadDataFromSupabase();
+                            Swal.fire('Importación exitosa', `${importados} nuevos, ${actualizados} actualizados.`, 'success');
+                        } else {
+                            Swal.fire('Error en formato', 'No se pudieron procesar los datos. Verifica el formato.', 'error');
+                        }
+                    } catch (err) {
+                        console.error('Error procesando JSON:', err);
+                        Swal.fire('Error al procesar', err.message, 'error');
+                    } finally {
+                        btn.innerHTML = orig; 
+                        btn.disabled = false;
                     }
-                    if (importados > 0 || actualizados > 0) {
-                        await saveHistoryToSupabase('importacion', null, importados + actualizados, 'archivo_json', 'inventario');
-                        await loadDataFromSupabase();
-                        Swal.fire('Importación exitosa', `${importados} nuevos, ${actualizados} actualizados.`, 'success');
-                    } else {
-                        Swal.fire('Error en formato', 'No se pudieron procesar los datos. Verifica el formato.', 'error');
-                    }
-                } catch (err) {
-                    Swal.fire('Error al procesar', err.message, 'error');
-                } finally {
-                    btn.innerHTML = orig; btn.disabled = false;
-                }
-            };
-            reader.readAsText(jsonFileInput.files[0]);
-        } catch (err) {
-            Swal.fire('Error', err.message, 'error');
-            btn.innerHTML = orig; btn.disabled = false;
-        }
-    });
+                };
+                reader.readAsText(jsonFileInput.files[0]);
+            } catch (err) {
+                console.error('Error en importación JSON:', err);
+                Swal.fire('Error', err.message, 'error');
+                btn.innerHTML = orig; 
+                btn.disabled = false;
+            }
+        });
+    }
 
     // Online/offline
-    window.addEventListener('online', async () => { updateConnectionStatus(true); await loadDataFromSupabase(); });
+    window.addEventListener('online', async () => { 
+        updateConnectionStatus(true); 
+        await loadDataFromSupabase(); 
+    });
+    
     window.addEventListener('offline', () => updateConnectionStatus(false));
 
     // Carga inicial
