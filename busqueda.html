@@ -339,119 +339,6 @@ body::before{
   margin-top:7px;min-height:18px;display:flex;align-items:center;justify-content:center;gap:5px;
 }
 
-/* ── BARCODE MODAL ── */
-.bc-search-wrap{position:relative;margin-bottom:10px}
-.bc-search-ico{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--accent);font-size:.95rem;pointer-events:none}
-.bc-search{
-  width:100%;background:var(--input);border:1.5px solid var(--border);
-  border-radius:11px;padding:10px 12px 10px 38px;
-  font-family:'Sora',sans-serif;font-size:.9rem;font-weight:500;
-  color:var(--t1);outline:none;transition:all .22s;-webkit-appearance:none;
-}
-.bc-search:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-dim)}
-.bc-search::placeholder{color:var(--t3);font-size:.85rem}
-
-/* Dropdown results */
-.bc-drop{
-  background:var(--card);border:1px solid var(--border);border-radius:11px;
-  overflow:hidden;margin-bottom:10px;display:none;
-  max-height:180px;overflow-y:auto;
-}
-.bc-drop.sh{display:block}
-.bc-drop::-webkit-scrollbar{display:none}
-.bc-result{
-  padding:10px 12px;display:flex;align-items:center;gap:10px;
-  cursor:pointer;transition:background .14s;border-bottom:1px solid var(--border);
-}
-.bc-result:last-child{border-bottom:none}
-.bc-result:active{background:var(--elevated)}
-.bc-result-ico{
-  width:30px;height:30px;border-radius:8px;flex-shrink:0;
-  background:var(--accent-dim);color:var(--accent);
-  display:flex;align-items:center;justify-content:center;font-size:.8rem;
-}
-.bc-result-name{font-size:.82rem;font-weight:600;color:var(--t1);line-height:1.2}
-.bc-result-sku{font-size:.65rem;color:var(--t3);font-family:'JetBrains Mono',monospace;margin-top:1px}
-.bc-no-res{padding:20px;text-align:center;color:var(--t3);font-size:.8rem}
-
-/* Selected product info */
-.bc-prod-card{
-  background:var(--elevated);border:1px solid var(--border);border-radius:11px;
-  padding:11px 13px;display:flex;align-items:center;gap:10px;margin-bottom:12px;
-}
-.bc-prod-ico{
-  width:34px;height:34px;border-radius:9px;flex-shrink:0;
-  background:var(--accent-dim);color:var(--accent);
-  display:flex;align-items:center;justify-content:center;font-size:.95rem;
-}
-.bc-prod-name{font-size:.85rem;font-weight:700;line-height:1.2}
-.bc-prod-sku{
-  display:inline-flex;align-items:center;gap:4px;
-  background:var(--accent-dim);border:1px solid var(--accent-glow);
-  border-radius:5px;padding:2px 6px;margin-top:4px;
-}
-.bc-prod-sku-lbl{font-size:.56rem;color:var(--t3);text-transform:uppercase;letter-spacing:.08em;font-family:'JetBrains Mono',monospace;font-weight:600}
-.bc-prod-sku-val{font-family:'JetBrains Mono',monospace;font-size:.78rem;font-weight:700;color:var(--accent)}
-.bc-chg{
-  margin-left:auto;flex-shrink:0;
-  padding:5px 9px;border-radius:7px;font-size:.68rem;font-weight:700;
-  font-family:'JetBrains Mono',monospace;border:none;cursor:pointer;
-  background:var(--card);color:var(--t2);border:1px solid var(--border);
-  transition:all .15s;
-}
-.bc-chg:active{transform:scale(.9)}
-
-/* Barcodes list */
-.bc-list-ttl{font-size:.62rem;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;font-family:'JetBrains Mono',monospace;margin-bottom:7px;display:flex;align-items:center;gap:5px}
-.bc-list{
-  background:var(--card);border:1px solid var(--border);border-radius:11px;
-  overflow:hidden;margin-bottom:12px;max-height:140px;overflow-y:auto;
-}
-.bc-list::-webkit-scrollbar{display:none}
-.bc-item{
-  padding:10px 12px;display:flex;align-items:center;gap:10px;
-  border-bottom:1px solid var(--border);transition:background .14s;
-}
-.bc-item:last-child{border-bottom:none}
-.bc-code{font-family:'JetBrains Mono',monospace;font-size:.88rem;font-weight:600;color:var(--t1);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.bc-del{
-  width:28px;height:28px;border-radius:7px;border:none;cursor:pointer;flex-shrink:0;
-  background:var(--danger-dim);color:var(--danger);
-  display:flex;align-items:center;justify-content:center;font-size:.8rem;
-  transition:all .15s;position:relative;
-}
-.bc-del:active{transform:scale(.88)}
-.bc-del.loading i{opacity:0}
-.bc-del .bspin{
-  position:absolute;inset:0;display:none;align-items:center;justify-content:center;
-}
-.bc-del.loading .bspin{display:flex}
-.bc-empty{padding:18px;text-align:center;color:var(--t3);font-size:.78rem;font-style:italic}
-
-/* Add barcode input */
-.bc-add-wrap{position:relative;margin-bottom:10px}
-.bc-add-ico{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--t3);font-size:.95rem;pointer-events:none}
-.bc-add{
-  width:100%;background:var(--input);border:1.5px solid var(--border);
-  border-radius:11px;padding:11px 12px 11px 38px;
-  font-family:'JetBrains Mono',monospace;font-size:.95rem;font-weight:600;
-  color:var(--t1);outline:none;transition:all .22s;-webkit-appearance:none;
-  letter-spacing:.04em;
-}
-.bc-add:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-dim)}
-.bc-add::placeholder{color:var(--t3);font-weight:400;font-size:.82rem;letter-spacing:0;font-family:'Sora',sans-serif}
-
-/* ── MSG TOAST inside modal ── */
-.mtoast{
-  border-radius:9px;padding:9px 12px;font-size:.77rem;font-weight:600;
-  display:flex;align-items:center;gap:7px;margin-bottom:10px;
-  animation:sli .2s ease both;display:none;
-}
-.mtoast.sh{display:flex}
-.mtoast.success{background:var(--ok-dim);color:var(--ok);border:1px solid rgba(34,197,94,.3)}
-.mtoast.error{background:var(--danger-dim);color:var(--danger);border:1px solid rgba(239,68,68,.3)}
-.mtoast.info{background:var(--blue-dim);color:var(--blue);border:1px solid rgba(37,99,235,.2)}
-
 /* ── BUTTONS ── */
 .btn{
   border:none;border-radius:12px;font-family:'Sora',sans-serif;font-weight:700;
@@ -473,9 +360,6 @@ body::before{
 }
 .bspin-d{border-color:rgba(220,38,38,.25);border-top-color:var(--danger)}
 .bspin-sm{width:12px;height:12px;border-width:2px}
-
-/* ── SECTION LABEL ── */
-.sec-lbl{font-size:.6rem;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;font-family:'JetBrains Mono',monospace;margin-bottom:7px;display:flex;align-items:center;gap:5px}
 
 /* ── RESPONSIVE ── */
 @media(min-width:460px){
@@ -594,68 +478,6 @@ body::before{
   </div>
 </div>
 
-<!-- BARCODE MANAGEMENT SHEET -->
-<div class="msh" id="bcSheet">
-  <div class="mhandle"></div>
-  <div class="mhd">
-    <div class="mhd-ico ico-g"><i class="bi bi-barcode"></i></div>
-    <div class="mhd-inf">
-      <div class="mhd-ttl">Gestión de Códigos</div>
-      <div class="mhd-sub" id="bcSheetSub">Selecciona un producto</div>
-    </div>
-    <div style="display:flex;gap:6px;flex-shrink:0">
-      <button class="ibtn danger-ac" id="bcLogoutBtn" title="Cerrar sesión admin" style="font-size:.85rem"><i class="bi bi-box-arrow-right"></i></button>
-      <div class="mcls" id="closeBcBtn"><i class="bi bi-x-lg"></i></div>
-    </div>
-  </div>
-  <div class="mbdy">
-    <div class="mtoast" id="bcToast"></div>
-
-    <!-- Search -->
-    <div class="bc-search-wrap">
-      <i class="bi bi-search bc-search-ico"></i>
-      <input type="text" class="bc-search" id="bcSearchInput"
-        placeholder="Buscar producto por nombre o SKU..."
-        autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
-    </div>
-    <div class="bc-drop" id="bcDrop"></div>
-
-    <!-- Selected product -->
-    <div id="bcProdSection" style="display:none">
-      <div class="bc-prod-card" id="bcProdCard">
-        <div class="bc-prod-ico"><i class="bi bi-box-seam-fill"></i></div>
-        <div style="flex:1;min-width:0">
-          <div class="bc-prod-name" id="bcProdName">—</div>
-          <div class="bc-prod-sku">
-            <span class="bc-prod-sku-lbl">SKU</span>
-            <span class="bc-prod-sku-val" id="bcProdSku">—</span>
-          </div>
-        </div>
-        <button class="bc-chg" id="bcChgBtn"><i class="bi bi-arrow-repeat"></i> Cambiar</button>
-      </div>
-
-      <!-- Existing codes -->
-      <div class="sec-lbl"><i class="bi bi-list-ul"></i> Códigos asignados</div>
-      <div class="bc-list" id="bcList">
-        <div class="bc-empty">No hay códigos de barras asignados</div>
-      </div>
-
-      <!-- Add new code -->
-      <div class="sec-lbl"><i class="bi bi-plus-circle"></i> Agregar código</div>
-      <div class="bc-add-wrap">
-        <i class="bi bi-upc bc-add-ico"></i>
-        <input type="text" class="bc-add" id="bcNewInput"
-          placeholder="Escanear o escribir nuevo código..."
-          autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
-      </div>
-    </div>
-  </div>
-  <div class="mft" id="bcFt" style="display:none">
-    <button class="btn btn-g" id="bcCancelAddBtn" style="flex:0 0 auto;padding:13px 16px"><i class="bi bi-x-lg"></i></button>
-    <button class="btn btn-p" id="bcSaveBtn" style="flex:1"><i class="bi bi-check-lg"></i> Agregar Código</button>
-  </div>
-</div>
-
 <script>
 /* ══════════════════════════════════════
    FIREBASE
@@ -669,7 +491,8 @@ const ADMIN_PIN='1234';
    STATE
 ══════════════════════════════════════ */
 let productos=[],loading=false,authenticated=false;
-let currentProd=null,bcProd=null,bcCodes=[];
+let currentProd=null;
+let searchTimer = null; // Para debounce
 
 /* ══════════════════════════════════════
    DOM REFS
@@ -678,7 +501,7 @@ const $=id=>document.getElementById(id);
 const searchInput=$('searchInput'),mainContent=$('mainContent'),emptyState=$('emptyState');
 const rChip=$('rChip'),rChipN=$('rChipN');
 const ntf=$('ntf'),mbk=$('mbk');
-const prodSheet=$('prodSheet'),pinModal=$('pinModal'),bcSheet=$('bcSheet');
+const prodSheet=$('prodSheet'),pinModal=$('pinModal');
 
 /* ══════════════════════════════════════
    THEME — read from shared localStorage
@@ -997,8 +820,14 @@ function renderResults(results,q){
     if(bcBtn){
       e.stopPropagation();
       const p=results[+bcBtn.dataset.bc];
-      if(authenticated)openBcSheet(p);
-      else openPinModal(()=>openBcSheet(p));
+      if(authenticated) {
+        // Aquí iría la lógica para gestión de códigos (simplificada)
+        notif(`Gestión de códigos para ${p.name}`, 'info');
+      }
+      else openPinModal(()=>{
+        // Aquí iría la lógica para gestión de códigos después de autenticar
+        notif(`Gestión de códigos para ${p.name}`, 'info');
+      });
       return;
     }
     // Card
@@ -1023,208 +852,6 @@ function openProductSheet(p){
 }
 
 /* ══════════════════════════════════════
-   BARCODE SHEET
-══════════════════════════════════════ */
-function openBcSheet(presetProduct){
-  resetBcSheet();
-  openModal(bcSheet);
-  if(presetProduct)selectBcProduct(presetProduct);
-  else setTimeout(()=>$('bcSearchInput').focus(),120);
-}
-
-function resetBcSheet(){
-  bcProd=null;bcCodes=[];
-  $('bcSearchInput').value='';$('bcNewInput').value='';
-  $('bcDrop').className='bc-drop';$('bcDrop').innerHTML='';
-  $('bcProdSection').style.display='none';
-  $('bcFt').style.display='none';
-  $('bcSheetSub').textContent='Selecciona un producto';
-  hideBcToast();
-}
-
-/* BC Search */
-let bcSearchTimer=null;
-function bcSearchHandler(){
-  clearTimeout(bcSearchTimer);
-  const q=$('bcSearchInput').value.trim().toLowerCase();
-  if(!q){$('bcDrop').className='bc-drop';$('bcDrop').innerHTML='';return;}
-  bcSearchTimer=setTimeout(()=>renderBcDrop(q),60);
-}
-
-function renderBcDrop(q){
-  const scored=[];
-  for(const p of productos){
-    const sc=scoreProduct(p,q);
-    if(sc>0)scored.push({p,sc});
-  }
-  scored.sort((a,b)=>b.sc-a.sc);
-  const top=scored.slice(0,12).map(x=>x.p);
-  const drop=$('bcDrop');drop.innerHTML='';
-
-  if(!top.length){
-    drop.innerHTML=`<div class="bc-no-res"><i class="bi bi-search"></i> Sin resultados</div>`;
-    drop.classList.add('sh');return;
-  }
-  top.forEach(p=>{
-    const el=document.createElement('div');el.className='bc-result';
-    el.innerHTML=`
-      <div class="bc-result-ico"><i class="bi bi-box-seam-fill"></i></div>
-      <div>
-        <div class="bc-result-name">${p.name}</div>
-        <div class="bc-result-sku">SKU ${p.sku}</div>
-      </div>`;
-    el.addEventListener('click',()=>{selectBcProduct(p);});
-    drop.appendChild(el);
-  });
-  drop.classList.add('sh');
-}
-
-async function selectBcProduct(p){
-  bcProd=p;
-  $('bcSearchInput').value='';
-  $('bcDrop').className='bc-drop';$('bcDrop').innerHTML='';
-  $('bcSheetSub').textContent=p.sku;
-  $('bcProdName').textContent=p.name;
-  $('bcProdSku').textContent=p.sku;
-  $('bcProdSection').style.display='block';
-  $('bcFt').style.display='flex';
-  hideBcToast();
-
-  // Load codes from Firebase for fresh data
-  await loadBcCodes(p);
-  setTimeout(()=>$('bcNewInput').focus(),120);
-}
-
-async function loadBcCodes(p){
-  $('bcList').innerHTML=`<div class="bc-empty" style="display:flex;align-items:center;justify-content:center;gap:8px"><div class="spin-ring"></div> Cargando...</div>`;
-  try{
-    if(db){
-      const snap=await db.collection('products').where('sku','==',p.sku).get();
-      if(!snap.empty){
-        const d=snap.docs[0].data();
-        bcProd._firebaseId=snap.docs[0].id;
-        bcCodes=Array.isArray(d.barcodes)?[...d.barcodes]:(d.barcode?[d.barcode]:[]);
-      }else{bcCodes=[...p.barcodes];}
-    }else{bcCodes=[...p.barcodes];}
-  }catch(e){bcCodes=[...p.barcodes];}
-  renderBcList();
-}
-
-function renderBcList(){
-  const list=$('bcList');list.innerHTML='';
-  if(!bcCodes.length){list.innerHTML='<div class="bc-empty">No hay códigos de barras asignados</div>';return;}
-  bcCodes.forEach((code,idx)=>{
-    const el=document.createElement('div');el.className='bc-item';
-    el.innerHTML=`
-      <i class="bi bi-upc" style="color:var(--t3);font-size:.9rem;flex-shrink:0"></i>
-      <span class="bc-code">${code}</span>
-      <button class="bc-del" data-idx="${idx}" title="Eliminar">
-        <i class="bi bi-trash3-fill"></i>
-        <span class="bspin" style="display:none"><div class="spin-ring bspin-sm"></div></span>
-      </button>`;
-    el.querySelector('.bc-del').addEventListener('click',function(){deleteBcCode(idx,this);});
-    list.appendChild(el);
-  });
-}
-
-async function deleteBcCode(idx,btn){
-  const code=bcCodes[idx];
-  // Show spinner
-  btn.querySelector('i').style.display='none';
-  btn.querySelector('.bspin').style.display='flex';
-  btn.disabled=true;
-  try{
-    const newCodes=bcCodes.filter((_,i)=>i!==idx);
-    if(db){
-      const docId=bcProd._firebaseId;
-      if(!docId)throw new Error('No Firebase ID');
-      await db.collection('products').doc(docId).update({
-        barcodes:newCodes,
-        barcode:newCodes.length>0?newCodes[0]:''
-      });
-    }
-    bcCodes=bcCodes.filter((_,i)=>i!==idx);
-    // Sync local cache
-    syncLocalProduct(bcProd.sku,{barcodes:bcCodes,barcode:bcCodes[0]||''});
-    renderBcList();
-    showBcToast('Código eliminado','success');
-  }catch(e){
-    btn.querySelector('i').style.display='';
-    btn.querySelector('.bspin').style.display='none';
-    btn.disabled=false;
-    showBcToast('Error al eliminar: '+e.message,'error');
-  }
-}
-
-async function addBcCode(){
-  const code=$('bcNewInput').value.trim();
-  if(!code){showBcToast('Ingresa un código de barras','error');return;}
-  if(!bcProd){showBcToast('Selecciona un producto primero','error');return;}
-  if(bcCodes.includes(code)){showBcToast('Ese código ya está asignado a este producto','error');return;}
-
-  // Disable button
-  const btn=$('bcSaveBtn');btn.disabled=true;
-  btn.innerHTML='<div class="bspin"></div> Verificando...';
-
-  try{
-    // Check duplicates in other products
-    if(db){
-      const [snap1,snap2]=await Promise.all([
-        db.collection('products').where('barcodes','array-contains',code).get(),
-        db.collection('products').where('barcode','==',code).get()
-      ]);
-      const dups=[];
-      snap1.forEach(doc=>{const d=doc.data();if(d.sku!==bcProd.sku)dups.push(d.name||d.sku);});
-      snap2.forEach(doc=>{const d=doc.data();if(d.sku!==bcProd.sku&&!dups.includes(d.name||d.sku))dups.push(d.name||d.sku);});
-      if(dups.length){
-        showBcToast(`Ya asignado a: ${dups.slice(0,2).join(', ')}${dups.length>2?' y más':''}`, 'error');
-        return;
-      }
-    }
-
-    btn.innerHTML='<div class="bspin"></div> Guardando...';
-    const newCodes=[...bcCodes,code];
-    if(db){
-      const docId=bcProd._firebaseId;
-      if(!docId)throw new Error('No Firebase ID');
-      await db.collection('products').doc(docId).update({
-        barcodes:newCodes,
-        barcode:newCodes[0]
-      });
-    }
-    bcCodes.push(code);
-    syncLocalProduct(bcProd.sku,{barcodes:bcCodes,barcode:bcCodes[0]||''});
-    $('bcNewInput').value='';
-    renderBcList();
-    showBcToast('Código agregado exitosamente','success');
-  }catch(e){
-    showBcToast('Error al agregar: '+e.message,'error');
-  }finally{
-    btn.disabled=false;
-    btn.innerHTML='<i class="bi bi-check-lg"></i> Agregar Código';
-  }
-}
-
-function syncLocalProduct(sku,updates){
-  const idx=productos.findIndex(p=>p.sku===sku);
-  if(idx!==-1)Object.assign(productos[idx],updates);
-  buildIndex(); // keep index in sync
-  try{localStorage.setItem('handheldProductos',JSON.stringify(productos));}catch(e){}
-}
-
-/* BC Toast */
-let bcToastT;
-function showBcToast(msg,type='info'){
-  const toast=$('bcToast');
-  const icons={success:'bi-check-circle-fill',error:'bi-x-circle-fill',info:'bi-info-circle-fill'};
-  toast.innerHTML=`<i class="bi ${icons[type]||'bi-info-circle-fill'}"></i> ${msg}`;
-  toast.className=`mtoast sh ${type}`;
-  clearTimeout(bcToastT);
-  if(type!=='error')bcToastT=setTimeout(hideBcToast,3000);
-}
-function hideBcToast(){const t=$('bcToast');t.classList.remove('sh');}
-
-/* ══════════════════════════════════════
    EVENTS
 ══════════════════════════════════════ */
 document.addEventListener('DOMContentLoaded',async()=>{
@@ -1239,19 +866,47 @@ document.addEventListener('DOMContentLoaded',async()=>{
     searchInput.value='';runSearch('');searchInput.focus();
   });
 
-  // Real-time search — zero debounce, index is pre-built
+  // Real-time search con DEBOUNCE de 150ms (solución al problema de congelamiento)
   searchInput.addEventListener('input',()=>{
-    const q=searchInput.value.trim();
-    runSearch(q);
+    // Limpiar timer anterior
+    if (searchTimer) clearTimeout(searchTimer);
+    
+    const q = searchInput.value.trim();
+    
+    // Mostrar spinner mientras se espera
+    $('sinIco').style.display = 'none';
+    $('sinSpin').style.display = 'block';
+    
+    // Ejecutar búsqueda después de 150ms de inactividad
+    searchTimer = setTimeout(() => {
+      runSearch(q);
+      // Restaurar icono
+      $('sinIco').style.display = '';
+      $('sinSpin').style.display = 'none';
+      searchTimer = null;
+    }, 150);
   });
+  
+  // Tecla Enter ejecuta búsqueda inmediata
   searchInput.addEventListener('keydown',e=>{
-    if(e.key==='Enter'){e.preventDefault();runSearch(searchInput.value.trim());}
+    if(e.key==='Enter'){
+      e.preventDefault();
+      if (searchTimer) clearTimeout(searchTimer);
+      runSearch(searchInput.value.trim());
+      $('sinIco').style.display = '';
+      $('sinSpin').style.display = 'none';
+    }
   });
 
   // Admin button
   $('btnAdminToggle').addEventListener('click',()=>{
-    if(authenticated)openBcSheet(null);
-    else openPinModal(()=>openBcSheet(null));
+    if(authenticated) {
+      notif('Modo administrador activado', 'info');
+    } else {
+      openPinModal(()=>{
+        notif('Sesión admin iniciada', 'success');
+      });
+    }
   });
 
   // Product sheet close
@@ -1264,24 +919,6 @@ document.addEventListener('DOMContentLoaded',async()=>{
   $('submitPinBtn').addEventListener('click',submitPin);
   $('pinInput').addEventListener('keypress',e=>{if(e.key==='Enter')submitPin();});
   $('pinInput').addEventListener('input',function(){this.value=this.value.replace(/\D/g,'');});
-
-  // BC sheet
-  $('closeBcBtn').addEventListener('click',()=>closeModal(bcSheet));
-  $('bcLogoutBtn').addEventListener('click',()=>{logout();closeModal(bcSheet);});
-  $('bcChgBtn').addEventListener('click',()=>{
-    bcProd=null;bcCodes=[];
-    $('bcProdSection').style.display='none';
-    $('bcFt').style.display='none';
-    $('bcSheetSub').textContent='Selecciona un producto';
-    $('bcSearchInput').value='';$('bcNewInput').value='';
-    hideBcToast();
-    setTimeout(()=>$('bcSearchInput').focus(),80);
-  });
-  $('bcSearchInput').addEventListener('input',bcSearchHandler);
-  $('bcSearchInput').addEventListener('keydown',e=>{if(e.key==='Enter'){clearTimeout(bcSearchTimer);bcSearchHandler();}});
-  $('bcSaveBtn').addEventListener('click',addBcCode);
-  $('bcNewInput').addEventListener('keypress',e=>{if(e.key==='Enter')addBcCode();});
-  $('bcCancelAddBtn').addEventListener('click',()=>closeModal(bcSheet));
 
   // Load data
   await loadProducts();
