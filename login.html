@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Inventario — Iniciar Sesión</title>
+<link rel="icon" href="https://cdn-icons-png.flaticon.com/512/891/891419.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+:root{
+  --bg:#f0f2f8;--bg-card:#ffffff;--bg-input:#f5f7fc;--border:#dde1ef;
+  --accent:#2563eb;--accent-h:#1d4ed8;--accent-dim:#dbeafe;
+  --text:#0f172a;--text-2:#475569;--text-m:#94a3b8;
+  --danger:#dc2626;--danger-bg:#fef2f2;
+  --sh:0 1px 3px rgba(0,0,0,.07),0 8px 30px rgba(0,0,0,.09);
+  --grid:rgba(37,99,235,0.05);
+}
+[data-theme="dark"]{
+  --bg:#0d0f14;--bg-card:#13151c;--bg-input:#1a1d26;--border:rgba(255,255,255,0.08);
+  --accent:#63b3ed;--accent-h:#90cdf4;--accent-dim:rgba(99,179,237,0.12);
+  --text:#f0f4f8;--text-2:#8892a4;--text-m:#4a5568;
+  --danger:#f87171;--danger-bg:rgba(248,113,113,0.1);
+  --sh:0 4px 32px rgba(0,0,0,.5);
+  --grid:rgba(99,179,237,0.03);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{height:100%;}
+body{
+  font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);
+  display:flex;align-items:center;justify-content:center;
+  min-height:100vh;transition:background .3s,color .3s;
+  position:relative;overflow:hidden;
+}
+body::before{
+  content:'';position:fixed;inset:0;
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:40px 40px;pointer-events:none;z-index:0;
+}
+.blob{position:fixed;border-radius:50%;filter:blur(80px);pointer-events:none;z-index:0;opacity:.6;}
+.b1{width:500px;height:500px;background:radial-gradient(circle,rgba(37,99,235,.08),transparent 70%);top:-150px;left:-120px;}
+.b2{width:400px;height:400px;background:radial-gradient(circle,rgba(6,182,212,.06),transparent 70%);bottom:-80px;right:-80px;}
+[data-theme="dark"] .b1{background:radial-gradient(circle,rgba(99,179,237,.1),transparent 70%);}
+[data-theme="dark"] .b2{background:radial-gradient(circle,rgba(104,211,145,.07),transparent 70%);}
+
+.theme-btn{
+  position:fixed;top:1.25rem;right:1.25rem;z-index:100;
+  width:38px;height:38px;border-radius:50%;border:1.5px solid var(--border);
+  background:var(--bg-card);color:var(--text-2);cursor:pointer;
+  display:flex;align-items:center;justify-content:center;font-size:.85rem;
+  transition:all .2s;box-shadow:var(--sh);
+}
+.theme-btn:hover{border-color:var(--accent);color:var(--accent);transform:rotate(15deg);}
+
+/* Container — más ancho en desktop */
+.wrap{
+  position:relative;z-index:1;width:100%;
+  max-width:420px;padding:1.25rem;
+  animation:cardIn .45s cubic-bezier(.22,.61,.36,1) both;
+}
+@media(min-width:640px){.wrap{max-width:480px;padding:1.5rem;}}
+@media(min-width:1024px){.wrap{max-width:540px;}}
+
+@keyframes cardIn{from{opacity:0;transform:translateY(20px) scale(.98);}to{opacity:1;transform:translateY(0) scale(1);}}
+
+.card{
+  background:var(--bg-card);border:1.5px solid var(--border);border-radius:20px;
+  padding:2.5rem 2.25rem;box-shadow:var(--sh);transition:background .3s,border-color .3s;
+}
+@media(min-width:640px){.card{padding:2.75rem 2.75rem;}}
+@media(min-width:1024px){.card{padding:3rem 3.25rem;}}
+
+.brand{display:flex;align-items:center;gap:14px;margin-bottom:2.25rem;}
+.brand-ico{
+  width:46px;height:46px;border-radius:13px;background:var(--accent);
+  display:flex;align-items:center;justify-content:center;font-size:1.125rem;color:#fff;
+  box-shadow:0 3px 14px rgba(37,99,235,.3);flex-shrink:0;
+}
+[data-theme="dark"] .brand-ico{background:var(--accent-dim);color:var(--accent);box-shadow:none;}
+.brand-name{font-family:'Syne',sans-serif;font-size:1.25rem;font-weight:800;color:var(--text);letter-spacing:-.3px;}
+.brand-sub{font-size:.73rem;color:var(--text-m);margin-top:1px;}
+
+.heading{margin-bottom:1.875rem;}
+.heading h2{font-family:'Syne',sans-serif;font-size:1.375rem;font-weight:800;color:var(--text);letter-spacing:-.4px;margin-bottom:4px;}
+.heading p{font-size:.8125rem;color:var(--text-m);}
+
+.error-box{
+  display:none;align-items:center;gap:8px;
+  background:var(--danger-bg);border:1px solid rgba(220,38,38,.2);
+  border-radius:9px;padding:.625rem .875rem;font-size:.78rem;color:var(--danger);
+  margin-bottom:1rem;animation:shake .3s ease;
+}
+.error-box.show{display:flex;}
+@keyframes shake{0%,100%{transform:translateX(0);}25%{transform:translateX(-5px);}75%{transform:translateX(5px);}}
+
+.field{margin-bottom:1.125rem;}
+.lbl{display:block;font-size:.67rem;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--text-m);margin-bottom:.5rem;}
+.inp-wrap{position:relative;}
+.inp-ico{position:absolute;left:.875rem;top:50%;transform:translateY(-50%);color:var(--text-m);font-size:.78rem;pointer-events:none;transition:color .2s;}
+.inp{
+  width:100%;padding:.6875rem .875rem .6875rem 2.5rem;
+  background:var(--bg-input);border:1.5px solid var(--border);border-radius:10px;
+  color:var(--text);font-family:'DM Sans',sans-serif;font-size:.9rem;
+  outline:none;transition:all .2s;
+}
+.inp::placeholder{color:var(--text-m);}
+.inp:focus{border-color:var(--accent);background:var(--bg-card);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 12%,transparent);}
+.eye-btn{position:absolute;right:.875rem;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text-m);cursor:pointer;font-size:.8rem;padding:4px;border-radius:5px;transition:color .2s;}
+.eye-btn:hover{color:var(--text-2);}
+
+.aux-row{display:flex;justify-content:space-between;align-items:center;margin:.5rem 0 1.5rem;}
+.chk{display:flex;align-items:center;gap:8px;cursor:pointer;}
+.chk input{width:15px;height:15px;accent-color:var(--accent);cursor:pointer;}
+.chk span{font-size:.8rem;color:var(--text-2);user-select:none;}
+.forgot{font-size:.8rem;color:var(--accent);text-decoration:none;font-weight:500;transition:opacity .2s;}
+.forgot:hover{opacity:.7;}
+
+.btn-login{
+  width:100%;padding:.75rem 1rem;background:var(--accent);color:#fff;border:none;border-radius:10px;
+  font-family:'DM Sans',sans-serif;font-size:.9rem;font-weight:600;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  transition:all .2s;box-shadow:0 2px 12px color-mix(in srgb,var(--accent) 35%,transparent);
+}
+.btn-login:hover:not(:disabled){background:var(--accent-h);transform:translateY(-1px);}
+.btn-login:disabled{opacity:.55;cursor:not-allowed;transform:none;}
+.btn-login.loading .lbl-txt{display:none;}
+.btn-login .spin{width:16px;height:16px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:sp .65s linear infinite;display:none;}
+.btn-login.loading .spin{display:block;}
+@keyframes sp{to{transform:rotate(360deg);}}
+
+.footer{text-align:center;margin-top:1.5rem;font-size:.73rem;color:var(--text-m);}
+</style>
+</head>
+<body>
+<div class="blob b1"></div>
+<div class="blob b2"></div>
+<button class="theme-btn" id="themeBtn" title="Cambiar tema"><i class="fas fa-moon" id="themeIco"></i></button>
+
+<div class="wrap">
+  <div class="card">
+    <div class="brand">
+      <div class="brand-ico"><i class="fas fa-warehouse"></i></div>
+      <div>
+        <div class="brand-name">Inventario</div>
+        <div class="brand-sub">Sistema de gestión de stock</div>
+      </div>
+    </div>
+
+    <div class="heading">
+      <h2>Bienvenido</h2>
+      <p>Ingresa tus credenciales para continuar</p>
+    </div>
+
+    <div class="error-box" id="errBox">
+      <i class="fas fa-exclamation-circle"></i>
+      <span id="errTxt">Credenciales incorrectas</span>
+    </div>
+
+    <form id="loginForm" novalidate>
+      <div class="field">
+        <label class="lbl" for="uIn">Usuario</label>
+        <div class="inp-wrap">
+          <input class="inp" type="text" id="uIn" placeholder="Tu usuario" autocomplete="username" spellcheck="false">
+          <i class="fas fa-user inp-ico"></i>
+        </div>
+      </div>
+      <div class="field">
+        <label class="lbl" for="pIn">Contraseña</label>
+        <div class="inp-wrap">
+          <input class="inp" type="password" id="pIn" placeholder="••••••••" autocomplete="current-password" style="padding-right:2.75rem">
+          <i class="fas fa-lock inp-ico"></i>
+          <button type="button" class="eye-btn" id="eyeBtn"><i class="fas fa-eye" id="eyeIco"></i></button>
+        </div>
+      </div>
+      <div class="aux-row">
+        <label class="chk">
+          <input type="checkbox" id="remCk">
+          <span>Recordarme</span>
+        </label>
+        <a href="#" class="forgot" onclick="return false">¿Olvidaste tu contraseña?</a>
+      </div>
+      <button type="submit" class="btn-login" id="loginBtn">
+        <span class="spin"></span>
+        <span class="lbl-txt"><i class="fas fa-arrow-right-to-bracket"></i> Ingresar</span>
+      </button>
+    </form>
+  </div>
+  <div class="footer">© 2025 Sistema de Inventario</div>
+</div>
+
+<script>
+const USERS = {
+  admin:  { password: 'admin21',   role: 'admin',   display: 'Administrador' },
+  hogar:  { password: 'hogar123',  role: 'usuario', display: 'Hogar' }
+};
+
+// ── Theme ──
+const root = document.documentElement;
+const tBtn = document.getElementById('themeBtn');
+const tIco = document.getElementById('themeIco');
+function setTheme(t) {
+  root.setAttribute('data-theme', t);
+  tIco.className = t === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+  localStorage.setItem('theme', t);
+}
+setTheme(localStorage.getItem('theme') || 'light');
+tBtn.onclick = () => setTheme(root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+
+// ── Eye toggle ──
+const pIn = document.getElementById('pIn');
+const eyeBtn = document.getElementById('eyeBtn');
+const eyeIco = document.getElementById('eyeIco');
+eyeBtn.onclick = () => {
+  const show = pIn.type === 'password';
+  pIn.type = show ? 'text' : 'password';
+  eyeIco.className = show ? 'fas fa-eye-slash' : 'fas fa-eye';
+};
+
+// ── Login ──
+const errBox = document.getElementById('errBox');
+const errTxt = document.getElementById('errTxt');
+const loginBtn = document.getElementById('loginBtn');
+function showErr(m) {
+  errTxt.textContent = m;
+  errBox.classList.add('show');
+  setTimeout(() => errBox.classList.remove('show'), 4000);
+}
+
+document.getElementById('loginForm').addEventListener('submit', async function(e) {
+  e.preventDefault();
+  const u = document.getElementById('uIn').value.trim().toLowerCase();
+  const p = document.getElementById('pIn').value;
+  const rem = document.getElementById('remCk').checked;
+  if (!u || !p) { showErr('Completa todos los campos.'); return; }
+  loginBtn.classList.add('loading'); loginBtn.disabled = true;
+  errBox.classList.remove('show');
+  await new Promise(r => setTimeout(r, 500));
+  const usr = USERS[u];
+  if (!usr || usr.password !== p) {
+    loginBtn.classList.remove('loading'); loginBtn.disabled = false;
+    showErr('Usuario o contraseña incorrectos.');
+    document.getElementById('pIn').value = '';
+    return;
+  }
+  const sess = JSON.stringify({ username: usr.display, role: usr.role, loginTime: Date.now() });
+  if (rem) localStorage.setItem('userSession', sess);
+  else sessionStorage.setItem('userSession', sess);
+  localStorage.setItem('theme', root.getAttribute('data-theme'));
+  window.location.href = 'inventario.html';
+});
+
+document.getElementById('uIn').addEventListener('keydown', e => {
+  if (e.key === 'Enter') document.getElementById('pIn').focus();
+});
+
+// Redirigir si ya hay sesión activa
+const s = localStorage.getItem('userSession') || sessionStorage.getItem('userSession');
+if (s) window.location.href = 'inventario.html';
+</script>
+</body>
+</html>
