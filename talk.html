@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <title>Walkie Talkie · Voz en Tiempo Real</title>
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Sora:wght@300;400;600;700&display=swap" rel="stylesheet">
@@ -43,7 +44,6 @@
       z-index: 2;
     }
 
-    /* Header */
     .hdr {
       flex-shrink: 0;
       padding: calc(12px + env(safe-area-inset-top, 0px)) 18px 10px;
@@ -54,9 +54,7 @@
       backdrop-filter: blur(20px);
       border-bottom: 1px solid rgba(0,0,0,0.08);
     }
-    .hdr-brand {
-      flex: 1;
-    }
+    .hdr-brand { flex: 1; }
     .hdr-title {
       font-size: 1.2rem;
       font-weight: 700;
@@ -124,11 +122,8 @@
       cursor: pointer;
       transition: all 0.15s;
     }
-    .ibtn:active {
-      transform: scale(0.92);
-    }
+    .ibtn:active { transform: scale(0.92); }
 
-    /* Walkie Principal */
     .walkie-main {
       flex: 1;
       display: flex;
@@ -169,10 +164,7 @@
       font-family: monospace;
     }
 
-    /* Botón PTT (Push to Talk) */
-    .ptt-container {
-      margin: 20px 0;
-    }
+    .ptt-container { margin: 20px 0; }
     .ptt-btn {
       width: 150px;
       height: 150px;
@@ -215,10 +207,7 @@
       100% { transform: scale(1.1); text-shadow: 0 0 8px rgba(0,86,179,0.5); }
     }
 
-    /* Indicadores */
-    .voice-indicator {
-      margin-top: 20px;
-    }
+    .voice-indicator { margin-top: 20px; }
     .vumeter {
       width: 100%;
       height: 6px;
@@ -272,7 +261,6 @@
       50% { opacity: 1; transform: scale(1.2); }
     }
 
-    /* Lista de dispositivos conectados */
     .devices-panel {
       margin-top: 24px;
       background: #f8fafc;
@@ -328,9 +316,7 @@
       align-items: center;
       gap: 6px;
     }
-    .sec-btn:active {
-      transform: scale(0.94);
-    }
+    .sec-btn:active { transform: scale(0.94); }
 
     footer {
       padding: 12px 18px calc(12px + env(safe-area-inset-bottom,0px));
@@ -377,7 +363,7 @@
       </div>
       <div id="connPill" class="pill on">
         <span class="dot pulse"></span>
-        <span id="connStatus">En línea</span>
+        <span id="connStatus">Conectando...</span>
       </div>
     </div>
     <div class="hdr-acts">
@@ -388,7 +374,7 @@
   <div class="walkie-main">
     <div class="radio-card">
       <div class="channel-info">
-        <div class="channel-badge"><i class="bi bi-broadcast"></i> CANAL VOZ · BODEGA</div>
+        <div class="channel-badge"><i class="bi bi-broadcast"></i> CANAL VOZ · EN VIVO</div>
         <div class="device-id" id="deviceIdDisplay">ID: ----</div>
       </div>
 
@@ -401,7 +387,7 @@
           <div class="vumeter">
             <div class="vumeter-fill" id="vumeterFill"></div>
           </div>
-          <div class="status-text" id="statusText">🔘 Listo · Presiona para hablar</div>
+          <div class="status-text" id="statusText">🎤 Esperando micrófono...</div>
           <div class="led-group">
             <div class="led" id="txLed"></div>
             <div class="led" id="rxLed"></div>
@@ -426,29 +412,23 @@
     </div>
   </div>
   <footer>
-    <i class="bi bi-wifi"></i> Voz en tiempo real · Push to Talk · WebRTC + WebSocket
+    <i class="bi bi-wifi"></i> Voz en tiempo real · Push to Talk · Abre en otra pestaña para probar
   </footer>
 </div>
 <div id="toastMsg" class="toast-msg"></div>
 
 <script>
-  // ==================== WALKIE TALKIE EN TIEMPO REAL ====================
-  // Usa WebRTC + WebSocket (servidor público de señalización) para audio en vivo
-  // Comunicación P2P con latencia mínima, voz en tiempo real mientras se mantiene presionado
-  
   class RealTimeWalkieTalkie {
     constructor() {
       this.localStream = null;
-      this.peerConnections = new Map(); // id -> RTCPeerConnection
-      this.audioContext = null;
-      this.sourceNode = null;
-      this.processorNode = null;
+      this.peerConnections = new Map();
+      this.remoteAudioElements = new Map(); // Guardar referencia a elementos de audio
       this.isTransmitting = false;
       this.deviceId = this.generateDeviceId();
-      this.devices = new Map(); // id -> { name, lastSeen }
+      this.devices = new Map();
       this.ws = null;
       this.reconnectAttempts = 0;
-      this.vumeterInterval = null;
+      this.roomId = this.getRoomId();
       
       // Elementos DOM
       this.pttBtn = document.getElementById('pttButton');
@@ -468,10 +448,21 @@
     generateDeviceId() {
       let id = localStorage.getItem('walkie_device_id_rt');
       if (!id) {
-        id = 'HH-' + Math.random().toString(36).substring(2, 8).toUpperCase();
+        const names = ['ALFA', 'BRAVO', 'CHARLIE', 'DELTA', 'ECHO', 'FOXTROT', 'GOLF', 'HOTEL'];
+        const randomName = names[Math.floor(Math.random() * names.length)];
+        id = randomName + '-' + Math.floor(Math.random() * 100);
         localStorage.setItem('walkie_device_id_rt', id);
       }
       return id;
+    }
+    
+    getRoomId() {
+      let room = localStorage.getItem('walkie_room');
+      if (!room) {
+        room = 'room_' + Math.random().toString(36).substring(2, 8);
+        localStorage.setItem('walkie_room', room);
+      }
+      return room;
     }
     
     async init() {
@@ -479,7 +470,6 @@
       await this.initMicrophone();
       this.connectWebSocket();
       this.setupUIEvents();
-      this.startHeartbeat();
     }
     
     async initMicrophone() {
@@ -492,17 +482,22 @@
           }
         });
         
-        this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        this.sourceNode = this.audioContext.createMediaStreamSource(this.localStream);
-        
-        // Analizador para VU meter
-        const analyser = this.audioContext.createAnalyser();
+        // Inicializar AudioContext para VU meter
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        const source = audioContext.createMediaStreamSource(this.localStream);
+        const analyser = audioContext.createAnalyser();
         analyser.fftSize = 256;
-        this.sourceNode.connect(analyser);
-        this.startVUMeter(analyser);
+        source.connect(analyser);
         
+        this.startVUMeter(analyser);
         this.statusText.innerHTML = '🎤 Micrófono listo · Presiona para hablar';
         this.showToast('Micrófono activado', 2000);
+        
+        // Reanudar AudioContext si está suspendido
+        if (audioContext.state === 'suspended') {
+          await audioContext.resume();
+        }
+        
       } catch (err) {
         console.error('Error micrófono:', err);
         this.statusText.innerHTML = '❌ Error: Sin acceso al micrófono';
@@ -533,71 +528,107 @@
     }
     
     connectWebSocket() {
-      // Usamos un servidor público de señalización WebSocket
-      // Para demo, usamos un servidor público simple (wss://echo.websocket.org no soporta WebRTC)
-      // Implementamos con servidor de señalización local simulado + BroadcastChannel como fallback
-      // Para verdadero P2P necesitaríamos un signaling server, pero para demo usamos WebRTC + BroadcastChannel para señalización
+      // Usar servidor público de señalización WebSocket para WebRTC
+      // Si falla, usar modo broadcast local (misma máquina)
+      const wsUrl = 'wss://broadcast-channel-demo.glitch.me/ws';
       
-      this.setupSignalingViaBroadcast();
+      try {
+        this.ws = new WebSocket(wsUrl);
+        
+        this.ws.onopen = () => {
+          console.log('WebSocket conectado');
+          this.netLed.classList.add('active');
+          this.connStatusSpan.innerHTML = 'En línea';
+          this.connPill.classList.add('on');
+          
+          // Enviar mensaje de registro
+          this.ws.send(JSON.stringify({
+            type: 'register',
+            deviceId: this.deviceId,
+            roomId: this.roomId
+          }));
+          
+          this.showToast('Conectado al canal', 2000);
+        };
+        
+        this.ws.onmessage = (event) => {
+          try {
+            const data = JSON.parse(event.data);
+            this.handleSignalingMessage(data);
+          } catch (e) {
+            console.error('Error parsing message:', e);
+          }
+        };
+        
+        this.ws.onclose = () => {
+          console.log('WebSocket desconectado');
+          this.netLed.classList.remove('active');
+          this.connStatusSpan.innerHTML = 'Desconectado';
+          this.connPill.classList.remove('on');
+          this.connPill.classList.add('off');
+          
+          // Intentar reconectar después de 3 segundos
+          setTimeout(() => this.connectWebSocket(), 3000);
+        };
+        
+        this.ws.onerror = (err) => {
+          console.error('WebSocket error:', err);
+          this.useBroadcastFallback();
+        };
+        
+      } catch (err) {
+        console.error('Error WebSocket:', err);
+        this.useBroadcastFallback();
+      }
     }
     
-    setupSignalingViaBroadcast() {
-      // Usamos BroadcastChannel para señalización entre pestañas (mismo dispositivo)
-      // Para dispositivos diferentes, recomendar usar el mismo navegador o compartir pantalla
-      this.signalingChannel = new BroadcastChannel('walkie_rt_signaling');
+    useBroadcastFallback() {
+      // Fallback a BroadcastChannel para prueba local
+      this.showToast('Usando modo local (misma máquina)', 3000);
+      this.signalingChannel = new BroadcastChannel('walkie_rt_' + this.roomId);
       this.signalingChannel.onmessage = (event) => {
         this.handleSignalingMessage(event.data);
       };
+      this.netLed.classList.add('active');
+      this.connStatusSpan.innerHTML = 'Local';
       
       // Anunciar presencia
       this.announcePresence();
-      this.netLed.classList.add('active');
-      this.connStatusSpan.innerHTML = 'Canal activo';
-      this.connPill.classList.add('on');
-      
-      // Simular red para demo: crear conexiones con otros pares
-      setTimeout(() => {
-        this.discoverPeers();
-      }, 500);
     }
     
     announcePresence() {
-      this.signalingChannel.postMessage({
-        type: 'announce',
-        deviceId: this.deviceId,
-        timestamp: Date.now()
-      });
-    }
-    
-    discoverPeers() {
-      // Solicitar lista de pares
-      this.signalingChannel.postMessage({
-        type: 'discover',
-        deviceId: this.deviceId
-      });
+      if (this.signalingChannel) {
+        this.signalingChannel.postMessage({
+          type: 'announce',
+          deviceId: this.deviceId,
+          timestamp: Date.now()
+        });
+      }
     }
     
     handleSignalingMessage(data) {
       switch(data.type) {
+        case 'register':
         case 'announce':
-          this.addDevice(data.deviceId);
-          // Si no tenemos conexión con este dispositivo, iniciar
           if (data.deviceId !== this.deviceId && !this.peerConnections.has(data.deviceId)) {
+            this.addDevice(data.deviceId);
             this.createPeerConnection(data.deviceId, true);
           }
           break;
-        case 'discover':
-          // Responder con anuncio
-          this.announcePresence();
-          break;
         case 'offer':
-          this.handleOffer(data);
+          if (data.fromId !== this.deviceId) {
+            this.handleOffer(data);
+          }
           break;
         case 'answer':
-          this.handleAnswer(data);
+          if (data.fromId !== this.deviceId) {
+            this.handleAnswer(data);
+          }
           break;
         case 'ice-candidate':
-          this.handleIceCandidate(data);
+          if (data.fromId !== this.deviceId) {
+            this.handleIceCandidate(data);
+          }
           break;
         case 'start-transmit':
           if (data.deviceId !== this.deviceId) {
@@ -608,6 +639,9 @@
           if (data.deviceId !== this.deviceId) {
             this.handleStopTransmit(data.deviceId);
           }
+          break;
+        case 'device-list':
+          this.updateDeviceList(data.devices);
           break;
       }
     }
@@ -633,44 +667,60 @@
       ).join('');
     }
     
+    updateDeviceList(devices) {
+      devices.forEach(device => {
+        if (device !== this.deviceId) {
+          this.addDevice(device);
+        }
+      });
+    }
+    
     createPeerConnection(remoteId, initiator = false) {
       const pc = new RTCPeerConnection({
-        iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
+        iceServers: [
+          { urls: 'stun:stun.l.google.com:19302' },
+          { urls: 'stun:stun1.l.google.com:19302' }
+        ]
       });
       
       // Añadir tracks locales cuando se esté transmitiendo
-      if (this.localStream) {
-        const senders = pc.getSenders();
-        if (senders.length === 0 && this.localStream) {
-          this.localStream.getTracks().forEach(track => {
-            pc.addTrack(track, this.localStream);
-          });
-        }
+      if (this.localStream && this.isTransmitting) {
+        this.localStream.getTracks().forEach(track => {
+          pc.addTrack(track, this.localStream);
+        });
       }
       
       pc.onicecandidate = (event) => {
         if (event.candidate) {
-          this.signalingChannel.postMessage({
+          this.sendSignaling({
             type: 'ice-candidate',
             candidate: event.candidate,
-            targetId: remoteId,
-            fromId: this.deviceId
+            fromId: this.deviceId,
+            targetId: remoteId
           });
         }
       };
       
       pc.ontrack = (event) => {
-        // Recibir audio de otro dispositivo
+        console.log('Recibiendo track remoto de:', remoteId);
         this.handleRemoteTrack(event.streams[0], remoteId);
       };
       
       pc.onconnectionstatechange = () => {
+        console.log(`Conexión con ${remoteId}: ${pc.connectionState}`);
         if (pc.connectionState === 'connected') {
           this.showToast(`🔊 Conectado con ${remoteId}`, 1500);
-        } else if (pc.connectionState === 'disconnected') {
+        } else if (pc.connectionState === 'disconnected' || pc.connectionState === 'failed') {
           this.peerConnections.delete(remoteId);
           this.devices.delete(remoteId);
           this.updateDevicesList();
+          // Limpiar elemento de audio
+          const audio = this.remoteAudioElements.get(remoteId);
+          if (audio) {
+            audio.pause();
+            audio.srcObject = null;
+            this.remoteAudioElements.delete(remoteId);
+          }
         }
       };
       
@@ -689,11 +739,11 @@
       try {
         const offer = await pc.createOffer();
         await pc.setLocalDescription(offer);
-        this.signalingChannel.postMessage({
+        this.sendSignaling({
           type: 'offer',
           offer: offer,
-          targetId: remoteId,
-          fromId: this.deviceId
+          fromId: this.deviceId,
+          targetId: remoteId
         });
       } catch (err) {
         console.error('Error creating offer:', err);
@@ -710,11 +760,11 @@
         await pc.setRemoteDescription(new RTCSessionDescription(data.offer));
         const answer = await pc.createAnswer();
         await pc.setLocalDescription(answer);
-        this.signalingChannel.postMessage({
+        this.sendSignaling({
           type: 'answer',
           answer: answer,
-          targetId: data.fromId,
-          fromId: this.deviceId
+          fromId: this.deviceId,
+          targetId: data.fromId
         });
       } catch (err) {
         console.error('Error handling offer:', err);
@@ -723,7 +773,7 @@
     
     async handleAnswer(data) {
       const pc = this.peerConnections.get(data.fromId);
-      if (pc && pc.remoteDescription === null) {
+      if (pc && !pc.remoteDescription) {
         await pc.setRemoteDescription(new RTCSessionDescription(data.answer));
       }
     }
@@ -736,13 +786,49 @@
     }
     
     handleRemoteTrack(stream, fromId) {
-      // Reproducir audio recibido
-      const audio = new Audio();
-      audio.srcObject = stream;
-      audio.play().catch(e => console.log('Auto-play bloqueado'));
+      // Crear o reutilizar elemento de audio
+      let audio = this.remoteAudioElements.get(fromId);
+      if (!audio) {
+        audio = new Audio();
+        audio.autoplay = true;
+        audio.playsInline = true;
+        audio.style.display = 'none';
+        document.body.appendChild(audio);
+        this.remoteAudioElements.set(fromId, audio);
+        
+        // Intentar reproducir con interacción de usuario
+        const playAudio = () => {
+          if (audio.srcObject !== stream) {
+            audio.srcObject = stream;
+            audio.play().catch(e => {
+              console.log('Autoplay bloqueado, esperando interacción');
+              // Esperar a que el usuario interactúe
+              const resumePlayback = () => {
+                audio.play().catch(console.log);
+                document.removeEventListener('click', resumePlayback);
+                document.removeEventListener('touchstart', resumePlayback);
+              };
+              document.addEventListener('click', resumePlayback);
+              document.addEventListener('touchstart', resumePlayback);
+            });
+          }
+        };
+        playAudio();
+      } else if (audio.srcObject !== stream) {
+        audio.srcObject = stream;
+        audio.play().catch(e => console.log('Error playing audio:', e));
+      }
+      
       this.rxLed.classList.add('active');
       setTimeout(() => this.rxLed.classList.remove('active'), 300);
-      this.showToast(`🔊 Recibiendo audio de ${fromId}`, 1000);
+    }
+    
+    sendSignaling(message) {
+      if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+        this.ws.send(JSON.stringify(message));
+      } else if (this.signalingChannel) {
+        this.signalingChannel.postMessage(message);
+      }
     }
     
     startTransmitting() {
@@ -752,7 +838,7 @@
       this.statusText.innerHTML = '🔴 TRANSMITIENDO · Hablando...';
       
       // Activar todos los tracks locales en todas las conexiones
-      this.peerConnections.forEach((pc, remoteId) => {
+      this.peerConnections.forEach((pc) => {
         const senders = pc.getSenders();
         if (senders.length === 0 && this.localStream) {
           this.localStream.getTracks().forEach(track => {
@@ -765,13 +851,13 @@
         }
       });
       
-      // Notificar a otros que empezamos a transmitir
-      this.signalingChannel.postMessage({
+      // Notificar a otros
+      this.sendSignaling({
         type: 'start-transmit',
         deviceId: this.deviceId
       });
       
-      // Vibración al empezar
+      // Vibración
       if (navigator.vibrate) navigator.vibrate(50);
     }
     
@@ -789,8 +875,8 @@
         });
       });
       
-      // Notificar fin de transmisión
-      this.signalingChannel.postMessage({
+      // Notificar fin
+      this.sendSignaling({
         type: 'stop-transmit',
         deviceId: this.deviceId
       });
@@ -805,6 +891,7 @@
         if (!this.isTransmitting) {
           this.statusText.innerHTML = '🎙️ Listo · Presiona para hablar';
         }
+        this.rxLed.classList.remove('active');
       }, 2000);
     }
     
@@ -816,40 +903,35 @@
     }
     
     setupUIEvents() {
-      // Push to Talk - mantener presionado
-      this.pttBtn.addEventListener('mousedown', (e) => {
+      // Push to Talk
+      const startPTT = (e) => {
         e.preventDefault();
         this.startTransmitting();
-      });
-      this.pttBtn.addEventListener('mouseup', () => {
-        this.stopTransmitting();
-      });
-      this.pttBtn.addEventListener('mouseleave', () => {
-        this.stopTransmitting();
-      });
-      this.pttBtn.addEventListener('touchstart', (e) => {
-        e.preventDefault();
-        this.startTransmitting();
-      });
-      this.pttBtn.addEventListener('touchend', () => {
-        this.stopTransmitting();
-      });
-      this.pttBtn.addEventListener('touchcancel', () => {
-        this.stopTransmitting();
-      });
+      };
       
-      // Botón probar audio
+      const stopPTT = () => {
+        this.stopTransmitting();
+      };
+      
+      this.pttBtn.addEventListener('mousedown', startPTT);
+      this.pttBtn.addEventListener('mouseup', stopPTT);
+      this.pttBtn.addEventListener('mouseleave', stopPTT);
+      this.pttBtn.addEventListener('touchstart', startPTT, { passive: false });
+      this.pttBtn.addEventListener('touchend', stopPTT);
+      this.pttBtn.addEventListener('touchcancel', stopPTT);
+      
+      // Test audio
       document.getElementById('testAudioBtn').addEventListener('click', () => {
         this.testAudio();
       });
       
-      // Botón copiar ID
+      // Copy ID
       document.getElementById('copyIdBtn').addEventListener('click', () => {
         navigator.clipboard.writeText(this.deviceId);
         this.showToast('ID copiado: ' + this.deviceId, 2000);
       });
       
-      // Botón compartir
+      // Share
       document.getElementById('shareBtn').addEventListener('click', () => {
         if (navigator.share) {
           navigator.share({
@@ -864,34 +946,22 @@
     }
     
     testAudio() {
-      if (!this.audioContext) return;
-      const beep = this.audioContext.createOscillator();
-      const gain = this.audioContext.createGain();
-      beep.connect(gain);
-      gain.connect(this.audioContext.destination);
-      beep.frequency.value = 880;
+      // Crear un beep simple con Web Audio
+      const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      const oscillator = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      
+      oscillator.connect(gain);
+      gain.connect(audioCtx.destination);
+      
+      oscillator.frequency.value = 880;
       gain.gain.value = 0.3;
-      beep.start();
-      gain.gain.exponentialRampToValueAtTime(0.0001, this.audioContext.currentTime + 0.5);
-      beep.stop(this.audioContext.currentTime + 0.5);
+      
+      oscillator.start();
+      gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.5);
+      oscillator.stop(audioCtx.currentTime + 0.5);
+      
       this.showToast('🔊 Audio de prueba', 1000);
-    }
-    
-    startHeartbeat() {
-      setInterval(() => {
-        this.announcePresence();
-        // Limpiar dispositivos antiguos (más de 10 seg sin heartbeat)
-        const now = Date.now();
-        let changed = false;
-        this.devices.forEach((device, id) => {
-          if (now - device.lastSeen > 10000 && id !== this.deviceId) {
-            this.devices.delete(id);
-            this.peerConnections.delete(id);
-            changed = true;
-          }
-        });
-        if (changed) this.updateDevicesList();
-      }, 5000);
     }
     
     showToast(msg, duration = 2000) {
@@ -902,7 +972,7 @@
     }
   }
   
-  // Iniciar walkie talkie cuando el DOM esté listo
+  // Iniciar app
   document.addEventListener('DOMContentLoaded', () => {
     window.walkie = new RealTimeWalkieTalkie();
   });
