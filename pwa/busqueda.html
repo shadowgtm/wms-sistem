@@ -1,1 +1,1234 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Bodega · Búsqueda</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🔍</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Sora:wght@300;400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+<style>
+/* ══════════════════════════════════════
+   DESIGN TOKENS — same as index.html
+══════════════════════════════════════ */
+:root,[data-theme="dark"]{
+  --bg:#0d0f16;--surface:#111827;--elevated:#1a2235;--card:#1e2a40;--input:#243044;
+  --border:rgba(255,255,255,0.07);--border-h:rgba(255,255,255,0.13);
+  --accent:#2563eb;--accent-dim:rgba(37,99,235,0.15);--accent-glow:rgba(37,99,235,0.35);
+  --accent-h:#3b82f6;
+  --blue:#60a5fa;--blue-dim:rgba(96,165,250,0.13);
+  --ok:#22c55e;--ok-dim:rgba(34,197,94,0.12);
+  --warn:#f59e0b;--warn-dim:rgba(245,158,11,0.12);
+  --danger:#ef4444;--danger-dim:rgba(239,68,68,0.12);
+  --t1:#e8edf8;--t2:#8b96b4;--t3:#4a5270;
+  --shadow:rgba(0,0,0,0.55);
+  --bg-grad1:rgba(37,99,235,0.07);--bg-grad2:rgba(96,165,250,0.05);
+}
+[data-theme="light"]{
+  --bg:#f0f4fc;--surface:#ffffff;--elevated:#e8eef8;--card:#ffffff;--input:#eaf0fb;
+  --border:rgba(0,0,0,0.08);--border-h:rgba(0,0,0,0.14);
+  --accent:#1d4ed8;--accent-dim:rgba(29,78,216,0.10);--accent-glow:rgba(29,78,216,0.25);
+  --accent-h:#2563eb;
+  --blue:#2563eb;--blue-dim:rgba(37,99,235,0.10);
+  --ok:#16a34a;--ok-dim:rgba(22,163,74,0.10);
+  --warn:#d97706;--warn-dim:rgba(217,119,6,0.10);
+  --danger:#dc2626;--danger-dim:rgba(220,38,38,0.10);
+  --t1:#0f172a;--t2:#475569;--t3:#94a3b8;
+  --shadow:rgba(0,0,0,0.12);
+  --bg-grad1:rgba(29,78,216,0.05);--bg-grad2:rgba(37,99,235,0.03);
+}
 
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{height:100%;overflow:hidden}
+body{
+  font-family:'Sora',sans-serif;background:var(--bg);color:var(--t1);
+  height:100%;overflow:hidden;
+  -webkit-tap-highlight-color:transparent;-webkit-touch-callout:none;
+  -webkit-font-smoothing:antialiased;user-select:none;
+  transition:background .25s,color .25s;
+}
+body::before{
+  content:'';position:fixed;inset:0;pointer-events:none;
+  background:
+    radial-gradient(ellipse 90% 55% at 10% -5%,var(--bg-grad1) 0%,transparent 60%),
+    radial-gradient(ellipse 70% 45% at 90% 105%,var(--bg-grad2) 0%,transparent 60%);
+}
+
+/* ── LAYOUT ── */
+.app{position:relative;height:100%;display:flex;flex-direction:column;max-width:560px;margin:0 auto;z-index:1}
+
+/* ── HEADER ── */
+.hdr{
+  flex-shrink:0;
+  padding:calc(10px + env(safe-area-inset-top,0px)) 14px 10px;
+  display:flex;align-items:center;gap:10px;
+  background:var(--surface);
+  border-bottom:1px solid var(--border);
+  transition:background .25s,border-color .25s;
+}
+.hdr-brand{flex:1;min-width:0;display:flex;align-items:center;gap:8px}
+.hdr-icon{
+  width:26px;height:26px;border-radius:7px;flex-shrink:0;
+  background:var(--accent-dim);border:1px solid rgba(37,99,235,0.4);
+  color:var(--accent);display:flex;align-items:center;justify-content:center;font-size:.78rem;
+}
+[data-theme="light"] .hdr-icon{border-color:rgba(29,78,216,0.35)}
+.hdr-title{font-size:clamp(1rem,4.5vw,1.2rem);font-weight:700;letter-spacing:-.02em}
+.hdr-acts{display:flex;gap:5px;flex-shrink:0}
+.ibtn{
+  width:36px;height:36px;border-radius:11px;
+  background:var(--elevated);border:1px solid var(--border);
+  color:var(--t2);display:flex;align-items:center;justify-content:center;
+  font-size:1rem;cursor:pointer;transition:all .18s;position:relative;
+}
+.ibtn:active{transform:scale(.88);background:var(--card)}
+.ibtn.ac{color:var(--accent);border-color:rgba(37,99,235,.35);background:var(--accent-dim)}
+.ibtn.danger-ac{color:var(--danger);border-color:rgba(239,68,68,.35);background:var(--danger-dim)}
+
+/* Admin badge */
+.abadge{
+  position:absolute;bottom:-3px;right:-3px;
+  width:13px;height:13px;border-radius:50%;
+  background:var(--ok);border:2px solid var(--surface);
+  display:none;align-items:center;justify-content:center;
+  font-size:.42rem;color:#fff;pointer-events:none;
+  z-index:2;
+}
+.abadge.sh{display:flex}
+/* ensure icon inside ibtn is always on top */
+.ibtn>i{position:relative;z-index:1}
+
+/* ── SEARCH ZONE ── */
+.szn{
+  flex-shrink:0;padding:12px 14px 10px;
+  background:var(--surface);border-bottom:1px solid var(--border);
+  transition:background .25s,border-color .25s;
+}
+.sin-wrap{position:relative;display:flex;align-items:center}
+.sin-ico{position:absolute;left:12px;color:var(--accent);font-size:1.05rem;pointer-events:none;z-index:1}
+/* Loading spinner inside search input — replaces the magnifier icon */
+.sin-spin{
+  position:absolute;left:10px;z-index:1;
+  width:20px;height:20px;border-radius:50%;
+  border:2.5px solid var(--accent-dim);border-top-color:var(--accent);
+  animation:sp .65s linear infinite;pointer-events:none;
+}
+.sin{
+  width:100%;background:var(--input);border:1.5px solid var(--border);
+  border-radius:12px;padding:12px 78px 12px 40px;
+  font-family:'Sora',sans-serif;font-size:clamp(.88rem,3.5vw,.98rem);font-weight:500;
+  color:var(--t1);outline:none;transition:all .22s;
+  -webkit-appearance:none;caret-color:var(--accent);
+}
+.sin::placeholder{color:var(--t3);font-weight:400;font-size:.88rem}
+.sin:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-dim)}
+.sin-acts{position:absolute;right:6px;display:flex;gap:4px}
+.sbtn{
+  padding:6px 12px;border-radius:8px;font-size:.75rem;font-weight:700;
+  font-family:'JetBrains Mono',monospace;border:none;cursor:pointer;transition:all .15s;
+  display:flex;align-items:center;gap:4px;
+}
+.sbtn:active{transform:scale(.88)}
+.sbtn-g{background:var(--elevated);color:var(--t2);border:1px solid var(--border)}
+.sbtn-g:hover{background:var(--card)}
+
+/* Results counter chip */
+.rchip{
+  display:inline-flex;align-items:center;gap:5px;margin-top:9px;
+  background:var(--elevated);border:1px solid var(--border);border-radius:8px;
+  padding:4px 10px;font-size:.67rem;font-family:'JetBrains Mono',monospace;font-weight:600;color:var(--t3);
+  transition:all .2s;
+}
+.rchip span{color:var(--accent);font-weight:700}
+
+/* ── CONTENT ── */
+.content{
+  flex:1;overflow-y:auto;overflow-x:hidden;
+  overscroll-behavior:contain;-webkit-overflow-scrolling:touch;
+  padding:12px 14px calc(12px + env(safe-area-inset-bottom,0px));
+}
+.content::-webkit-scrollbar{display:none}
+
+/* ── EMPTY / LOADING ── */
+.empty{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  min-height:200px;gap:10px;color:var(--t3);text-align:center;padding:24px;
+}
+.empty-ring{
+  width:64px;height:64px;border-radius:50%;
+  border:2px dashed var(--border-h);
+  display:flex;align-items:center;justify-content:center;font-size:1.6rem;
+  animation:sr 10s linear infinite;
+}
+@keyframes sr{to{transform:rotate(360deg)}}
+.empty-t{font-size:.88rem;font-weight:600;color:var(--t2);margin-top:2px}
+.empty-s{font-size:.75rem}
+
+.spin-ring{
+  width:28px;height:28px;border-radius:50%;
+  border:3px solid var(--elevated);border-top-color:var(--accent);
+  animation:sp .65s linear infinite;flex-shrink:0;
+}
+@keyframes sp{to{transform:rotate(360deg)}}
+
+/* ── PRODUCT CARDS ── */
+.rlist{display:flex;flex-direction:column;gap:7px}
+.pcard{
+  background:var(--card);border:1px solid var(--border);border-radius:12px;
+  padding:13px 14px;display:flex;align-items:center;gap:12px;
+  cursor:pointer;transition:background .15s,border-color .15s;
+}
+.pcard:active{background:var(--elevated)}
+.pcard-ico{
+  width:40px;height:40px;border-radius:11px;flex-shrink:0;
+  background:var(--accent-dim);border:1px solid rgba(37,99,235,.2);
+  color:var(--accent);display:flex;align-items:center;justify-content:center;font-size:1.1rem;
+}
+[data-theme="light"] .pcard-ico{border-color:rgba(29,78,216,.15)}
+.pcard-body{flex:1;min-width:0}
+.pcard-name{
+  font-size:clamp(.82rem,3.2vw,.9rem);font-weight:700;color:var(--t1);line-height:1.3;
+  overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;
+}
+/* SKU badge — same style as index.html pcard-sku */
+.pcard-sku{
+  display:inline-flex;align-items:center;gap:5px;
+  margin-top:5px;
+  background:var(--accent-dim);
+  border:1.5px solid var(--accent-glow);
+  border-radius:6px;
+  padding:3px 8px;
+}
+.pcard-sku-label{
+  font-size:.58rem;color:var(--t3);text-transform:uppercase;
+  letter-spacing:.1em;font-family:'JetBrains Mono',monospace;font-weight:600;
+}
+.pcard-sku-value{
+  font-family:'JetBrains Mono',monospace;font-size:.82rem;font-weight:700;
+  color:var(--accent);letter-spacing:.05em;
+}
+.pcard-right{flex-shrink:0;text-align:right}
+.pcard-stock{
+  font-family:'JetBrains Mono',monospace;font-size:.92rem;font-weight:700;color:var(--t1);
+}
+.pcard-slbl{font-size:.6rem;color:var(--t3);text-transform:uppercase;letter-spacing:.06em;margin-top:1px}
+.pcard-chevron{color:var(--t3);font-size:.75rem;margin-top:4px}
+
+/* pcard barcode button — only visible when admin authenticated */
+.pcard-bc{
+  width:32px;height:32px;border-radius:9px;flex-shrink:0;
+  background:var(--accent-dim);border:1px solid var(--accent-glow);
+  color:var(--accent);display:none;align-items:center;justify-content:center;
+  font-size:.95rem;cursor:pointer;transition:all .16s;
+}
+.pcard-bc:active{transform:scale(.88);background:var(--accent);color:#fff}
+.pcard-bc.sh{display:flex}
+.stk-low{color:var(--warn)}
+.stk-empty{color:var(--danger)}
+
+/* ── NOTIFICATION ── */
+.ntf{
+  position:fixed;top:calc(env(safe-area-inset-top,0px) + 66px);left:50%;
+  transform:translateX(-50%) translateY(-14px);opacity:0;
+  pointer-events:none;z-index:8000;
+  background:var(--card);border:1px solid var(--border);border-radius:12px;
+  padding:9px 14px;font-size:.8rem;font-weight:600;
+  display:flex;align-items:center;gap:7px;box-shadow:0 4px 16px var(--shadow);
+  max-width:min(300px,88vw);transition:all .28s cubic-bezier(.22,.68,0,1.2);
+}
+.ntf.sh{opacity:1;transform:translateX(-50%) translateY(0)}
+.ntf.success{border-color:rgba(34,197,94,.4);color:var(--ok)}
+.ntf.error{border-color:rgba(239,68,68,.4);color:var(--danger)}
+.ntf.warning{border-color:rgba(245,158,11,.4);color:var(--warn)}
+.ntf.info{border-color:rgba(79,142,255,.4);color:var(--blue)}
+
+/* ── MODAL SYSTEM ── */
+.mbk{
+  position:fixed;inset:0;background:rgba(0,0,0,.72);
+  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+  z-index:1000;opacity:0;pointer-events:none;transition:opacity .22s;
+}
+.mbk.op{opacity:1;pointer-events:auto}
+
+/* Bottom sheet */
+.msh{
+  position:fixed;bottom:0;left:0;right:0;
+  background:var(--surface);border-radius:28px 28px 0 0;
+  border-top:1px solid var(--border);z-index:1001;
+  transform:translateY(100%);
+  transition:transform .32s cubic-bezier(.32,.72,0,1),background .25s,border-color .25s;
+  max-height:calc(92dvh - env(safe-area-inset-top,0px));
+  display:flex;flex-direction:column;overflow:hidden;
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+.msh.op{transform:translateY(0)}
+
+/* Center modal */
+.mct{
+  position:fixed;top:50%;left:50%;
+  transform:translate(-50%,calc(-50% + 18px));
+  background:var(--surface);border-radius:20px;border:1px solid var(--border);
+  z-index:1001;opacity:0;
+  transition:transform .28s cubic-bezier(.22,.68,0,1.2),opacity .25s,background .25s,border-color .25s;
+  pointer-events:none;
+  width:min(420px,calc(100vw - 24px));
+  max-height:calc(88dvh - env(safe-area-inset-top,0px));
+  display:flex;flex-direction:column;overflow:hidden;
+}
+.mct.op{transform:translate(-50%,-50%);opacity:1;pointer-events:auto}
+
+.mhandle{width:32px;height:3px;background:var(--elevated);border-radius:99px;margin:9px auto 0;flex-shrink:0}
+.mhd{
+  padding:12px 14px 10px;display:flex;align-items:center;gap:9px;
+  border-bottom:1px solid var(--border);flex-shrink:0;
+}
+.mhd-ico{width:32px;height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:.9rem;flex-shrink:0}
+.ico-t{background:var(--accent-dim);color:var(--accent)}
+.ico-g{background:var(--ok-dim);color:var(--ok)}
+.ico-d{background:var(--danger-dim);color:var(--danger)}
+.ico-w{background:var(--warn-dim);color:var(--warn)}
+.mhd-inf{flex:1;min-width:0}
+.mhd-ttl{font-size:.92rem;font-weight:700;line-height:1.2}
+.mhd-sub{font-size:.68rem;color:var(--t3);font-family:'JetBrains Mono',monospace;margin-top:1px}
+.mcls{
+  width:30px;height:30px;border-radius:9px;background:var(--elevated);border:1px solid var(--border);
+  color:var(--t2);display:flex;align-items:center;justify-content:center;cursor:pointer;
+  font-size:.8rem;transition:all .15s;flex-shrink:0;
+}
+.mcls:active{transform:scale(.85);background:var(--danger-dim);color:var(--danger)}
+.mbdy{flex:1;overflow-y:auto;padding:14px;-webkit-overflow-scrolling:touch}
+.mbdy::-webkit-scrollbar{display:none}
+.mft{padding:10px 14px;border-top:1px solid var(--border);display:flex;gap:7px;flex-shrink:0}
+
+/* ── PRODUCT MODAL BODY ── */
+.pm-name{font-size:clamp(1rem,4vw,1.2rem);font-weight:700;line-height:1.3;margin-bottom:8px}
+.pm-sku{
+  display:inline-flex;align-items:center;gap:6px;
+  background:var(--accent-dim);border:1.5px solid var(--accent-glow);
+  border-radius:7px;padding:4px 10px;margin-bottom:16px;
+}
+.pm-sku-label{font-size:.6rem;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;font-family:'JetBrains Mono',monospace;font-weight:600}
+.pm-sku-value{font-family:'JetBrains Mono',monospace;font-size:.95rem;font-weight:700;color:var(--accent);letter-spacing:.05em}
+
+.stk-box{
+  background:var(--card);border:1px solid var(--border);border-radius:12px;
+  padding:16px;text-align:center;margin-bottom:14px;
+  transition:background .25s,border-color .25s;
+}
+.stk-box-lbl{font-size:.62rem;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;font-family:'JetBrains Mono',monospace;margin-bottom:6px}
+.stk-box-num{font-family:'JetBrains Mono',monospace;font-size:clamp(2rem,10vw,2.6rem);font-weight:700;line-height:1}
+.stk-box-unit{font-size:.7rem;color:var(--t3);font-family:'JetBrains Mono',monospace;margin-top:4px}
+
+/* ── PIN MODAL ── */
+.pin-inp{
+  width:100%;background:var(--input);border:1.5px solid var(--border);
+  border-radius:11px;padding:14px;
+  font-family:'JetBrains Mono',monospace;font-size:1.6rem;font-weight:700;
+  color:var(--t1);text-align:center;letter-spacing:.3em;outline:none;
+  transition:all .2s;-webkit-appearance:none;-moz-appearance:textfield;
+}
+.pin-inp::-webkit-inner-spin-button,.pin-inp::-webkit-outer-spin-button{-webkit-appearance:none}
+.pin-inp:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-dim)}
+.pin-err{
+  color:var(--danger);font-size:.75rem;font-weight:600;text-align:center;
+  margin-top:7px;min-height:18px;display:flex;align-items:center;justify-content:center;gap:5px;
+}
+
+/* ── BARCODE MODAL (SIN BUSCADOR) ── */
+/* Se eliminó el buscador interno, ahora solo se usa el buscador principal */
+
+/* Selected product info */
+.bc-prod-card{
+  background:var(--elevated);border:1px solid var(--border);border-radius:11px;
+  padding:11px 13px;display:flex;align-items:center;gap:10px;margin-bottom:12px;
+}
+.bc-prod-ico{
+  width:34px;height:34px;border-radius:9px;flex-shrink:0;
+  background:var(--accent-dim);color:var(--accent);
+  display:flex;align-items:center;justify-content:center;font-size:.95rem;
+}
+.bc-prod-name{font-size:.85rem;font-weight:700;line-height:1.2}
+.bc-prod-sku{
+  display:inline-flex;align-items:center;gap:4px;
+  background:var(--accent-dim);border:1px solid var(--accent-glow);
+  border-radius:5px;padding:2px 6px;margin-top:4px;
+}
+.bc-prod-sku-lbl{font-size:.56rem;color:var(--t3);text-transform:uppercase;letter-spacing:.08em;font-family:'JetBrains Mono',monospace;font-weight:600}
+.bc-prod-sku-val{font-family:'JetBrains Mono',monospace;font-size:.78rem;font-weight:700;color:var(--accent)}
+.bc-chg{
+  margin-left:auto;flex-shrink:0;
+  padding:5px 9px;border-radius:7px;font-size:.68rem;font-weight:700;
+  font-family:'JetBrains Mono',monospace;border:none;cursor:pointer;
+  background:var(--card);color:var(--t2);border:1px solid var(--border);
+  transition:all .15s;
+}
+.bc-chg:active{transform:scale(.9)}
+
+/* Barcodes list */
+.bc-list-ttl{font-size:.62rem;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;font-family:'JetBrains Mono',monospace;margin-bottom:7px;display:flex;align-items:center;gap:5px}
+.bc-list{
+  background:var(--card);border:1px solid var(--border);border-radius:11px;
+  overflow:hidden;margin-bottom:12px;max-height:140px;overflow-y:auto;
+}
+.bc-list::-webkit-scrollbar{display:none}
+.bc-item{
+  padding:10px 12px;display:flex;align-items:center;gap:10px;
+  border-bottom:1px solid var(--border);transition:background .14s;
+}
+.bc-item:last-child{border-bottom:none}
+.bc-code{font-family:'JetBrains Mono',monospace;font-size:.88rem;font-weight:600;color:var(--t1);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bc-del{
+  width:28px;height:28px;border-radius:7px;border:none;cursor:pointer;flex-shrink:0;
+  background:var(--danger-dim);color:var(--danger);
+  display:flex;align-items:center;justify-content:center;font-size:.8rem;
+  transition:all .15s;position:relative;
+}
+.bc-del:active{transform:scale(.88)}
+.bc-del.loading i{opacity:0}
+.bc-del .bspin{
+  position:absolute;inset:0;display:none;align-items:center;justify-content:center;
+}
+.bc-del.loading .bspin{display:flex}
+.bc-empty{padding:18px;text-align:center;color:var(--t3);font-size:.78rem;font-style:italic}
+
+/* Add barcode input */
+.bc-add-wrap{position:relative;margin-bottom:10px}
+.bc-add-ico{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--t3);font-size:.95rem;pointer-events:none}
+.bc-add{
+  width:100%;background:var(--input);border:1.5px solid var(--border);
+  border-radius:11px;padding:11px 12px 11px 38px;
+  font-family:'JetBrains Mono',monospace;font-size:.95rem;font-weight:600;
+  color:var(--t1);outline:none;transition:all .22s;-webkit-appearance:none;
+  letter-spacing:.04em;
+}
+.bc-add:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-dim)}
+.bc-add::placeholder{color:var(--t3);font-weight:400;font-size:.82rem;letter-spacing:0;font-family:'Sora',sans-serif}
+
+/* ── MSG TOAST inside modal ── */
+.mtoast{
+  border-radius:9px;padding:9px 12px;font-size:.77rem;font-weight:600;
+  display:flex;align-items:center;gap:7px;margin-bottom:10px;
+  animation:sli .2s ease both;display:none;
+}
+.mtoast.sh{display:flex}
+.mtoast.success{background:var(--ok-dim);color:var(--ok);border:1px solid rgba(34,197,94,.3)}
+.mtoast.error{background:var(--danger-dim);color:var(--danger);border:1px solid rgba(239,68,68,.3)}
+.mtoast.info{background:var(--blue-dim);color:var(--blue);border:1px solid rgba(37,99,235,.2)}
+
+/* ── BUTTONS ── */
+.btn{
+  border:none;border-radius:12px;font-family:'Sora',sans-serif;font-weight:700;
+  font-size:clamp(.82rem,3.4vw,.92rem);cursor:pointer;padding:13px 18px;
+  display:flex;align-items:center;justify-content:center;gap:7px;
+  transition:all .16s;-webkit-tap-highlight-color:transparent;position:relative;overflow:hidden;
+}
+.btn:active{transform:scale(.95)}
+.btn-p{background:var(--accent);color:#fff}
+.btn-p:hover{background:var(--accent-h)}
+.btn-p:disabled{background:var(--accent-dim);color:rgba(255,255,255,.35);cursor:not-allowed;transform:none}
+[data-theme="light"] .btn-p,[data-theme="light"] .btn-p:disabled{color:#fff}
+.btn-g{background:var(--elevated);color:var(--t2);border:1px solid var(--border)}
+.btn-d{background:var(--danger-dim);color:var(--danger);border:1px solid rgba(239,68,68,.25)}
+.btn-fw{width:100%}
+.bspin{
+  width:15px;height:15px;border:2px solid rgba(255,255,255,.25);border-top-color:#fff;
+  border-radius:50%;animation:sp .7s linear infinite;
+}
+.bspin-d{border-color:rgba(220,38,38,.25);border-top-color:var(--danger)}
+.bspin-sm{width:12px;height:12px;border-width:2px}
+
+/* ── SECTION LABEL ── */
+.sec-lbl{font-size:.6rem;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;font-family:'JetBrains Mono',monospace;margin-bottom:7px;display:flex;align-items:center;gap:5px}
+
+/* ── RESPONSIVE ── */
+@media(min-width:460px){
+  .szn{padding:14px 18px 11px}
+  .content{padding:14px 18px calc(14px + env(safe-area-inset-bottom,0px))}
+  .hdr{padding-left:18px;padding-right:18px}
+}
+@media(max-height:640px){
+  .szn{padding:9px 13px 7px}
+  .hdr{padding-top:calc(7px + env(safe-area-inset-top,0px));padding-bottom:7px}
+}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- HEADER -->
+  <header class="hdr">
+    <div class="hdr-brand">
+      <span class="hdr-icon"><i class="bi bi-search"></i></span>
+      <span class="hdr-title">Buscar Producto</span>
+    </div>
+    <div class="hdr-acts">
+      <button class="ibtn" id="btnAdminToggle" title="Gestión de códigos">
+        <i class="bi bi-lock-fill" id="adminBtnIco"></i>
+        <span class="abadge" id="adminBadge"><i class="bi bi-check-lg" style="font-size:.4rem"></i></span>
+      </button>
+      <button class="ibtn" id="btnBack" title="Volver">
+        <i class="bi bi-arrow-left"></i>
+      </button>
+    </div>
+  </header>
+
+  <!-- SEARCH ZONE -->
+  <section class="szn">
+    <div class="sin-wrap">
+      <i class="bi bi-search sin-ico" id="sinIco"></i>
+      <div class="sin-spin" id="sinSpin" style="display:none"></div>
+      <input type="text" class="sin" id="searchInput"
+        placeholder="Nombre, SKU o código de barras..."
+        autocomplete="off" autocorrect="off" autocapitalize="off"
+        spellcheck="false" autofocus>
+      <div class="sin-acts">
+        <button class="sbtn sbtn-g" id="btnClear"><i class="bi bi-x-lg"></i></button>
+      </div>
+    </div>
+    <div id="rChip" class="rchip" style="display:none">
+      <i class="bi bi-funnel-fill"></i>
+      <span id="rChipN">0</span> resultado(s)
+    </div>
+  </section>
+
+  <!-- CONTENT -->
+  <main class="content" id="mainContent">
+    <div class="empty" id="emptyState">
+      <div class="empty-ring"><i class="bi bi-search"></i></div>
+      <div class="empty-t">Busca un producto</div>
+      <div class="empty-s">Nombre, SKU o código de barras</div>
+    </div>
+  </main>
+</div>
+
+<!-- NOTIFICATION -->
+<div class="ntf" id="ntf"></div>
+
+<!-- BACKDROP -->
+<div class="mbk" id="mbk"></div>
+
+<!-- PRODUCT DETAIL SHEET -->
+<div class="msh" id="prodSheet">
+  <div class="mhandle"></div>
+  <div class="mhd">
+    <div class="mhd-ico ico-t"><i class="bi bi-box-seam-fill"></i></div>
+    <div class="mhd-inf">
+      <div class="mhd-ttl" id="ps-title">Producto</div>
+      <div class="mhd-sub" id="ps-sub">SKU —</div>
+    </div>
+    <div class="mcls" id="closeProdBtn"><i class="bi bi-x-lg"></i></div>
+  </div>
+  <div class="mbdy">
+    <div class="pm-name" id="ps-name">—</div>
+    <div class="pm-sku">
+      <span class="pm-sku-label">SKU</span>
+      <span class="pm-sku-value" id="ps-sku">—</span>
+    </div>
+    <div class="stk-box">
+      <div class="stk-box-lbl">Existencia en Bodega</div>
+      <div class="stk-box-num" id="ps-stock">0</div>
+      <div class="stk-box-unit">unidades disponibles</div>
+    </div>
+  </div>
+  <div class="mft">
+    <button class="btn btn-g btn-fw" id="closeProdBtn2"><i class="bi bi-x-lg"></i> Cerrar</button>
+  </div>
+</div>
+
+<!-- PIN MODAL -->
+<div class="mct" id="pinModal">
+  <div class="mhd">
+    <div class="mhd-ico ico-w"><i class="bi bi-lock-fill"></i></div>
+    <div class="mhd-inf">
+      <div class="mhd-ttl">Acceso Admin</div>
+      <div class="mhd-sub">Ingresa el PIN de 4 dígitos</div>
+    </div>
+    <div class="mcls" id="closePinBtn"><i class="bi bi-x-lg"></i></div>
+  </div>
+  <div class="mbdy">
+    <input type="password" class="pin-inp" id="pinInput"
+      placeholder="••••" maxlength="4" inputmode="numeric" autocomplete="off">
+    <div class="pin-err" id="pinErr"></div>
+  </div>
+  <div class="mft">
+    <button class="btn btn-g" id="cancelPinBtn" style="flex:0 0 auto;padding:13px 16px">Cancelar</button>
+    <button class="btn btn-p" id="submitPinBtn" style="flex:1"><i class="bi bi-check-lg"></i> Ingresar</button>
+  </div>
+</div>
+
+<!-- BARCODE MANAGEMENT SHEET (SIN BUSCADOR INTERNO) -->
+<div class="msh" id="bcSheet">
+  <div class="mhandle"></div>
+  <div class="mhd">
+    <div class="mhd-ico ico-g"><i class="bi bi-barcode"></i></div>
+    <div class="mhd-inf">
+      <div class="mhd-ttl">Gestión de Barras</div>
+      <div class="mhd-sub" id="bcSheetSub">Producto no seleccionado</div>
+    </div>
+    <div style="display:flex;gap:6px;flex-shrink:0">
+      <button class="ibtn danger-ac" id="bcLogoutBtn" title="Cerrar sesión admin" style="font-size:.85rem"><i class="bi bi-box-arrow-right"></i></button>
+      <div class="mcls" id="closeBcBtn"><i class="bi bi-x-lg"></i></div>
+    </div>
+  </div>
+  <div class="mbdy">
+    <div class="mtoast" id="bcToast"></div>
+
+    <!-- Selected product -->
+    <div id="bcProdSection" style="display:none">
+      <div class="bc-prod-card" id="bcProdCard">
+        <div class="bc-prod-ico"><i class="bi bi-box-seam-fill"></i></div>
+        <div style="flex:1;min-width:0">
+          <div class="bc-prod-name" id="bcProdName">—</div>
+          <div class="bc-prod-sku">
+            <span class="bc-prod-sku-lbl">SKU</span>
+            <span class="bc-prod-sku-val" id="bcProdSku">—</span>
+          </div>
+        </div>
+        <button class="bc-chg" id="bcChgBtn"><i class="bi bi-arrow-repeat"></i> Cambiar</button>
+      </div>
+
+      <!-- Existing codes -->
+      <div class="sec-lbl"><i class="bi bi-list-ul"></i> Barras asignadas</div>
+      <div class="bc-list" id="bcList">
+        <div class="bc-empty">No hay códigos de barras asignados</div>
+      </div>
+
+      <!-- Add new code -->
+      <div class="sec-lbl"><i class="bi bi-plus-circle"></i> Agregar Barra</div>
+      <div class="bc-add-wrap">
+        <i class="bi bi-upc bc-add-ico"></i>
+        <input type="text" class="bc-add" id="bcNewInput"
+          placeholder="Escanear o escribir nueva barra..."
+          autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+      </div>
+    </div>
+  </div>
+  <div class="mft" id="bcFt" style="display:none">
+    <button class="btn btn-g" id="bcCancelAddBtn" style="flex:0 0 auto;padding:13px 16px"><i class="bi bi-x-lg"></i></button>
+    <button class="btn btn-p" id="bcSaveBtn" style="flex:1"><i class="bi bi-check-lg"></i> Agregar Barra</button>
+  </div>
+</div>
+
+<script>
+/* ══════════════════════════════════════
+   FIREBASE
+══════════════════════════════════════ */
+const FC={apiKey:"AIzaSyC5PwQQrY02yhICT4hl6nzZTEvA-CLgC2g",authDomain:"thogar-de74d.firebaseapp.com",projectId:"thogar-de74d",storageBucket:"thogar-de74d.firebasestorage.app",messagingSenderId:"605168322064",appId:"1:605168322064:web:e0d9a16c5e5bc230d9ac95"};
+let db;try{firebase.initializeApp(FC);db=firebase.firestore();}catch(e){}
+
+const ADMIN_PIN='1234';
+
+/* ══════════════════════════════════════
+   STATE
+══════════════════════════════════════ */
+let productos=[],loading=false,authenticated=false;
+let currentProd=null,bcProd=null,bcCodes=[];
+let searchTimer = null; // Para debounce del buscador principal
+
+/* ══════════════════════════════════════
+   DOM REFS
+══════════════════════════════════════ */
+const $=id=>document.getElementById(id);
+const searchInput=$('searchInput'),mainContent=$('mainContent'),emptyState=$('emptyState');
+const rChip=$('rChip'),rChipN=$('rChipN');
+const ntf=$('ntf'),mbk=$('mbk');
+const prodSheet=$('prodSheet'),pinModal=$('pinModal'),bcSheet=$('bcSheet');
+
+/* ══════════════════════════════════════
+   THEME — read from shared localStorage
+══════════════════════════════════════ */
+function applyTheme(){
+  try{
+    const cfg=JSON.parse(localStorage.getItem('handheldConfig')||'{}');
+    const t=cfg.theme||'light';
+    document.documentElement.setAttribute('data-theme',t);
+  }catch(e){document.documentElement.setAttribute('data-theme','light');}
+}
+applyTheme();
+
+/* ══════════════════════════════════════
+   NOTIFICATION
+══════════════════════════════════════ */
+let ntfT;
+function notif(msg,type='success',ico=''){
+  const icons={success:'bi-check-circle-fill',error:'bi-x-circle-fill',warning:'bi-exclamation-triangle-fill',info:'bi-info-circle-fill'};
+  ntf.innerHTML=`<i class="bi ${ico||icons[type]}"></i> ${msg}`;
+  ntf.className=`ntf ${type} sh`;clearTimeout(ntfT);
+  ntfT=setTimeout(()=>ntf.classList.remove('sh'),3000);
+}
+
+/* ══════════════════════════════════════
+   MODAL HELPERS
+══════════════════════════════════════ */
+let activeModal=null;
+function openModal(m){
+  mbk.classList.add('op');m.classList.add('op');activeModal=m;
+}
+function closeModal(m){
+  if(!m)return;
+  m.classList.remove('op');mbk.classList.remove('op');activeModal=null;
+}
+mbk.addEventListener('click',()=>{
+  if(activeModal&&activeModal!==prodSheet)closeModal(activeModal);
+});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&activeModal)closeModal(activeModal);});
+
+/* ══════════════════════════════════════
+   ADMIN AUTH
+══════════════════════════════════════ */
+function checkAuth(){
+  if(localStorage.getItem('adminSession')==='authenticated'){
+    authenticated=true;updateAdminUI();
+  }
+}
+function updateAdminUI(){
+  $('adminBadge').classList.toggle('sh',authenticated);
+  // Toggle lock icon: unlocked (barcode icon) when authenticated, locked when not
+  const ico=$('adminBtnIco');
+  if(ico)ico.className=authenticated?'bi bi-barcode':'bi bi-lock-fill';
+  // Show/hide barcode buttons on any currently rendered product cards
+  document.querySelectorAll('.pcard-bc').forEach(btn=>{
+    btn.classList.toggle('sh',authenticated);
+  });
+}
+function logout(){
+  authenticated=false;localStorage.removeItem('adminSession');updateAdminUI();
+  notif('Sesión admin cerrada','info');
+}
+
+/* ── PIN Modal ── */
+function openPinModal(onSuccess){
+  $('pinInput').value='';$('pinErr').textContent='';
+  openModal(pinModal);
+  setTimeout(()=>$('pinInput').focus(),120);
+  // Store callback
+  pinModal._onSuccess=onSuccess;
+}
+function submitPin(){
+  const pin=$('pinInput').value.trim();
+  if(pin===ADMIN_PIN){
+    authenticated=true;localStorage.setItem('adminSession','authenticated');
+    updateAdminUI();closeModal(pinModal);
+    if(typeof pinModal._onSuccess==='function')pinModal._onSuccess();
+  }else{
+    $('pinErr').innerHTML='<i class="bi bi-exclamation-circle-fill"></i> PIN incorrecto';
+    $('pinInput').value='';
+    setTimeout(()=>{$('pinErr').textContent='';},2200);
+  }
+}
+
+/* ══════════════════════════════════════
+   SEARCH WORKER — runs index build + search off main thread
+   Falls back to sync if workers unavailable
+══════════════════════════════════════ */
+const WORKER_SRC=`
+const idx=[];
+let ready=false;
+
+function build(products){
+  idx.length=0;
+  for(let i=0;i<products.length;i++){
+    const p=products[i];
+    idx.push({
+      p,
+      hay:[p.name,p.sku,p.barcode,...(p.barcodes||[])].join('\\0').toLowerCase()
+    });
+  }
+  ready=true;
+}
+
+function search(q){
+  if(!ready||!q)return[];
+  const words=q.split(/\\s+/).filter(Boolean);
+  const out=[];
+  for(let i=0;i<idx.length;i++){
+    const {p,hay}=idx[i];
+    let ok=true;
+    for(let w=0;w<words.length;w++){if(hay.indexOf(words[w])<0){ok=false;break;}}
+    if(!ok)continue;
+    const s=p.sku.toLowerCase(),bc=p.barcode.toLowerCase(),n=p.name.toLowerCase();
+    let sc=0;
+    if(s===q)sc=1000;
+    else if(bc===q)sc=900;
+    else if(hay.indexOf('\\0'+q)>=0)sc=800;
+    else if(s.indexOf(q)===0)sc=600;
+    else if(n.indexOf(q)===0)sc=500;
+    else if(s.indexOf(q)>=0)sc=300;
+    else if(n.indexOf(q)>=0)sc=200;
+    else sc=100;
+    out.push({p,sc});
+  }
+  out.sort((a,b)=>b.sc-a.sc);
+  return out.map(x=>x.p);
+}
+
+self.onmessage=function(e){
+  const {type,payload,id}=e.data;
+  if(type==='build'){build(payload);self.postMessage({type:'ready',id});}
+  else if(type==='search'){self.postMessage({type:'results',id,results:search(payload)});}
+};
+`;
+
+let worker=null,workerReady=false;
+// Fallback sync index when Worker unavailable
+let syncIdx=[];
+
+function initWorker(products){
+  try{
+    const blob=new Blob([WORKER_SRC],{type:'text/javascript'});
+    const url=URL.createObjectURL(blob);
+    worker=new Worker(url);
+    worker.onmessage=onWorkerMsg;
+    worker.onerror=()=>{worker=null;buildSyncIndex(products);};
+    worker.postMessage({type:'build',payload:products,id:'init'});
+  }catch(e){
+    worker=null;buildSyncIndex(products);
+  }
+}
+
+function buildSyncIndex(products){
+  syncIdx=[];
+  for(let i=0;i<products.length;i++){
+    const p=products[i];
+    syncIdx.push({p,hay:[p.name,p.sku,p.barcode,...(p.barcodes||[])].join('\0').toLowerCase()});
+  }
+  workerReady=true;
+}
+
+// Pending search callbacks
+let pendingId=null,pendingQ='';
+function onWorkerMsg(e){
+  const {type,id,results}=e.data;
+  if(type==='ready'){workerReady=true;if(pendingQ){doSearch(pendingQ);pendingQ='';}}
+  else if(type==='results'&&id===pendingId){renderResults(results,pendingQ);}
+}
+
+// Called on every input event — returns immediately, render happens async
+function doSearch(raw){
+  const q=raw.trim().toLowerCase();
+  if(!q){
+    mainContent.innerHTML='';mainContent.appendChild(emptyState);
+    rChip.style.display='none';return;
+  }
+  if(worker&&workerReady){
+    pendingId='s'+Date.now();pendingQ=q;
+    worker.postMessage({type:'search',payload:q,id:pendingId});
+  }else if(workerReady){
+    // Sync fallback
+    const words=q.split(/\s+/).filter(Boolean);
+    const out=[];
+    for(let i=0;i<syncIdx.length;i++){
+      const {p,hay}=syncIdx[i];
+      let ok=true;
+      for(let w=0;w<words.length;w++){if(hay.indexOf(words[w])<0){ok=false;break;}}
+      if(!ok)continue;
+      const s=p.sku.toLowerCase(),bc=p.barcode.toLowerCase(),n=p.name.toLowerCase();
+      let sc=0;
+      if(s===q)sc=1000;else if(bc===q)sc=900;
+      else if(hay.indexOf('\0'+q)>=0)sc=800;
+      else if(s.indexOf(q)===0)sc=600;else if(n.indexOf(q)===0)sc=500;
+      else if(s.indexOf(q)>=0)sc=300;else if(n.indexOf(q)>=0)sc=200;else sc=100;
+      out.push({p,sc});
+    }
+    out.sort((a,b)=>b.sc-a.sc);
+    pendingQ=q;
+    renderResults(out.map(x=>x.p),q);
+  }else{
+    pendingQ=q; // will run once worker is ready
+  }
+}
+
+// Keep alias so barcode sync code that calls buildIndex still works
+function buildIndex(){
+  if(worker)worker.postMessage({type:'build',payload:productos,id:'rebuild'});
+  else buildSyncIndex(productos);
+}
+// runSearch alias used elsewhere
+const runSearch=doSearch;
+
+/* ══════════════════════════════════════
+   LOAD PRODUCTS — shared cache from index.html
+══════════════════════════════════════ */
+function setSearchLoading(on){
+  const ico=$('sinIco'),spin=$('sinSpin');
+  if(!ico||!spin)return;
+  ico.style.display=on?'none':'';
+  spin.style.display=on?'block':'none';
+}
+
+async function loadProducts(){
+  // 1. Parse cache off main thread using scheduler if available, else defer
+  let parsed=null;
+  const raw=localStorage.getItem('handheldProductos');
+  if(raw){
+    // Use requestIdleCallback to avoid blocking first paint
+    await new Promise(res=>{
+      const fn=()=>{try{parsed=JSON.parse(raw);}catch(e){}res();};
+      if(typeof requestIdleCallback!=='undefined')requestIdleCallback(fn,{timeout:300});
+      else setTimeout(fn,0);
+    });
+  }
+  if(parsed&&parsed.length){
+    productos=parsed;
+    initWorker(productos);  // builds index off-thread
+  }
+
+  // 2. Skip Firebase if cache is fresh (index.html synced recently)
+  const ls=localStorage.getItem('lastSync');
+  const isFresh=ls&&(Date.now()-new Date(ls).getTime())<5*60*1000;
+  if(isFresh&&productos.length>0){setSearchLoading(false);return;}
+
+  // 3. Fetch from Firebase in background — doesn't block UI at all
+  if(!db){setSearchLoading(false);return;}
+  setSearchLoading(true);
+  try{
+    const snap=await db.collection('products').get();
+    const fresh=[];
+    snap.forEach(doc=>{
+      const d=doc.data();
+      fresh.push({id:doc.id,sku:(d.sku||'').toString(),name:d.name||'Sin nombre',
+        barcode:(d.barcode||'').toString(),barcodes:Array.isArray(d.barcodes)?d.barcodes:[],
+        bodega:d.bodega||0,tienda:d.tienda||0});
+    });
+    productos=fresh;
+    // Save to shared cache (non-blocking)
+    setTimeout(()=>{
+      localStorage.setItem('handheldProductos',JSON.stringify(productos));
+      localStorage.setItem('lastSync',new Date().toISOString());
+    },0);
+    buildIndex();
+    const q=searchInput.value.trim();
+    if(q)doSearch(q);
+  }catch(e){console.warn('Firebase fetch error:',e);}
+  finally{setSearchLoading(false);}
+}
+
+function renderResults(results,q){
+  // Update chip first (cheap)
+  rChipN.textContent=results.length;
+  rChip.style.display=results.length>0||q?'inline-flex':'none';
+
+  if(!results.length){
+    mainContent.innerHTML='';
+    const el=document.createElement('div');el.className='empty';
+    el.innerHTML=`<div class="empty-ring"><i class="bi bi-search"></i></div>
+      <div class="empty-t">Sin resultados</div>
+      <div class="empty-s">Intenta con otro término</div>`;
+    mainContent.appendChild(el);return;
+  }
+
+  // Build entire list as one innerHTML string — single DOM write, fastest possible
+  const au=authenticated;
+  let html='<div class="rlist">';
+  for(let i=0;i<results.length;i++){
+    const p=results[i];
+    const stk=p.bodega||0;
+    const sc=stk===0?'stk-empty':stk<=5?'stk-low':'stk-ok';
+    html+=`<div class="pcard" data-idx="${i}">
+      <div class="pcard-ico"><i class="bi bi-box-seam-fill"></i></div>
+      <div class="pcard-body">
+        <div class="pcard-name">${p.name}</div>
+        <div class="pcard-sku"><span class="pcard-sku-label">SKU</span><span class="pcard-sku-value">${p.sku}</span></div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
+        <button class="pcard-bc${au?' sh':''}" data-bc="${i}"><i class="bi bi-upc-scan"></i></button>
+        <div class="pcard-right">
+          <div class="pcard-stock ${sc}">${stk}</div>
+          <div class="pcard-slbl">bodega</div>
+          <div class="pcard-chevron"><i class="bi bi-chevron-right"></i></div>
+        </div>
+      </div></div>`;
+  }
+  html+='</div>';
+
+  // Single write to DOM
+  mainContent.innerHTML=html;
+
+  // Single delegated listener on the container — no per-card listeners
+  mainContent.firstChild.addEventListener('click',e=>{
+    // Barcode button
+    const bcBtn=e.target.closest('[data-bc]');
+    if(bcBtn){
+      e.stopPropagation();
+      const p=results[+bcBtn.dataset.bc];
+      if(authenticated)openBcSheet(p);
+      else openPinModal(()=>openBcSheet(p));
+      return;
+    }
+    // Card
+    const card=e.target.closest('[data-idx]');
+    if(card)openProductSheet(results[+card.dataset.idx]);
+  });
+}
+
+/* ══════════════════════════════════════
+   PRODUCT SHEET
+══════════════════════════════════════ */
+function openProductSheet(p){
+  currentProd=p;
+  $('ps-title').textContent=p.name;
+  $('ps-sub').textContent=`SKU ${p.sku}`;
+  $('ps-name').textContent=p.name;
+  $('ps-sku').textContent=p.sku;
+  const stk=p.bodega||0;
+  $('ps-stock').textContent=stk;
+  $('ps-stock').className='stk-box-num '+(stk===0?'stk-empty':stk<=5?'stk-low':'stk-ok');
+  openModal(prodSheet);
+}
+
+/* ══════════════════════════════════════
+   BARCODE SHEET (SIN BUSCADOR INTERNO)
+══════════════════════════════════════ */
+function openBcSheet(presetProduct){
+  resetBcSheet();
+  openModal(bcSheet);
+  if(presetProduct)selectBcProduct(presetProduct);
+}
+
+function resetBcSheet(){
+  bcProd=null;bcCodes=[];
+  $('bcNewInput').value='';
+  $('bcProdSection').style.display='none';
+  $('bcFt').style.display='none';
+  $('bcSheetSub').textContent='Producto no seleccionado';
+  hideBcToast();
+}
+
+async function selectBcProduct(p){
+  bcProd=p;
+  $('bcSheetSub').textContent=p.sku;
+  $('bcProdName').textContent=p.name;
+  $('bcProdSku').textContent=p.sku;
+  $('bcProdSection').style.display='block';
+  $('bcFt').style.display='flex';
+  hideBcToast();
+
+  // Load codes from Firebase for fresh data
+  await loadBcCodes(p);
+  setTimeout(()=>$('bcNewInput').focus(),120);
+}
+
+async function loadBcCodes(p){
+  $('bcList').innerHTML=`<div class="bc-empty" style="display:flex;align-items:center;justify-content:center;gap:8px"><div class="spin-ring"></div> Cargando...</div>`;
+  try{
+    if(db){
+      const snap=await db.collection('products').where('sku','==',p.sku).get();
+      if(!snap.empty){
+        const d=snap.docs[0].data();
+        bcProd._firebaseId=snap.docs[0].id;
+        bcCodes=Array.isArray(d.barcodes)?[...d.barcodes]:(d.barcode?[d.barcode]:[]);
+      }else{bcCodes=[...p.barcodes];}
+    }else{bcCodes=[...p.barcodes];}
+  }catch(e){bcCodes=[...p.barcodes];}
+  renderBcList();
+}
+
+function renderBcList(){
+  const list=$('bcList');list.innerHTML='';
+  if(!bcCodes.length){list.innerHTML='<div class="bc-empty">No hay códigos de barras asignados</div>';return;}
+  bcCodes.forEach((code,idx)=>{
+    const el=document.createElement('div');el.className='bc-item';
+    el.innerHTML=`
+      <i class="bi bi-upc" style="color:var(--t3);font-size:.9rem;flex-shrink:0"></i>
+      <span class="bc-code">${code}</span>
+      <button class="bc-del" data-idx="${idx}" title="Eliminar">
+        <i class="bi bi-trash3-fill"></i>
+        <span class="bspin" style="display:none"><div class="spin-ring bspin-sm"></div></span>
+      </button>`;
+    el.querySelector('.bc-del').addEventListener('click',function(){deleteBcCode(idx,this);});
+    list.appendChild(el);
+  });
+}
+
+async function deleteBcCode(idx,btn){
+  const code=bcCodes[idx];
+  // Show spinner
+  btn.querySelector('i').style.display='none';
+  btn.querySelector('.bspin').style.display='flex';
+  btn.disabled=true;
+  try{
+    const newCodes=bcCodes.filter((_,i)=>i!==idx);
+    if(db){
+      const docId=bcProd._firebaseId;
+      if(!docId)throw new Error('No Firebase ID');
+      await db.collection('products').doc(docId).update({
+        barcodes:newCodes,
+        barcode:newCodes.length>0?newCodes[0]:''
+      });
+    }
+    bcCodes=bcCodes.filter((_,i)=>i!==idx);
+    // Sync local cache
+    syncLocalProduct(bcProd.sku,{barcodes:bcCodes,barcode:bcCodes[0]||''});
+    renderBcList();
+    showBcToast('Código eliminado','success');
+  }catch(e){
+    btn.querySelector('i').style.display='';
+    btn.querySelector('.bspin').style.display='none';
+    btn.disabled=false;
+    showBcToast('Error al eliminar: '+e.message,'error');
+  }
+}
+
+async function addBcCode(){
+  const code=$('bcNewInput').value.trim();
+  if(!code){showBcToast('Ingresa un código de barras','error');return;}
+  if(!bcProd){showBcToast('Selecciona un producto primero','error');return;}
+  if(bcCodes.includes(code)){showBcToast('Ese código ya está asignado a este producto','error');return;}
+
+  // Disable button
+  const btn=$('bcSaveBtn');btn.disabled=true;
+  btn.innerHTML='<div class="bspin"></div> Verificando...';
+
+  try{
+    // Check duplicates in other products
+    if(db){
+      const [snap1,snap2]=await Promise.all([
+        db.collection('products').where('barcodes','array-contains',code).get(),
+        db.collection('products').where('barcode','==',code).get()
+      ]);
+      const dups=[];
+      snap1.forEach(doc=>{const d=doc.data();if(d.sku!==bcProd.sku)dups.push(d.name||d.sku);});
+      snap2.forEach(doc=>{const d=doc.data();if(d.sku!==bcProd.sku&&!dups.includes(d.name||d.sku))dups.push(d.name||d.sku);});
+      if(dups.length){
+        showBcToast(`Ya asignado a: ${dups.slice(0,2).join(', ')}${dups.length>2?' y más':''}`, 'error');
+        return;
+      }
+    }
+
+    btn.innerHTML='<div class="bspin"></div> Guardando...';
+    const newCodes=[...bcCodes,code];
+    if(db){
+      const docId=bcProd._firebaseId;
+      if(!docId)throw new Error('No Firebase ID');
+      await db.collection('products').doc(docId).update({
+        barcodes:newCodes,
+        barcode:newCodes[0]
+      });
+    }
+    bcCodes.push(code);
+    syncLocalProduct(bcProd.sku,{barcodes:bcCodes,barcode:bcCodes[0]||''});
+    $('bcNewInput').value='';
+    renderBcList();
+    showBcToast('Código agregado exitosamente','success');
+  }catch(e){
+    showBcToast('Error al agregar: '+e.message,'error');
+  }finally{
+    btn.disabled=false;
+    btn.innerHTML='<i class="bi bi-check-lg"></i> Agregar Código';
+  }
+}
+
+function syncLocalProduct(sku,updates){
+  const idx=productos.findIndex(p=>p.sku===sku);
+  if(idx!==-1)Object.assign(productos[idx],updates);
+  buildIndex(); // keep index in sync
+  try{localStorage.setItem('handheldProductos',JSON.stringify(productos));}catch(e){}
+}
+
+/* BC Toast */
+let bcToastT;
+function showBcToast(msg,type='info'){
+  const toast=$('bcToast');
+  const icons={success:'bi-check-circle-fill',error:'bi-x-circle-fill',info:'bi-info-circle-fill'};
+  toast.innerHTML=`<i class="bi ${icons[type]||'bi-info-circle-fill'}"></i> ${msg}`;
+  toast.className=`mtoast sh ${type}`;
+  clearTimeout(bcToastT);
+  if(type!=='error')bcToastT=setTimeout(hideBcToast,3000);
+}
+function hideBcToast(){const t=$('bcToast');t.classList.remove('sh');}
+
+/* ══════════════════════════════════════
+   EVENTS
+══════════════════════════════════════ */
+document.addEventListener('DOMContentLoaded',async()=>{
+  checkAuth();
+  updateAdminUI();
+
+  // Volver
+  $('btnBack').addEventListener('click',()=>history.back());
+
+  // Clear
+  $('btnClear').addEventListener('click',()=>{
+    searchInput.value='';runSearch('');searchInput.focus();
+  });
+
+  // Real-time search con DEBOUNCE de 150ms (solución al problema de congelamiento)
+  searchInput.addEventListener('input',()=>{
+    // Limpiar timer anterior
+    if (searchTimer) clearTimeout(searchTimer);
+    
+    const q = searchInput.value.trim();
+    
+    // Mostrar spinner mientras se espera
+    $('sinIco').style.display = 'none';
+    $('sinSpin').style.display = 'block';
+    
+    // Ejecutar búsqueda después de 150ms de inactividad
+    searchTimer = setTimeout(() => {
+      runSearch(q);
+      // Restaurar icono
+      $('sinIco').style.display = '';
+      $('sinSpin').style.display = 'none';
+      searchTimer = null;
+    }, 150);
+  });
+  
+  // Tecla Enter ejecuta búsqueda inmediata
+  searchInput.addEventListener('keydown',e=>{
+    if(e.key==='Enter'){
+      e.preventDefault();
+      if (searchTimer) clearTimeout(searchTimer);
+      runSearch(searchInput.value.trim());
+      $('sinIco').style.display = '';
+      $('sinSpin').style.display = 'none';
+    }
+  });
+
+  // Admin button
+  $('btnAdminToggle').addEventListener('click',()=>{
+    if(authenticated) {
+      openBcSheet(null);
+    } else {
+      openPinModal(()=>openBcSheet(null));
+    }
+  });
+
+  // Product sheet close
+  $('closeProdBtn').addEventListener('click',()=>closeModal(prodSheet));
+  $('closeProdBtn2').addEventListener('click',()=>closeModal(prodSheet));
+
+  // PIN modal
+  $('closePinBtn').addEventListener('click',()=>closeModal(pinModal));
+  $('cancelPinBtn').addEventListener('click',()=>closeModal(pinModal));
+  $('submitPinBtn').addEventListener('click',submitPin);
+  $('pinInput').addEventListener('keypress',e=>{if(e.key==='Enter')submitPin();});
+  $('pinInput').addEventListener('input',function(){this.value=this.value.replace(/\D/g,'');});
+
+  // BC sheet
+  $('closeBcBtn').addEventListener('click',()=>closeModal(bcSheet));
+  $('bcLogoutBtn').addEventListener('click',()=>{logout();closeModal(bcSheet);});
+  $('bcChgBtn').addEventListener('click',()=>{
+    bcProd=null;bcCodes=[];
+    $('bcProdSection').style.display='none';
+    $('bcFt').style.display='none';
+    $('bcSheetSub').textContent='Producto no seleccionado';
+    $('bcNewInput').value='';
+    hideBcToast();
+  });
+  $('bcSaveBtn').addEventListener('click',addBcCode);
+  $('bcNewInput').addEventListener('keypress',e=>{if(e.key==='Enter')addBcCode();});
+  $('bcCancelAddBtn').addEventListener('click',()=>closeModal(bcSheet));
+
+  // Load data
+  await loadProducts();
+  searchInput.focus();
+});
+</script>
+</body>
+</html>
