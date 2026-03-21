@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <title>Handheld · Walkie Talkie</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📡</text></svg>">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Sora:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background: #f5f7fa;
+      font-family: 'Sora', sans-serif;
+      height: 100vh;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* Fondo con patrones sutiles como el original */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background: radial-gradient(ellipse 90% 55% at 10% -5%, rgba(0,86,179,0.03) 0%, transparent 60%),
+                  radial-gradient(ellipse 70% 45% at 90% 105%, rgba(42,130,218,0.03) 0%, transparent 60%);
+      z-index: 0;
+    }
+
+    .app {
+      max-width: 560px;
+      margin: 0 auto;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      z-index: 2;
+    }
+
+    /* HEADER estilo bodega */
+    .hdr {
+      flex-shrink: 0;
+      padding: calc(12px + env(safe-area-inset-top, 0px)) 18px 10px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: rgba(255,255,255,0.96);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid rgba(0,0,0,0.08);
+    }
+    .hdr-brand {
+      flex: 1;
+    }
+    .hdr-title {
+      font-size: 1.2rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      letter-spacing: -0.02em;
+      color: #1e293b;
+    }
+    .hdr-icon {
+      width: 28px;
+      height: 28px;
+      background: rgba(0,86,179,0.08);
+      border-radius: 9px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #0056b3;
+      font-size: 1rem;
+    }
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 0.68rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 600;
+      padding: 3px 8px;
+      border-radius: 99px;
+      margin-top: 3px;
+      transition: all 0.2s;
+    }
+    .pill.on {
+      background: rgba(46,125,50,0.1);
+      color: #2e7d32;
+      border: 1px solid rgba(46,125,50,0.3);
+    }
+    .pill.off {
+      background: rgba(237,108,2,0.08);
+      color: #ed6c02;
+      border: 1px solid rgba(237,108,2,0.3);
+    }
+    .dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+    .dot.pulse {
+      animation: pulseDot 1.2s ease-in-out infinite;
+    }
+    @keyframes pulseDot {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.8); }
+    }
+    .ibtn {
+      width: 38px;
+      height: 38px;
+      background: #f0f2f5;
+      border: 1px solid rgba(0,0,0,0.08);
+      border-radius: 11px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.1rem;
+      color: #475569;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .ibtn:active {
+      transform: scale(0.92);
+      background: white;
+    }
+
+    /* WALKIE TALKIE CORE */
+    .walkie-section {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 16px 20px;
+      overflow-y: auto;
+    }
+    .radio-card {
+      background: #ffffff;
+      border-radius: 28px;
+      border: 1px solid rgba(0,0,0,0.08);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.03);
+      padding: 28px 18px 32px;
+      text-align: center;
+      transition: all 0.2s;
+    }
+    .channel-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(0,86,179,0.08);
+      padding: 6px 16px;
+      border-radius: 40px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      font-family: 'JetBrains Mono', monospace;
+      color: #0056b3;
+      margin-bottom: 24px;
+      border: 1px solid rgba(0,86,179,0.2);
+    }
+    .mic-area {
+      margin: 20px 0;
+    }
+    .talk-btn {
+      width: 130px;
+      height: 130px;
+      background: #f0f2f5;
+      border-radius: 100px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 10px;
+      cursor: pointer;
+      transition: all 0.12s linear;
+      box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+      border: 2px solid rgba(0,86,179,0.2);
+      background: radial-gradient(circle at 30% 25%, #ffffff, #f4f6fa);
+    }
+    .talk-btn i {
+      font-size: 3rem;
+      color: #0056b3;
+      transition: transform 0.08s;
+    }
+    .talk-btn span {
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: #1e293b;
+    }
+    .talk-btn.active {
+      background: radial-gradient(circle at 30% 25%, #e6f0ff, #d9e8ff);
+      transform: scale(0.96);
+      border-color: #0056b3;
+      box-shadow: 0 2px 12px rgba(0,86,179,0.3);
+    }
+    .talk-btn.active i {
+      color: #004494;
+      animation: micPulse 0.5s infinite alternate;
+    }
+    @keyframes micPulse {
+      0% { transform: scale(1); opacity: 0.8; }
+      100% { transform: scale(1.08); opacity: 1; }
+    }
+    .status-msg {
+      background: #f0f2f5;
+      border-radius: 44px;
+      padding: 10px 18px;
+      margin: 20px 0 12px;
+      font-size: 0.85rem;
+      font-weight: 500;
+      font-family: 'JetBrains Mono', monospace;
+      color: #0056b3;
+      display: inline-block;
+      width: auto;
+      backdrop-filter: blur(4px);
+    }
+    .transcript-area {
+      background: #ffffff;
+      border-radius: 24px;
+      border: 1px solid rgba(0,0,0,0.05);
+      margin-top: 28px;
+      padding: 12px 16px;
+      text-align: left;
+      max-height: 180px;
+      overflow-y: auto;
+    }
+    .msg-row {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 12px;
+      font-size: 0.8rem;
+      animation: fadeIn 0.2s ease;
+    }
+    .msg-badge {
+      width: 28px;
+      height: 28px;
+      background: rgba(0,86,179,0.1);
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #0056b3;
+      flex-shrink: 0;
+    }
+    .msg-text {
+      background: #f8fafc;
+      padding: 8px 12px;
+      border-radius: 18px;
+      flex: 1;
+      color: #1e293b;
+      line-height: 1.35;
+      word-break: break-word;
+    }
+    .msg-text.own {
+      background: rgba(0,86,179,0.08);
+      border-left: 3px solid #0056b3;
+    }
+    .timestamp {
+      font-size: 0.6rem;
+      color: #94a3b8;
+      margin-top: 3px;
+      display: block;
+    }
+    .empty-chat {
+      text-align: center;
+      color: #94a3b8;
+      padding: 20px;
+      font-size: 0.8rem;
+    }
+    .control-buttons {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      margin-top: 16px;
+    }
+    .sec-btn {
+      background: #f0f2f5;
+      border: 1px solid rgba(0,0,0,0.08);
+      border-radius: 32px;
+      padding: 8px 18px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      transition: all 0.15s;
+      color: #2c3e50;
+    }
+    .sec-btn:active {
+      transform: scale(0.94);
+      background: #e6e9ef;
+    }
+    .sec-btn.danger {
+      color: #d32f2f;
+      background: rgba(211,47,47,0.08);
+      border-color: rgba(211,47,47,0.2);
+    }
+    .indicator-led {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 8px;
+      margin-top: 8px;
+    }
+    .led {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #cbd5e1;
+      transition: 0.1s;
+    }
+    .led.active {
+      background: #2e7d32;
+      box-shadow: 0 0 4px #2e7d32;
+      animation: blinkLed 1s infinite;
+    }
+    @keyframes blinkLed {
+      0%,100%{ opacity: 0.6; }
+      50%{ opacity: 1; background: #4caf50; }
+    }
+    .perm-request {
+      background: #fff3e0;
+      border-radius: 20px;
+      padding: 16px;
+      margin-top: 20px;
+      border-left: 4px solid #ed6c02;
+    }
+    footer {
+      padding: 12px 18px calc(12px + env(safe-area-inset-bottom,0px));
+      text-align: center;
+      font-size: 0.65rem;
+      color: #94a3b8;
+      border-top: 1px solid rgba(0,0,0,0.05);
+      background: rgba(255,255,255,0.8);
+    }
+    .toast-ntf {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #1e293b;
+      color: white;
+      padding: 6px 14px;
+      border-radius: 100px;
+      font-size: 0.7rem;
+      z-index: 1000;
+      opacity: 0;
+      transition: 0.2s;
+      pointer-events: none;
+      font-family: monospace;
+    }
+    .toast-ntf.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(-5px);
+    }
+    ::-webkit-scrollbar {
+      width: 3px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 10px;
+    }
+    @media (max-width: 500px) {
+      .talk-btn { width: 110px; height: 110px; }
+      .talk-btn i { font-size: 2.5rem; }
+    }
+  </style>
+</head>
+<body>
+<div class="app">
+  <header class="hdr">
+    <div class="hdr-brand">
+      <div class="hdr-title">
+        <span class="hdr-icon"><i class="bi bi-megaphone-fill"></i></span>
+        Walkie Talkie
+      </div>
+      <div id="connPill" class="pill on">
+        <span class="dot pulse"></span>
+        <span id="connStatus">Handheld · Local</span>
+      </div>
+    </div>
+    <div class="hdr-acts">
+      <button class="ibtn" id="clearChatBtn" title="Limpiar mensajes"><i class="bi bi-trash3"></i></button>
+    </div>
+  </header>
+
+  <div class="walkie-section">
+    <div class="radio-card">
+      <div class="channel-badge">
+        <i class="bi bi-broadcast"></i> CANAL PRINCIPAL · BODEGA
+      </div>
+
+      <!-- Botón Pulsar para hablar -->
+      <div class="mic-area">
+        <div id="talkButton" class="talk-btn">
+          <i class="bi bi-mic-fill"></i>
+          <span>PULSAR HABLAR</span>
+        </div>
+        <div class="indicator-led" id="ledIndicator">
+          <span class="led" id="micLed"></span>
+          <span style="font-size: 0.7rem; color:#475569;">Esperando</span>
+        </div>
+      </div>
+
+      <div id="statusMessage" class="status-msg">🎙️ Mantén presionado para transmitir</div>
+
+      <!-- Mensajes de voz transcritos y notificaciones -->
+      <div class="transcript-area" id="transcriptArea">
+        <div class="empty-chat">
+          <i class="bi bi-chat-dots"></i> Mensajes recibidos aparecerán aquí<br>
+          <span style="font-size:0.7rem;">Simula comunicación con otros handhelds</span>
+        </div>
+      </div>
+
+      <div class="control-buttons">
+        <button class="sec-btn" id="testSimulateBtn"><i class="bi bi-radioactive"></i> Simular llamada</button>
+        <button class="sec-btn danger" id="resetTalkBtn"><i class="bi bi-arrow-repeat"></i> Reiniciar</button>
+      </div>
+      <div style="margin-top: 12px; font-size: 0.7rem; color:#94a3b8; background: #f8fafc; border-radius: 16px; padding: 8px;">
+        <i class="bi bi-info-circle"></i> Comunicación local entre dispositivos (BroadcastChannel) + síntesis de voz.<br>
+        Abre esta misma página en otra pestaña o dispositivo para walkie-talkie real.
+      </div>
+    </div>
+  </div>
+  <footer>
+    <i class="bi bi-wifi"></i> Comunicación por canales locales · Handheld Ready
+  </footer>
+</div>
+<div id="toastMsg" class="toast-ntf">📡 Mensaje</div>
+
+<script>
+  // --------------------------------------------------------------
+  // WALKIE TALKIE CON BROADCASTCHANNEL + SPEECH RECOGNITION + SPEECH SYNTH
+  // Basado en la paleta: azul corporativo #0056b3, grises y acentos
+  // --------------------------------------------------------------
+  (function(){
+    // Elementos UI
+    const talkBtn = document.getElementById('talkButton');
+    const transcriptArea = document.getElementById('transcriptArea');
+    const connPill = document.getElementById('connPill');
+    const connStatusSpan = document.getElementById('connStatus');
+    const statusMsgDiv = document.getElementById('statusMessage');
+    const micLed = document.getElementById('micLed');
+    const clearBtn = document.getElementById('clearChatBtn');
+    const testSimulate = document.getElementById('testSimulateBtn');
+    const resetBtn = document.getElementById('resetTalkBtn');
+    const toast = document.getElementById('toastMsg');
+
+    // Configuración
+    let isPressing = false;
+    let recognition = null;
+    let broadcastChannel = null;
+    let synth = window.speechSynthesis;
+    let messages = [];       // almacena mensajes {text, isOwn, timestamp}
+    let currentTranscript = '';
+    let activeRecognition = false;
+
+    // Soporte para SpeechRecognition
+    const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const hasRecognition = !!SpeechRecognitionAPI;
+
+    // Inicializar canal de broadcast (comunicación entre pestañas/handhelds)
+    function initBroadcastChannel() {
+      try {
+        if (broadcastChannel) broadcastChannel.close();
+        broadcastChannel = new BroadcastChannel('walkie_bodega_channel');
+        broadcastChannel.onmessage = (event) => {
+          if (event.data && event.data.type === 'voice_message') {
+            // Recibimos mensaje de otro handheld o pestaña
+            const { text, senderId, timestamp } = event.data;
+            addMessageToUI(text, false, timestamp);
+            // Reproducir síntesis de voz automática (como si llegara la comunicación)
+            speakText(`Mensaje de Handheld: ${text}`);
+            showToast(`📻 Handheld dice: ${text}`);
+            // vibración suave si se soporta
+            if (navigator.vibrate) navigator.vibrate(80);
+          } else if (event.data && event.data.type === 'ping') {
+            // Respuesta implícita
+            broadcastChannel.postMessage({ type: 'pong', senderId: getDeviceId() });
+          }
+        };
+        // Indicar conexión activa
+        connPill.classList.remove('off');
+        connPill.classList.add('on');
+        connStatusSpan.innerText = 'Canal activo';
+      } catch (e) {
+        console.warn('BroadcastChannel fallback, comunicación limitada', e);
+        connStatusSpan.innerText = 'Modo local';
+      }
+    }
+
+    // ID simple para identificar origen
+    function getDeviceId() {
+      let id = localStorage.getItem('walkie_device_id');
+      if (!id) {
+        id = 'hh_' + Math.random().toString(36).substring(2, 8);
+        localStorage.setItem('walkie_device_id', id);
+      }
+      return id;
+    }
+
+    // Enviar mensaje de voz a otros handhelds
+    function broadcastVoiceMessage(text) {
+      if (!broadcastChannel) {
+        initBroadcastChannel();
+      }
+      if (broadcastChannel && text && text.trim()) {
+        broadcastChannel.postMessage({
+          type: 'voice_message',
+          text: text.trim(),
+          senderId: getDeviceId(),
+          timestamp: Date.now()
+        });
+      }
+    }
+
+    // Síntesis de voz estilo walkie (con voz agradable)
+    function speakText(text) {
+      if (!synth) return;
+      try {
+        // cancelar cualquier síntesis previa para no solaparse
+        synth.cancel();
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'es-ES';
+        utterance.rate = 0.9;
+        utterance.pitch = 1.1;
+        utterance.volume = 0.8;
+        // elegir voz en español si existe
+        synth.speak(utterance);
+      } catch(e) { console.warn(e); }
+    }
+
+    // Agregar mensaje a UI
+    function addMessageToUI(text, isOwn = true, timestamp = null) {
+      const ts = timestamp || Date.now();
+      const timeLabel = new Date(ts).toLocaleTimeString([], { hour:'2-digit', minute:'2-digit', second:'2-digit' });
+      messages.push({ text, isOwn, timestamp: ts, timeLabel });
+
+      // Limpiar contenedor placeholder
+      transcriptArea.innerHTML = '';
+      // Mostrar todos los mensajes en orden cronológico ascendente
+      const sorted = [...messages].sort((a,b) => a.timestamp - b.timestamp);
+      for (let msg of sorted) {
+        const rowDiv = document.createElement('div');
+        rowDiv.className = 'msg-row';
+        const badge = document.createElement('div');
+        badge.className = 'msg-badge';
+        badge.innerHTML = msg.isOwn ? '<i class="bi bi-mic"></i>' : '<i class="bi bi-broadcast"></i>';
+        const textDiv = document.createElement('div');
+        textDiv.className = `msg-text ${msg.isOwn ? 'own' : ''}`;
+        textDiv.innerHTML = `<strong>${msg.isOwn ? 'Tú' : 'Handheld'}</strong><br>${escapeHtml(msg.text)}<span class="timestamp">${msg.timeLabel}</span>`;
+        rowDiv.appendChild(badge);
+        rowDiv.appendChild(textDiv);
+        transcriptArea.appendChild(rowDiv);
+      }
+      // auto scroll abajo
+      transcriptArea.scrollTop = transcriptArea.scrollHeight;
+      if (transcriptArea.children.length === 0) {
+        transcriptArea.innerHTML = '<div class="empty-chat"><i class="bi bi-chat-dots"></i> Mensajes recibidos aparecerán aquí</div>';
+      }
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return str.replace(/[&<>]/g, function(m) {
+        if (m === '&') return '&amp;';
+        if (m === '<') return '&lt;';
+        if (m === '>') return '&gt;';
+        return m;
+      }).replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, function(c) {
+        return c;
+      });
+    }
+
+    function showToast(msg, duration = 2000) {
+      const toastEl = document.getElementById('toastMsg');
+      toastEl.innerText = msg;
+      toastEl.classList.add('show');
+      setTimeout(() => {
+        toastEl.classList.remove('show');
+      }, duration);
+    }
+
+    // Inicializar reconocimiento de voz
+    function initSpeechRecognition() {
+      if (!hasRecognition) {
+        statusMsgDiv.innerHTML = '⚠️ Tu navegador no soporta reconocimiento de voz. Simula con botón.';
+        return null;
+      }
+      const recog = new SpeechRecognitionAPI();
+      recog.lang = 'es-ES';
+      recog.interimResults = true;
+      recog.maxAlternatives = 1;
+      recog.continuous = false;
+      return recog;
+    }
+
+    function startRecording() {
+      if (!hasRecognition) {
+        statusMsgDiv.innerHTML = '❌ Sin soporte de voz, usa Simular llamada';
+        showToast('Reconocimiento no disponible', 1500);
+        return;
+      }
+      if (activeRecognition) {
+        try { recognition?.abort(); } catch(e) {}
+      }
+      recognition = initSpeechRecognition();
+      if (!recognition) return;
+      currentTranscript = '';
+      activeRecognition = true;
+      micLed.classList.add('active');
+      statusMsgDiv.innerHTML = '🔴 Escuchando... habla ahora';
+      if (navigator.vibrate) navigator.vibrate(50);
+      
+      recognition.onstart = () => {
+        statusMsgDiv.innerHTML = '🎙️ Grabando... suelta para enviar';
+        micLed.classList.add('active');
+      };
+      recognition.onresult = (event) => {
+        let interim = '';
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          const transcript = event.results[i][0].transcript;
+          if (event.results[i].isFinal) {
+            currentTranscript = transcript;
+          } else {
+            interim = transcript;
+            statusMsgDiv.innerHTML = `📝 ${interim}...`;
+          }
+        }
+        if (currentTranscript) {
+          statusMsgDiv.innerHTML = `✅ "${currentTranscript}"`;
+        }
+      };
+      recognition.onerror = (event) => {
+        console.error('error speech', event);
+        activeRecognition = false;
+        micLed.classList.remove('active');
+        statusMsgDiv.innerHTML = '⚠️ Error de micrófono, prueba de nuevo';
+        if (navigator.vibrate) navigator.vibrate([100,50,100]);
+      };
+      recognition.onend = () => {
+        // Cuando termina el reconocimiento por dejar de presionar? la lógica: si isPressing es false porque se soltó el botón, procesamos
+        if (isPressing === false && currentTranscript && currentTranscript.trim().length > 0) {
+          sendVoiceMessage(currentTranscript);
+        } else if (isPressing === false && (!currentTranscript || currentTranscript.trim() === '')) {
+          statusMsgDiv.innerHTML = '🎙️ No se detectó voz, pulsa y habla';
+          micLed.classList.remove('active');
+        } else if (isPressing === true) {
+          // Podría reiniciar si aun presiona? no debería, pero por si acaso
+        }
+        activeRecognition = false;
+        if (!isPressing) micLed.classList.remove('active');
+        currentTranscript = '';
+      };
+      recognition.start();
+    }
+
+    function stopRecordingAndSend() {
+      if (!recognition || !activeRecognition) {
+        // Si no hay reconocimiento activo pero isPressing era true, quizás error
+        if (currentTranscript && currentTranscript.trim()) {
+          sendVoiceMessage(currentTranscript);
+        } else {
+          statusMsgDiv.innerHTML = 'Pulsa y mantén para hablar';
+        }
+        micLed.classList.remove('active');
+        return;
+      }
+      try {
+        recognition.stop();
+      } catch(e) {
+        if (currentTranscript && currentTranscript.trim()) sendVoiceMessage(currentTranscript);
+      }
+      // el onend se encargará de enviar
+    }
+
+    function sendVoiceMessage(finalText) {
+      if (!finalText || finalText.trim() === '') {
+        statusMsgDiv.innerHTML = 'No se captó mensaje, inténtalo de nuevo';
+        micLed.classList.remove('active');
+        return;
+      }
+      const clean = finalText.trim();
+      // Agregar a UI local como propio
+      addMessageToUI(clean, true, Date.now());
+      // Enviar a través del broadcast channel para otros handhelds
+      broadcastVoiceMessage(clean);
+      // síntesis local para confirmar (opcional, como eco walkie)
+      speakText(`Mensaje enviado: ${clean}`);
+      showToast(`📢 Enviado: ${clean}`, 1800);
+      if (navigator.vibrate) navigator.vibrate(100);
+      statusMsgDiv.innerHTML = '✅ Mensaje transmitido';
+      setTimeout(() => {
+        if (!isPressing) statusMsgDiv.innerHTML = '🎙️ Mantén presionado para transmitir';
+      }, 1200);
+      currentTranscript = '';
+      micLed.classList.remove('active');
+    }
+
+    // Gestión táctil/mouse: Pulsar y mantener
+    function onPressStart(e) {
+      e.preventDefault();
+      if (isPressing) return;
+      isPressing = true;
+      talkBtn.classList.add('active');
+      startRecording();
+    }
+    function onPressEnd(e) {
+      e.preventDefault();
+      if (!isPressing) return;
+      isPressing = false;
+      talkBtn.classList.remove('active');
+      stopRecordingAndSend();
+      micLed.classList.remove('active');
+    }
+
+    // Simular llamada entrante (para demostración)
+    function simulateIncomingCall() {
+      const fakeMessages = [
+        "¿Hay stock del SKU 4456?",
+        "Necesito 10 cajas para tienda",
+        "Confirmo traslado de producto",
+        "Bodega lista para envío"
+      ];
+      const randomMsg = fakeMessages[Math.floor(Math.random() * fakeMessages.length)];
+      addMessageToUI(randomMsg, false, Date.now());
+      broadcastVoiceMessage(randomMsg); // también lo envía a otros canales (simula)
+      speakText(`Mensaje entrante: ${randomMsg}`);
+      showToast(`📡 Handheld: ${randomMsg}`, 2200);
+      if (navigator.vibrate) navigator.vibrate([60, 30, 60]);
+    }
+
+    function resetConversation() {
+      messages = [];
+      transcriptArea.innerHTML = '<div class="empty-chat"><i class="bi bi-chat-dots"></i> Mensajes recibidos aparecerán aquí<br><span style="font-size:0.7rem;">Comunicación reiniciada</span></div>';
+      showToast('Conversación limpia', 1000);
+      if (synth) synth.cancel();
+    }
+
+    function clearChat() {
+      resetConversation();
+    }
+
+    // Configurar eventos touch/mouse
+    function bindTalkEvents() {
+      talkBtn.addEventListener('mousedown', onPressStart);
+      talkBtn.addEventListener('mouseup', onPressEnd);
+      talkBtn.addEventListener('mouseleave', onPressEnd);
+      talkBtn.addEventListener('touchstart', onPressStart, {passive: false});
+      talkBtn.addEventListener('touchend', onPressEnd);
+      talkBtn.addEventListener('touchcancel', onPressEnd);
+    }
+
+    // Inicializar y pedir permisos de micrófono sutiles
+    async function requestMicrophonePermission() {
+      if (!hasRecognition) return;
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        stream.getTracks().forEach(track => track.stop());
+        statusMsgDiv.innerHTML = '🎙️ Micrófono listo · pulsa para hablar';
+      } catch(err) {
+        console.warn('permiso denegado', err);
+        statusMsgDiv.innerHTML = '🔇 Sin acceso al micrófono, usa modo simulación';
+      }
+    }
+
+    // Sincronizar estado visual
+    function init() {
+      initBroadcastChannel();
+      bindTalkEvents();
+      if (hasRecognition) requestMicrophonePermission();
+      else statusMsgDiv.innerHTML = '📻 Modo texto simulado (sin voz)';
+      
+      clearBtn.addEventListener('click', clearChat);
+      testSimulate.addEventListener('click', simulateIncomingCall);
+      resetBtn.addEventListener('click', () => {
+        resetConversation();
+        showToast('Walkie reiniciado', 1200);
+      });
+      // Enviar ping de presencia cada 30 segundos para mantener canal
+      setInterval(() => {
+        if (broadcastChannel) {
+          broadcastChannel.postMessage({ type: 'ping', senderId: getDeviceId() });
+        }
+      }, 30000);
+    }
+    init();
+  })();
+</script>
+</body>
+</html>
