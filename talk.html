@@ -8,6 +8,7 @@
   <title>Walkie Talkie · Voz en Tiempo Real</title>
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Sora:wght@300;400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+  <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
   <style>
     * {
       margin: 0;
@@ -18,20 +19,11 @@
     }
 
     body {
-      background: #f5f7fa;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       font-family: 'Sora', sans-serif;
       height: 100vh;
       overflow: hidden;
       position: relative;
-    }
-
-    body::before {
-      content: '';
-      position: fixed;
-      inset: 0;
-      pointer-events: none;
-      background: radial-gradient(ellipse 90% 55% at 10% -5%, rgba(0,86,179,0.03) 0%, transparent 60%),
-                  radial-gradient(ellipse 70% 45% at 90% 105%, rgba(42,130,218,0.03) 0%, transparent 60%);
     }
 
     .app {
@@ -50,7 +42,7 @@
       display: flex;
       align-items: center;
       gap: 12px;
-      background: rgba(255,255,255,0.96);
+      background: rgba(255,255,255,0.95);
       backdrop-filter: blur(20px);
       border-bottom: 1px solid rgba(0,0,0,0.08);
     }
@@ -66,12 +58,12 @@
     .hdr-icon {
       width: 32px;
       height: 32px;
-      background: rgba(0,86,179,0.08);
+      background: linear-gradient(135deg, #667eea, #764ba2);
       border-radius: 10px;
       display: flex;
       align-items: center;
       justify-content: center;
-      color: #0056b3;
+      color: white;
       font-size: 1.1rem;
     }
     .pill {
@@ -94,6 +86,11 @@
       background: rgba(237,108,2,0.08);
       color: #ed6c02;
       border: 1px solid rgba(237,108,2,0.3);
+    }
+    .pill.warning {
+      background: rgba(237,108,2,0.15);
+      color: #ed6c02;
+      border: 1px solid rgba(237,108,2,0.4);
     }
     .dot {
       width: 6px;
@@ -130,12 +127,13 @@
       flex-direction: column;
       justify-content: center;
       padding: 20px;
+      overflow-y: auto;
     }
     .radio-card {
       background: white;
       border-radius: 32px;
       border: 1px solid rgba(0,0,0,0.08);
-      box-shadow: 0 12px 32px rgba(0,0,0,0.05);
+      box-shadow: 0 20px 40px rgba(0,0,0,0.1);
       padding: 28px 20px 32px;
       text-align: center;
     }
@@ -145,29 +143,34 @@
       align-items: center;
       margin-bottom: 24px;
       padding: 0 8px;
+      flex-wrap: wrap;
+      gap: 10px;
     }
     .channel-badge {
       display: inline-flex;
       align-items: center;
       gap: 8px;
-      background: rgba(0,86,179,0.08);
+      background: linear-gradient(135deg, #667eea20, #764ba220);
       padding: 6px 16px;
       border-radius: 40px;
       font-size: 0.75rem;
       font-weight: 600;
       font-family: monospace;
-      color: #0056b3;
+      color: #667eea;
     }
     .device-id {
       font-size: 0.65rem;
       color: #94a3b8;
       font-family: monospace;
+      background: #f8fafc;
+      padding: 4px 8px;
+      border-radius: 8px;
     }
 
     .ptt-container { margin: 20px 0; }
     .ptt-btn {
-      width: 150px;
-      height: 150px;
+      width: 160px;
+      height: 160px;
       background: linear-gradient(145deg, #f0f2f5, #ffffff);
       border-radius: 50%;
       margin: 0 auto;
@@ -178,13 +181,16 @@
       gap: 12px;
       cursor: pointer;
       transition: all 0.08s linear;
-      box-shadow: 0 15px 30px rgba(0,0,0,0.12);
-      border: 3px solid rgba(0,86,179,0.2);
+      box-shadow: 0 15px 30px rgba(0,0,0,0.2);
+      border: 3px solid rgba(102,126,234,0.3);
       position: relative;
     }
     .ptt-btn i {
-      font-size: 3.5rem;
-      color: #0056b3;
+      font-size: 3.8rem;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
       transition: all 0.05s;
     }
     .ptt-btn span {
@@ -194,17 +200,19 @@
     }
     .ptt-btn.active {
       transform: scale(0.94);
-      background: radial-gradient(circle at 30% 25%, #e0ebff, #d0e0ff);
-      border-color: #0056b3;
-      box-shadow: 0 5px 20px rgba(0,86,179,0.4);
+      background: linear-gradient(145deg, #e0e7ff, #ede9fe);
+      border-color: #667eea;
+      box-shadow: 0 5px 20px rgba(102,126,234,0.4);
     }
     .ptt-btn.active i {
       animation: micWave 0.4s infinite alternate;
-      color: #004494;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      -webkit-background-clip: text;
+      background-clip: text;
     }
     @keyframes micWave {
-      0% { transform: scale(1); text-shadow: 0 0 0 rgba(0,86,179,0); }
-      100% { transform: scale(1.1); text-shadow: 0 0 8px rgba(0,86,179,0.5); }
+      0% { transform: scale(1); filter: drop-shadow(0 0 0 rgba(102,126,234,0)); }
+      100% { transform: scale(1.1); filter: drop-shadow(0 0 8px rgba(102,126,234,0.5)); }
     }
 
     .voice-indicator { margin-top: 20px; }
@@ -219,7 +227,7 @@
     .vumeter-fill {
       height: 100%;
       width: 0%;
-      background: linear-gradient(90deg, #2e7d32, #0056b3);
+      background: linear-gradient(90deg, #667eea, #764ba2);
       transition: width 0.05s linear;
       border-radius: 10px;
     }
@@ -228,6 +236,7 @@
       color: #475569;
       margin-top: 12px;
       font-family: monospace;
+      font-weight: 600;
     }
     .led-group {
       display: flex;
@@ -282,6 +291,8 @@
       display: flex;
       flex-wrap: wrap;
       gap: 6px;
+      max-height: 100px;
+      overflow-y: auto;
     }
     .device-chip {
       background: white;
@@ -290,11 +301,27 @@
       padding: 4px 10px;
       font-size: 0.7rem;
       font-family: monospace;
-      color: #0056b3;
+      color: #667eea;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .device-chip:active {
+      transform: scale(0.95);
     }
     .device-chip.self {
-      background: rgba(0,86,179,0.1);
-      border-color: #0056b3;
+      background: linear-gradient(135deg, #667eea20, #764ba220);
+      border-color: #667eea;
+      font-weight: 600;
+    }
+    .device-chip.remote-speaking {
+      background: linear-gradient(135deg, #f59e0b, #ef4444);
+      color: white;
+      border-color: #f59e0b;
+      animation: pulseOrange 0.5s infinite;
+    }
+    @keyframes pulseOrange {
+      0%, 100% { opacity: 0.8; transform: scale(1); }
+      50% { opacity: 1; transform: scale(1.02); }
     }
 
     .control-bar {
@@ -302,6 +329,7 @@
       gap: 12px;
       justify-content: center;
       margin-top: 16px;
+      flex-wrap: wrap;
     }
     .sec-btn {
       background: #f0f2f5;
@@ -318,13 +346,34 @@
     }
     .sec-btn:active { transform: scale(0.94); }
 
+    .connection-panel {
+      margin-top: 16px;
+      padding: 12px;
+      background: linear-gradient(135deg, #fef3c7, #fde68a);
+      border-radius: 16px;
+      border: 1px solid #f59e0b;
+    }
+    .connection-panel input {
+      width: 100%;
+      padding: 10px;
+      border: 2px solid #e2e8f0;
+      border-radius: 12px;
+      font-size: 0.8rem;
+      font-family: monospace;
+      margin-top: 8px;
+      text-align: center;
+    }
+    .connection-panel button {
+      margin-top: 8px;
+      width: 100%;
+    }
+
     footer {
       padding: 12px 18px calc(12px + env(safe-area-inset-bottom,0px));
       text-align: center;
       font-size: 0.65rem;
-      color: #94a3b8;
-      border-top: 1px solid rgba(0,0,0,0.05);
-      background: rgba(255,255,255,0.8);
+      color: rgba(255,255,255,0.8);
+      background: rgba(0,0,0,0.2);
     }
     .toast-msg {
       position: fixed;
@@ -348,8 +397,8 @@
       transform: translateX(-50%) translateY(-10px);
     }
     @media (max-width: 500px) {
-      .ptt-btn { width: 130px; height: 130px; }
-      .ptt-btn i { font-size: 2.8rem; }
+      .ptt-btn { width: 140px; height: 140px; }
+      .ptt-btn i { font-size: 3.2rem; }
     }
   </style>
 </head>
@@ -359,7 +408,7 @@
     <div class="hdr-brand">
       <div class="hdr-title">
         <span class="hdr-icon"><i class="bi bi-mic"></i></span>
-        Walkie Talkie RT
+        Walkie Talkie PRO
       </div>
       <div id="connPill" class="pill on">
         <span class="dot pulse"></span>
@@ -367,14 +416,14 @@
       </div>
     </div>
     <div class="hdr-acts">
-      <button class="ibtn" id="shareBtn" title="Compartir enlace"><i class="bi bi-share"></i></button>
+      <button class="ibtn" id="shareBtn" title="Compartir ID"><i class="bi bi-share"></i></button>
     </div>
   </header>
 
   <div class="walkie-main">
     <div class="radio-card">
       <div class="channel-info">
-        <div class="channel-badge"><i class="bi bi-broadcast"></i> CANAL VOZ · EN VIVO</div>
+        <div class="channel-badge"><i class="bi bi-cloud-check"></i> PEERJS CLOUD · GLOBAL</div>
         <div class="device-id" id="deviceIdDisplay">ID: ----</div>
       </div>
 
@@ -387,7 +436,7 @@
           <div class="vumeter">
             <div class="vumeter-fill" id="vumeterFill"></div>
           </div>
-          <div class="status-text" id="statusText">🎤 Esperando micrófono...</div>
+          <div class="status-text" id="statusText">🎤 Iniciando...</div>
           <div class="led-group">
             <div class="led" id="txLed"></div>
             <div class="led" id="rxLed"></div>
@@ -398,21 +447,29 @@
 
       <div class="devices-panel">
         <div class="devices-title">
-          <i class="bi bi-diagram-3"></i> Handhelds conectados
+          <i class="bi bi-diagram-3"></i> Dispositivos conectados
         </div>
         <div class="devices-list" id="devicesList">
-          <span class="device-chip">🔄 Conectando...</span>
+          <span class="device-chip">🔄 Conectando a red PeerJS...</span>
         </div>
+      </div>
+
+      <div class="connection-panel">
+        <i class="bi bi-link-45deg"></i> <strong>Conectar con otro dispositivo</strong><br>
+        <small>Pide el ID del otro dispositivo y pégalo aquí:</small>
+        <input type="text" id="remoteIdInput" placeholder="Ej: 8a3f9b2c-1d4e-5f6a-7b8c-9d0e1f2a3b4c" autocomplete="off">
+        <button class="sec-btn" id="connectBtn" style="width: 100%; margin-top: 8px;"><i class="bi bi-plus-circle"></i> Conectar</button>
       </div>
 
       <div class="control-bar">
         <button class="sec-btn" id="testAudioBtn"><i class="bi bi-headphones"></i> Probar audio</button>
-        <button class="sec-btn" id="copyIdBtn"><i class="bi bi-copy"></i> Copiar ID</button>
+        <button class="sec-btn" id="copyIdBtn"><i class="bi bi-copy"></i> Copiar mi ID</button>
+        <button class="sec-btn" id="disconnectAllBtn"><i class="bi bi-x-circle"></i> Desconectar todos</button>
       </div>
     </div>
   </div>
   <footer>
-    <i class="bi bi-wifi"></i> Voz en tiempo real · Push to Talk · Abre en otra pestaña para probar
+    <i class="bi bi-globe2"></i> Comunicación global vía PeerJS · Presiona para hablar
   </footer>
 </div>
 <div id="toastMsg" class="toast-msg"></div>
@@ -421,14 +478,13 @@
   class RealTimeWalkieTalkie {
     constructor() {
       this.localStream = null;
-      this.peerConnections = new Map();
-      this.remoteAudioElements = new Map(); // Guardar referencia a elementos de audio
+      this.peer = null;
+      this.connections = new Map(); // peerId -> MediaConnection
+      this.remoteAudioElements = new Map();
       this.isTransmitting = false;
-      this.deviceId = this.generateDeviceId();
-      this.devices = new Map();
-      this.ws = null;
-      this.reconnectAttempts = 0;
-      this.roomId = this.getRoomId();
+      this.myId = null;
+      this.devices = new Map(); // peerId -> { name, lastSeen, call }
+      this.currentSpeaker = null;
       
       // Elementos DOM
       this.pttBtn = document.getElementById('pttButton');
@@ -441,34 +497,15 @@
       this.deviceIdDisplay = document.getElementById('deviceIdDisplay');
       this.connStatusSpan = document.getElementById('connStatus');
       this.connPill = document.getElementById('connPill');
+      this.remoteIdInput = document.getElementById('remoteIdInput');
+      this.connectBtn = document.getElementById('connectBtn');
       
       this.init();
     }
     
-    generateDeviceId() {
-      let id = localStorage.getItem('walkie_device_id_rt');
-      if (!id) {
-        const names = ['ALFA', 'BRAVO', 'CHARLIE', 'DELTA', 'ECHO', 'FOXTROT', 'GOLF', 'HOTEL'];
-        const randomName = names[Math.floor(Math.random() * names.length)];
-        id = randomName + '-' + Math.floor(Math.random() * 100);
-        localStorage.setItem('walkie_device_id_rt', id);
-      }
-      return id;
-    }
-    
-    getRoomId() {
-      let room = localStorage.getItem('walkie_room');
-      if (!room) {
-        room = 'room_' + Math.random().toString(36).substring(2, 8);
-        localStorage.setItem('walkie_room', room);
-      }
-      return room;
-    }
-    
     async init() {
-      this.deviceIdDisplay.textContent = `ID: ${this.deviceId}`;
       await this.initMicrophone();
-      this.connectWebSocket();
+      this.initPeerJS();
       this.setupUIEvents();
     }
     
@@ -478,7 +515,9 @@
           audio: {
             echoCancellation: true,
             noiseSuppression: true,
-            autoGainControl: true
+            autoGainControl: true,
+            sampleRate: 48000,
+            channelCount: 1
           }
         });
         
@@ -491,9 +530,8 @@
         
         this.startVUMeter(analyser);
         this.statusText.innerHTML = '🎤 Micrófono listo · Presiona para hablar';
-        this.showToast('Micrófono activado', 2000);
+        this.showToast('✅ Micrófono activado', 2000);
         
-        // Reanudar AudioContext si está suspendido
         if (audioContext.state === 'suspended') {
           await audioContext.resume();
         }
@@ -501,7 +539,7 @@
       } catch (err) {
         console.error('Error micrófono:', err);
         this.statusText.innerHTML = '❌ Error: Sin acceso al micrófono';
-        this.showToast('No se pudo acceder al micrófono', 3000);
+        this.showToast('❌ No se pudo acceder al micrófono. Revisa permisos.', 3000);
       }
     }
     
@@ -527,308 +565,239 @@
       updateVU();
     }
     
-    connectWebSocket() {
-      // Usar servidor público de señalización WebSocket para WebRTC
-      // Si falla, usar modo broadcast local (misma máquina)
-      const wsUrl = 'wss://broadcast-channel-demo.glitch.me/ws';
+    initPeerJS() {
+      // Crear ID único para este dispositivo
+      const savedId = localStorage.getItem('walkie_peer_id');
+      if (savedId) {
+        this.myId = savedId;
+      } else {
+        this.myId = 'walkie-' + Math.random().toString(36).substring(2, 15);
+        localStorage.setItem('walkie_peer_id', this.myId);
+      }
       
-      try {
-        this.ws = new WebSocket(wsUrl);
-        
-        this.ws.onopen = () => {
-          console.log('WebSocket conectado');
-          this.netLed.classList.add('active');
-          this.connStatusSpan.innerHTML = 'En línea';
-          this.connPill.classList.add('on');
-          
-          // Enviar mensaje de registro
-          this.ws.send(JSON.stringify({
-            type: 'register',
-            deviceId: this.deviceId,
-            roomId: this.roomId
-          }));
-          
-          this.showToast('Conectado al canal', 2000);
-        };
-        
-        this.ws.onmessage = (event) => {
-          try {
-            const data = JSON.parse(event.data);
-            this.handleSignalingMessage(data);
-          } catch (e) {
-            console.error('Error parsing message:', e);
-          }
-        };
-        
-        this.ws.onclose = () => {
-          console.log('WebSocket desconectado');
-          this.netLed.classList.remove('active');
-          this.connStatusSpan.innerHTML = 'Desconectado';
-          this.connPill.classList.remove('on');
-          this.connPill.classList.add('off');
-          
-          // Intentar reconectar después de 3 segundos
-          setTimeout(() => this.connectWebSocket(), 3000);
-        };
-        
-        this.ws.onerror = (err) => {
-          console.error('WebSocket error:', err);
-          this.useBroadcastFallback();
-        };
-        
-      } catch (err) {
-        console.error('Error WebSocket:', err);
-        this.useBroadcastFallback();
-      }
-    }
-    
-    useBroadcastFallback() {
-      // Fallback a BroadcastChannel para prueba local
-      this.showToast('Usando modo local (misma máquina)', 3000);
-      this.signalingChannel = new BroadcastChannel('walkie_rt_' + this.roomId);
-      this.signalingChannel.onmessage = (event) => {
-        this.handleSignalingMessage(event.data);
-      };
-      this.netLed.classList.add('active');
-      this.connStatusSpan.innerHTML = 'Local';
+      this.deviceIdDisplay.textContent = `ID: ${this.myId.substring(0, 12)}...`;
       
-      // Anunciar presencia
-      this.announcePresence();
-    }
-    
-    announcePresence() {
-      if (this.signalingChannel) {
-        this.signalingChannel.postMessage({
-          type: 'announce',
-          deviceId: this.deviceId,
-          timestamp: Date.now()
-        });
-      }
-    }
-    
-    handleSignalingMessage(data) {
-      switch(data.type) {
-        case 'register':
-        case 'announce':
-          if (data.deviceId !== this.deviceId && !this.peerConnections.has(data.deviceId)) {
-            this.addDevice(data.deviceId);
-            this.createPeerConnection(data.deviceId, true);
-          }
-          break;
-        case 'offer':
-          if (data.fromId !== this.deviceId) {
-            this.handleOffer(data);
-          }
-          break;
-        case 'answer':
-          if (data.fromId !== this.deviceId) {
-            this.handleAnswer(data);
-          }
-          break;
-        case 'ice-candidate':
-          if (data.fromId !== this.deviceId) {
-            this.handleIceCandidate(data);
-          }
-          break;
-        case 'start-transmit':
-          if (data.deviceId !== this.deviceId) {
-            this.handleStartTransmit(data.deviceId);
-          }
-          break;
-        case 'stop-transmit':
-          if (data.deviceId !== this.deviceId) {
-            this.handleStopTransmit(data.deviceId);
-          }
-          break;
-        case 'device-list':
-          this.updateDeviceList(data.devices);
-          break;
-      }
-    }
-    
-    addDevice(deviceId) {
-      if (!this.devices.has(deviceId) && deviceId !== this.deviceId) {
-        this.devices.set(deviceId, { name: deviceId, lastSeen: Date.now() });
+      // Conectar a PeerJS Cloud
+      this.peer = new Peer(this.myId, {
+        host: '0.peerjs.com',
+        port: 443,
+        path: '/',
+        secure: true,
+        debug: 2
+      });
+      
+      this.peer.on('open', (id) => {
+        console.log('PeerJS conectado con ID:', id);
+        this.myId = id;
+        this.deviceIdDisplay.textContent = `ID: ${id.substring(0, 12)}...`;
+        this.netLed.classList.add('active');
+        this.connStatusSpan.innerHTML = '🌐 En línea';
+        this.connPill.classList.add('on');
+        this.showToast('✅ Conectado a red global. Comparte tu ID para conectar.', 4000);
         this.updateDevicesList();
-        this.showToast(`📡 ${deviceId} se ha conectado`, 2000);
-      }
-    }
-    
-    updateDevicesList() {
-      const devices = Array.from(this.devices.keys());
-      if (devices.length === 0) {
-        this.devicesList.innerHTML = '<span class="device-chip">📻 Esperando handhelds...</span>';
-        return;
-      }
-      this.devicesList.innerHTML = devices.map(id => 
-        `<span class="device-chip ${id === this.deviceId ? 'self' : ''}">
-          ${id === this.deviceId ? '📱 ' : '📡 '}${id}
-        </span>`
-      ).join('');
-    }
-    
-    updateDeviceList(devices) {
-      devices.forEach(device => {
-        if (device !== this.deviceId) {
-          this.addDevice(device);
+      });
+      
+      this.peer.on('connection', (conn) => {
+        console.log('Nueva conexión de datos:', conn.peer);
+        this.handleDataConnection(conn);
+      });
+      
+      this.peer.on('call', (call) => {
+        console.log('Llamada entrante de:', call.peer);
+        this.handleIncomingCall(call);
+      });
+      
+      this.peer.on('error', (err) => {
+        console.error('PeerJS error:', err);
+        if (err.type === 'unavailable-id') {
+          // Si el ID ya existe, generar uno nuevo
+          this.myId = 'walkie-' + Math.random().toString(36).substring(2, 15);
+          localStorage.setItem('walkie_peer_id', this.myId);
+          this.peer.destroy();
+          this.initPeerJS();
+        } else {
+          this.showToast('❌ Error de conexión: ' + err.type, 3000);
+          this.connStatusSpan.innerHTML = '⚠️ Error';
+          this.connPill.classList.add('off');
+          this.connPill.classList.remove('on');
+          this.netLed.classList.remove('active');
         }
+      });
+      
+      this.peer.on('disconnected', () => {
+        console.log('PeerJS desconectado');
+        this.netLed.classList.remove('active');
+        this.connStatusSpan.innerHTML = '⭕ Desconectado';
+        this.connPill.classList.remove('on');
+        this.connPill.classList.add('off');
+        this.showToast('⚠️ Desconectado del servidor. Reconectando...', 2000);
+        
+        // Intentar reconectar
+        setTimeout(() => {
+          if (this.peer) this.peer.reconnect();
+        }, 3000);
       });
     }
     
-    createPeerConnection(remoteId, initiator = false) {
-      const pc = new RTCPeerConnection({
-        iceServers: [
-          { urls: 'stun:stun.l.google.com:19302' },
-          { urls: 'stun:stun1.l.google.com:19302' }
-        ]
+    handleIncomingCall(call) {
+      // Responder a la llamada con el stream local
+      call.answer(this.localStream);
+      
+      call.on('stream', (remoteStream) => {
+        console.log('Recibiendo audio de:', call.peer);
+        this.handleRemoteStream(remoteStream, call.peer);
       });
       
-      // Añadir tracks locales cuando se esté transmitiendo
-      if (this.localStream && this.isTransmitting) {
-        this.localStream.getTracks().forEach(track => {
-          pc.addTrack(track, this.localStream);
-        });
-      }
+      call.on('close', () => {
+        console.log('Llamada cerrada con:', call.peer);
+        this.removeConnection(call.peer);
+      });
       
-      pc.onicecandidate = (event) => {
-        if (event.candidate) {
-          this.sendSignaling({
-            type: 'ice-candidate',
-            candidate: event.candidate,
-            fromId: this.deviceId,
-            targetId: remoteId
-          });
-        }
-      };
+      call.on('error', (err) => {
+        console.error('Error en llamada:', err);
+        this.removeConnection(call.peer);
+      });
       
-      pc.ontrack = (event) => {
-        console.log('Recibiendo track remoto de:', remoteId);
-        this.handleRemoteTrack(event.streams[0], remoteId);
-      };
-      
-      pc.onconnectionstatechange = () => {
-        console.log(`Conexión con ${remoteId}: ${pc.connectionState}`);
-        if (pc.connectionState === 'connected') {
-          this.showToast(`🔊 Conectado con ${remoteId}`, 1500);
-        } else if (pc.connectionState === 'disconnected' || pc.connectionState === 'failed') {
-          this.peerConnections.delete(remoteId);
-          this.devices.delete(remoteId);
-          this.updateDevicesList();
-          // Limpiar elemento de audio
-          const audio = this.remoteAudioElements.get(remoteId);
-          if (audio) {
-            audio.pause();
-            audio.srcObject = null;
-            this.remoteAudioElements.delete(remoteId);
-          }
-        }
-      };
-      
-      this.peerConnections.set(remoteId, pc);
-      
-      if (initiator) {
-        this.createOffer(remoteId);
-      }
-      
-      return pc;
+      this.connections.set(call.peer, call);
+      this.addDevice(call.peer, call);
     }
     
-    async createOffer(remoteId) {
-      const pc = this.peerConnections.get(remoteId);
-      if (!pc) return;
-      try {
-        const offer = await pc.createOffer();
-        await pc.setLocalDescription(offer);
-        this.sendSignaling({
-          type: 'offer',
-          offer: offer,
-          fromId: this.deviceId,
-          targetId: remoteId
-        });
-      } catch (err) {
-        console.error('Error creating offer:', err);
-      }
-    }
-    
-    async handleOffer(data) {
-      if (data.fromId === this.deviceId) return;
-      let pc = this.peerConnections.get(data.fromId);
-      if (!pc) {
-        pc = this.createPeerConnection(data.fromId, false);
-      }
-      try {
-        await pc.setRemoteDescription(new RTCSessionDescription(data.offer));
-        const answer = await pc.createAnswer();
-        await pc.setLocalDescription(answer);
-        this.sendSignaling({
-          type: 'answer',
-          answer: answer,
-          fromId: this.deviceId,
-          targetId: data.fromId
-        });
-      } catch (err) {
-        console.error('Error handling offer:', err);
-      }
-    }
-    
-    async handleAnswer(data) {
-      const pc = this.peerConnections.get(data.fromId);
-      if (pc && !pc.remoteDescription) {
-        await pc.setRemoteDescription(new RTCSessionDescription(data.answer));
-      }
-    }
-    
-    async handleIceCandidate(data) {
-      const pc = this.peerConnections.get(data.fromId);
-      if (pc) {
-        await pc.addIceCandidate(new RTCIceCandidate(data.candidate));
-      }
-    }
-    
-    handleRemoteTrack(stream, fromId) {
-      // Crear o reutilizar elemento de audio
-      let audio = this.remoteAudioElements.get(fromId);
+    handleRemoteStream(stream, peerId) {
+      let audio = this.remoteAudioElements.get(peerId);
       if (!audio) {
         audio = new Audio();
         audio.autoplay = true;
         audio.playsInline = true;
         audio.style.display = 'none';
         document.body.appendChild(audio);
-        this.remoteAudioElements.set(fromId, audio);
-        
-        // Intentar reproducir con interacción de usuario
-        const playAudio = () => {
-          if (audio.srcObject !== stream) {
-            audio.srcObject = stream;
-            audio.play().catch(e => {
-              console.log('Autoplay bloqueado, esperando interacción');
-              // Esperar a que el usuario interactúe
-              const resumePlayback = () => {
-                audio.play().catch(console.log);
-                document.removeEventListener('click', resumePlayback);
-                document.removeEventListener('touchstart', resumePlayback);
-              };
-              document.addEventListener('click', resumePlayback);
-              document.addEventListener('touchstart', resumePlayback);
-            });
-          }
-        };
-        playAudio();
-      } else if (audio.srcObject !== stream) {
-        audio.srcObject = stream;
-        audio.play().catch(e => console.log('Error playing audio:', e));
+        this.remoteAudioElements.set(peerId, audio);
       }
       
-      this.rxLed.classList.add('active');
-      setTimeout(() => this.rxLed.classList.remove('active'), 300);
+      audio.srcObject = stream;
+      
+      const playPromise = audio.play();
+      if (playPromise !== undefined) {
+        playPromise.catch(e => {
+          console.log('Autoplay bloqueado:', e);
+          // El usuario ya interactuará con el botón PTT
+        });
+      }
     }
     
-    sendSignaling(message) {
-      if (this.ws && this.ws.readyState === WebSocket.OPEN) {
-        this.ws.send(JSON.stringify(message));
-      } else if (this.signalingChannel) {
-        this.signalingChannel.postMessage(message);
+    handleDataConnection(conn) {
+      conn.on('data', (data) => {
+        if (data.type === 'start-transmit' && data.from !== this.myId) {
+          this.handleStartTransmit(data.from);
+        } else if (data.type === 'stop-transmit' && data.from !== this.myId) {
+          this.handleStopTransmit(data.from);
+        }
+      });
+      
+      // Guardar la conexión de datos
+      this.dataConnections.set(conn.peer, conn);
+    }
+    
+    connectToPeer(remoteId) {
+      if (!remoteId || remoteId === this.myId) {
+        this.showToast('❌ No puedes conectarte a ti mismo', 2000);
+        return;
       }
+      
+      if (this.connections.has(remoteId)) {
+        this.showToast('⚠️ Ya estás conectado a este dispositivo', 2000);
+        return;
+      }
+      
+      this.showToast(`📞 Conectando a ${remoteId.substring(0, 12)}...`, 2000);
+      
+      // Crear conexión de datos para señalización
+      const dataConn = this.peer.connect(remoteId);
+      dataConn.on('open', () => {
+        console.log('Conexión de datos abierta con:', remoteId);
+        if (!this.dataConnections) this.dataConnections = new Map();
+        this.dataConnections.set(remoteId, dataConn);
+      });
+      
+      // Realizar llamada de audio
+      const call = this.peer.call(remoteId, this.localStream);
+      
+      call.on('stream', (remoteStream) => {
+        console.log('Stream recibido de:', remoteId);
+        this.handleRemoteStream(remoteStream, remoteId);
+      });
+      
+      call.on('close', () => {
+        console.log('Llamada cerrada con:', remoteId);
+        this.removeConnection(remoteId);
+      });
+      
+      call.on('error', (err) => {
+        console.error('Error en llamada:', err);
+        this.showToast(`❌ Error conectando con ${remoteId.substring(0, 12)}`, 3000);
+        this.removeConnection(remoteId);
+      });
+      
+      this.connections.set(remoteId, call);
+      this.addDevice(remoteId, call);
+    }
+    
+    addDevice(peerId, call) {
+      if (!this.devices.has(peerId) && peerId !== this.myId) {
+        this.devices.set(peerId, { 
+          name: peerId.substring(0, 12), 
+          lastSeen: Date.now(), 
+          call: call 
+        });
+        this.updateDevicesList();
+        this.showToast(`📡 ${peerId.substring(0, 12)} conectado`, 2000);
+      }
+    }
+    
+    removeConnection(peerId) {
+      if (this.connections.has(peerId)) {
+        this.connections.delete(peerId);
+      }
+      if (this.dataConnections && this.dataConnections.has(peerId)) {
+        this.dataConnections.delete(peerId);
+      }
+      if (this.devices.has(peerId)) {
+        this.devices.delete(peerId);
+      }
+      const audio = this.remoteAudioElements.get(peerId);
+      if (audio) {
+        audio.pause();
+        audio.srcObject = null;
+        this.remoteAudioElements.delete(peerId);
+      }
+      this.updateDevicesList();
+      this.showToast(`📡 Dispositivo desconectado`, 1500);
+    }
+    
+    updateDevicesList() {
+      const devices = Array.from(this.devices.keys());
+      if (devices.length === 0) {
+        this.devicesList.innerHTML = '<span class="device-chip">📻 Esperando conexiones...<br><small>Comparte tu ID para conectar</small></span>';
+        return;
+      }
+      
+      this.devicesList.innerHTML = devices.map(id => {
+        const isSpeaking = this.currentSpeaker === id;
+        const shortId = id.substring(0, 12);
+        return `<span class="device-chip ${isSpeaking ? 'remote-speaking' : ''}" onclick="window.walkie.connectToPeer('${id}')">
+          ${isSpeaking ? '🔴 ' : '📡 '}${shortId}${isSpeaking ? ' HABLANDO' : ''}
+        </span>`;
+      }).join('');
+    }
+    
+    sendSignalingToAll(type) {
+      this.connections.forEach((call, peerId) => {
+        if (this.dataConnections && this.dataConnections.has(peerId)) {
+          this.dataConnections.get(peerId).send({
+            type: type,
+            from: this.myId
+          });
+        }
+      });
     }
     
     startTransmitting() {
@@ -837,14 +806,10 @@
       this.txLed.classList.add('recording');
       this.statusText.innerHTML = '🔴 TRANSMITIENDO · Hablando...';
       
-      // Activar todos los tracks locales en todas las conexiones
-      this.peerConnections.forEach((pc) => {
-        const senders = pc.getSenders();
-        if (senders.length === 0 && this.localStream) {
-          this.localStream.getTracks().forEach(track => {
-            pc.addTrack(track, this.localStream);
-          });
-        } else {
+      // Habilitar todos los tracks en todas las conexiones
+      this.connections.forEach((call) => {
+        if (call.peerConnection) {
+          const senders = call.peerConnection.getSenders();
           senders.forEach(sender => {
             if (sender.track) sender.track.enabled = true;
           });
@@ -852,12 +817,8 @@
       });
       
       // Notificar a otros
-      this.sendSignaling({
-        type: 'start-transmit',
-        deviceId: this.deviceId
-      });
+      this.sendSignalingToAll('start-transmit');
       
-      // Vibración
       if (navigator.vibrate) navigator.vibrate(50);
     }
     
@@ -867,39 +828,59 @@
       this.txLed.classList.remove('recording');
       this.statusText.innerHTML = '🎙️ Listo · Presiona para hablar';
       
-      // Desactivar envío de audio
-      this.peerConnections.forEach((pc) => {
-        const senders = pc.getSenders();
-        senders.forEach(sender => {
-          if (sender.track) sender.track.enabled = false;
-        });
+      // Deshabilitar envío de audio
+      this.connections.forEach((call) => {
+        if (call.peerConnection) {
+          const senders = call.peerConnection.getSenders();
+          senders.forEach(sender => {
+            if (sender.track) sender.track.enabled = false;
+          });
+        }
       });
       
       // Notificar fin
-      this.sendSignaling({
-        type: 'stop-transmit',
-        deviceId: this.deviceId
-      });
+      this.sendSignalingToAll('stop-transmit');
       
       if (navigator.vibrate) navigator.vibrate(40);
     }
     
     handleStartTransmit(fromId) {
+      this.currentSpeaker = fromId;
       this.rxLed.classList.add('active');
-      this.statusText.innerHTML = `📢 ${fromId} está hablando...`;
+      this.statusText.innerHTML = `📢 ${fromId.substring(0, 12)} está hablando...`;
+      this.updateDevicesList();
+      
       setTimeout(() => {
-        if (!this.isTransmitting) {
+        if (!this.isTransmitting && this.currentSpeaker === fromId) {
+          this.currentSpeaker = null;
           this.statusText.innerHTML = '🎙️ Listo · Presiona para hablar';
+          this.updateDevicesList();
         }
         this.rxLed.classList.remove('active');
-      }, 2000);
+      }, 3000);
     }
     
     handleStopTransmit(fromId) {
-      this.rxLed.classList.remove('active');
-      if (!this.isTransmitting) {
-        this.statusText.innerHTML = '🎙️ Listo · Presiona para hablar';
+      if (this.currentSpeaker === fromId) {
+        this.currentSpeaker = null;
+        this.rxLed.classList.remove('active');
+        if (!this.isTransmitting) {
+          this.statusText.innerHTML = '🎙️ Listo · Presiona para hablar';
+        }
+        this.updateDevicesList();
       }
+    }
+    
+    disconnectAll() {
+      this.connections.forEach((call, peerId) => {
+        call.close();
+        this.removeConnection(peerId);
+      });
+      this.connections.clear();
+      if (this.dataConnections) this.dataConnections.clear();
+      this.devices.clear();
+      this.updateDevicesList();
+      this.showToast('✅ Desconectado de todos los dispositivos', 2000);
     }
     
     setupUIEvents() {
@@ -920,6 +901,23 @@
       this.pttBtn.addEventListener('touchend', stopPTT);
       this.pttBtn.addEventListener('touchcancel', stopPTT);
       
+      // Conectar a dispositivo remoto
+      this.connectBtn.addEventListener('click', () => {
+        const remoteId = this.remoteIdInput.value.trim();
+        if (remoteId) {
+          this.connectToPeer(remoteId);
+          this.remoteIdInput.value = '';
+        } else {
+          this.showToast('❌ Ingresa un ID válido', 2000);
+        }
+      });
+      
+      this.remoteIdInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+          this.connectBtn.click();
+        }
+      });
+      
       // Test audio
       document.getElementById('testAudioBtn').addEventListener('click', () => {
         this.testAudio();
@@ -927,8 +925,13 @@
       
       // Copy ID
       document.getElementById('copyIdBtn').addEventListener('click', () => {
-        navigator.clipboard.writeText(this.deviceId);
-        this.showToast('ID copiado: ' + this.deviceId, 2000);
+        navigator.clipboard.writeText(this.myId);
+        this.showToast('📋 ID copiado: ' + this.myId.substring(0, 12) + '...', 2000);
+      });
+      
+      // Disconnect all
+      document.getElementById('disconnectAllBtn').addEventListener('click', () => {
+        this.disconnectAll();
       });
       
       // Share
@@ -936,17 +939,16 @@
         if (navigator.share) {
           navigator.share({
             title: 'Walkie Talkie',
-            text: `Únete a mi canal con ID: ${this.deviceId}`,
+            text: `Mi ID de Walkie Talkie: ${this.myId}`,
             url: window.location.href
           });
         } else {
-          this.showToast('Comparte este enlace con otros handhelds', 2000);
+          this.showToast('📋 Mi ID: ' + this.myId, 3000);
         }
       });
     }
     
     testAudio() {
-      // Crear un beep simple con Web Audio
       const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
       const oscillator = audioCtx.createOscillator();
       const gain = audioCtx.createGain();
